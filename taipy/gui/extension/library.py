@@ -459,7 +459,8 @@ class _Element_with_inner_props(Element):
         """NOT DOCUMENTED
 
         Arguments:
-            inner_properties (Optional[List[ElementProperty]]): The optional list of inner properties for this element.<br/>
+            inner_properties (Optional[List[ElementProperty]]): The optional list of inner properties
+                for this element.<br/>
                 Default values are set/bound automatically.
         """
         super().__init__(

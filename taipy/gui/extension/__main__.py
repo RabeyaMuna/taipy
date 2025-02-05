@@ -4,16 +4,17 @@
 
 import argparse
 import os
-from taipy.gui.extension import ElementLibrary
 import typing as t
+
+from taipy.gui.extension import ElementLibrary
 
 
 def error(message):
-    print(message)
+    print(message)  # noqa: T201
     exit(1)
 
 
-def generate_tgb(args) -> None:
+def generate_tgb(args) -> None:  # noqa: C901
     from importlib import import_module
     from inspect import getmembers, isclass
 
