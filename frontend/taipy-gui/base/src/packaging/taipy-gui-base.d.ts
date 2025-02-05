@@ -104,18 +104,22 @@ declare class TaipyCanvas {
     init(domElement: HTMLElement): void;
     updateContent(jsx: string): void;
 }
-export interface TaipyRenderer {
-    render(elements: Element[]): string;
+declare class ElementRenderer {
+    taipyApp: TaipyApp;
+    constructor(taipyApp: TaipyApp);
+    render(elements: Element[], force?: boolean): Promise<string>;
+    renderSingle(element: Element): Promise<string>;
 }
 export interface Element {
-    id: string | undefined;
     type: string;
-    bindingEncodedVarName: string | undefined;
-    wrapperHtml: [string, string] | undefined;
+    id?: string;
+    properties?: Record<string, string>;
+    wrapperHtml?: [string, string];
+    jsx?: string;
 }
 declare class ElementManager {
     _elements: Element[];
-    _renderer: TaipyRenderer;
+    _renderer: ElementRenderer;
     _canvas: TaipyCanvas;
     taipyApp: TaipyApp;
     constructor(taipyApp: TaipyApp);
@@ -128,6 +132,7 @@ export type OnNotifyHandler = (taipyApp: TaipyApp, type: string, message: string
 export type OnReloadHandler = (taipyApp: TaipyApp, removedChanges: ModuleData) => void;
 export type OnWsMessage = (taipyApp: TaipyApp, event: string, payload: unknown) => void;
 export type OnWsStatusUpdate = (taipyApp: TaipyApp, messageQueue: string[]) => void;
+export type OnCanvasReRender = (taipyApp: TaipyApp) => void;
 export type Route = [string, string];
 export type RequestDataCallback = (
     taipyApp: TaipyApp,
@@ -143,6 +148,7 @@ export declare class TaipyApp {
     _onReload: OnReloadHandler | undefined;
     _onWsMessage: OnWsMessage | undefined;
     _onWsStatusUpdate: OnWsStatusUpdate | undefined;
+    _onCanvasReRender: OnCanvasReRender | undefined;
     _ackList: string[];
     _rdc: Record<string, Record<string, RequestDataCallback>>;
     _cookieHandler: CookieHandler | undefined;
@@ -181,6 +187,9 @@ export declare class TaipyApp {
     get onWsStatusUpdate(): OnWsStatusUpdate | undefined;
     set onWsStatusUpdate(handler: OnWsStatusUpdate | undefined);
     onWsStatusUpdateEvent(messageQueue: string[]): void;
+    get onCanvasReRender(): OnCanvasReRender | undefined;
+    set onCanvasReRender(handler: OnCanvasReRender | undefined);
+    onCanvasReRenderEvent(): void;
     init(): void;
     initApp(): void;
     sendWsMessage(type: WsMessageType | string, id: string, payload: unknown, context?: string | undefined): void;
@@ -206,7 +215,7 @@ export declare class TaipyApp {
     createCanvas(domElement: HTMLElement): void;
     addElement2Canvas(
         type: string,
-        bindingEncodedVarName?: string | undefined,
+        properties?: Record<string, string> | undefined,
         wrapperHtml?: [string, string] | undefined,
         id?: string | undefined,
     ): void;

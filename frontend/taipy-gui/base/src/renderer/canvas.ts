@@ -15,6 +15,7 @@ export class TaipyCanvas {
         if (domElement) {
             const root = createRoot(domElement);
             root.render(createElement(TaipyRendered));
+            useStore.getState().setApp(this.taipyApp);
             useStore.getState().setModule(this.taipyApp.getContext());
         } else {
             console.error("Root element not found!");

@@ -35,6 +35,7 @@ import useStore from "../../store";
 const TaipyRendered = () => {
     const jsx = useStore((state) => state.jsx);
     const module = useStore((state) => state.module);
+    const app = useStore((state) => state.app);
     const pageState = useMemo(() => {
         return { jsx, module };
     }, [jsx, module]);
@@ -55,6 +56,10 @@ const TaipyRendered = () => {
         document.body.className = classes.join(" ");
     }, [themeClass]);
 
+    useEffect(() => {
+        app && app.onCanvasReRenderEvent();
+    }, [jsx, app]);
+
     return (
         <TaipyContext.Provider value={{ state, dispatch }}>
             <ThemeProvider theme={state.theme}>
@@ -70,6 +75,7 @@ const TaipyRendered = () => {
                                 allowUnknownElements={false}
                                 renderError={renderError}
                                 blacklistedAttrs={emptyArray}
+                                renderInWrapper={false}
                             />
                         </ErrorBoundary>
                     </PageContext.Provider>

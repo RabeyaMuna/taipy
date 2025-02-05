@@ -18,6 +18,7 @@ export type OnNotifyHandler = (taipyApp: TaipyApp, type: string, message: string
 export type OnReloadHandler = (taipyApp: TaipyApp, removedChanges: ModuleData) => void;
 export type OnWsMessage = (taipyApp: TaipyApp, event: string, payload: unknown) => void;
 export type OnWsStatusUpdate = (taipyApp: TaipyApp, messageQueue: string[]) => void;
+export type OnCanvasReRender = (taipyApp: TaipyApp) => void;
 export type OnEvent =
     | OnInitHandler
     | OnChangeHandler
@@ -36,6 +37,7 @@ export class TaipyApp {
     _onReload: OnReloadHandler | undefined;
     _onWsMessage: OnWsMessage | undefined;
     _onWsStatusUpdate: OnWsStatusUpdate | undefined;
+    _onCanvasReRender: OnCanvasReRender | undefined;
     _ackList: string[];
     _rdc: Record<string, Record<string, RequestDataCallback>>;
     _cookieHandler: CookieHandler | undefined;
@@ -165,6 +167,21 @@ export class TaipyApp {
 
     onWsStatusUpdateEvent(messageQueue: string[]) {
         this.onWsStatusUpdate && this.onWsStatusUpdate(this, messageQueue);
+    }
+
+    get onCanvasReRender() {
+        return this._onCanvasReRender;
+    }
+
+    set onCanvasReRender(handler: OnCanvasReRender | undefined) {
+        if (handler !== undefined && handler?.length !== 1) {
+            throw new Error("onCanvasReRender() requires one parameter");
+        }
+        this._onCanvasReRender = handler;
+    }
+
+    onCanvasReRenderEvent() {
+        this.onCanvasReRender && this.onCanvasReRender(this);
     }
 
     // Utility methods
