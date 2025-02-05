@@ -253,7 +253,9 @@ class _Builder:
                 else:
                     self.__update_vars.append(f"{_to_camel_case(name)}={hash_name}")
 
-    def __set_number_attribute(self, name: str, default_value: t.Optional[str] = None, optional: t.Optional[bool] = True):
+    def __set_number_attribute(
+        self, name: str, default_value: t.Optional[str] = None, optional: t.Optional[bool] = True
+    ):
         """
         TODO-undocumented
         Defines a React number attribute (attr={<number>}).
@@ -1129,7 +1131,9 @@ class _Builder:
                     self.__update_vars.append(f"{prop_name}={hash_name}")
                     self.__set_react_attribute(prop_name, hash_name)
                 else:
-                    self.__set_react_attribute(prop_name, self.__prop_values.get(attr[0], _get_tuple_val(attr, 2, None)))
+                    self.__set_react_attribute(
+                        prop_name, self.__prop_values.get(attr[0], _get_tuple_val(attr, 2, None))
+                    )
             elif var_type == PropertyType.broadcast:
                 self.__set_react_attribute(
                     _to_camel_case(attr[0]), _get_broadcast_var_name(_get_tuple_val(attr, 2, None))
