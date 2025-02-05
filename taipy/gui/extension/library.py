@@ -127,7 +127,7 @@ class Element:
             render_xhtml: A function that receives a dictionary containing the element's properties and their values
                 and that must return a valid XHTML string.<br/>
                 This is used to implement static elements.
-            doc_string: The documentation text for this element or None if there is note, which is
+            doc_string: The documentation text for this element or None if there is none, which is
                 the default.<br/>
                 This string is used when generating stub functions so elements of extension libraries
                 can be used with the Page Builder API.
