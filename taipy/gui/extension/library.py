@@ -161,7 +161,7 @@ class Element:
     def _is_server_only(self):
         return hasattr(self, "_render_xhtml") and callable(self._render_xhtml)
 
-    def _process_inner_properties(self, _attributes: t.Dict[str, t.Any], _counter: int):
+    def _process_inner_properties(self, _gui: "Gui", _attributes: t.Dict[str, t.Any], _counter: int):
         pass
 
     def _call_builder(
@@ -174,7 +174,7 @@ class Element:
         counter: int = 0,
     ) -> t.Union[t.Any, t.Tuple[str, str]]:
         attributes = properties if isinstance(properties, dict) else {}
-        self._process_inner_properties(attributes, counter)
+        self._process_inner_properties(gui, attributes, counter)
         # this modifies attributes
         hash_names = _Builder._get_variable_hash_names(gui, attributes)  # variable replacement
         # call user render if any
@@ -471,7 +471,7 @@ class _Element_with_inner_props(Element):
         )
         self.inner_properties = inner_properties
 
-    def _process_inner_properties(self, attributes: t.Dict[str, t.Any], counter: int):
+    def _process_inner_properties(self, gui: "Gui", attributes: t.Dict[str, t.Any], counter: int):
         if self.inner_properties:
             uniques: t.Dict[str, int] = {}
             self.attributes.update(
