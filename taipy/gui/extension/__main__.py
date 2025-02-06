@@ -16,7 +16,7 @@ def error(message):
 
 def generate_tgb(args) -> None:  # noqa: C901
     from importlib import import_module
-    from inspect import getmembers, isclass
+    from inspect import getmembers
 
     from taipy.gui.types import PropertyType
 
