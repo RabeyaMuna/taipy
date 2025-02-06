@@ -445,7 +445,7 @@ class ElementLibrary(ABC):
         return None
 
 
-class _Element_with_inner_props(Element):
+class _ElementWithInnerProps(Element):
     def __init__(
         self,
         default_property: str,

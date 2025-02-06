@@ -30,7 +30,7 @@ def generate_tgb(args) -> None:  # noqa: C901
     except Exception as e:
         error(f"Couldn't open module '{package_root_dir}' ({e})")
     library: t.Optional[ElementLibrary] = None
-    for _, member in getmembers(module, lambda o: isclass(o) and issubclass(o, ElementLibrary)):
+    for _, member in getmembers(module, lambda o: issubclass(o, ElementLibrary)):
         if library:
             error("Extension contains more than one ElementLibrary")
         library = member()

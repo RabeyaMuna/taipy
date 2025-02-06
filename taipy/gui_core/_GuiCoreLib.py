@@ -15,7 +15,7 @@ from datetime import datetime
 from taipy.core import Cycle, DataNode, Job, Scenario, Sequence, Task
 from taipy.gui import Gui, State
 from taipy.gui.extension import Element, ElementLibrary, ElementProperty, PropertyType
-from taipy.gui.extension.library import _Element_with_inner_props
+from taipy.gui.extension.library import _ElementWithInnerProps
 
 from ..version import _get_version
 from ._adapters import (
@@ -67,7 +67,7 @@ class _GuiCore(ElementLibrary):
     __DATANODE_SELECTOR_ERROR_VAR = "__tpgc_dn_error"
 
     __elements: dict[str, Element] = {
-        "scenario_selector": _Element_with_inner_props(
+        "scenario_selector": _ElementWithInnerProps(
             "value",
             {
                 "id": ElementProperty(PropertyType.string),
@@ -114,7 +114,7 @@ class _GuiCore(ElementLibrary):
                 ),
             },
         ),
-        "scenario": _Element_with_inner_props(
+        "scenario": _ElementWithInnerProps(
             "scenario",
             {
                 "id": ElementProperty(PropertyType.string),
@@ -145,7 +145,7 @@ class _GuiCore(ElementLibrary):
                 ),
             },
         ),
-        "scenario_dag": _Element_with_inner_props(
+        "scenario_dag": _ElementWithInnerProps(
             "scenario",
             {
                 "id": ElementProperty(PropertyType.string),
@@ -162,7 +162,7 @@ class _GuiCore(ElementLibrary):
                 "on_select": ElementProperty(PropertyType.function, f"{{{__CTX_VAR_NAME}.on_dag_select}}"),
             },
         ),
-        "data_node_selector": _Element_with_inner_props(
+        "data_node_selector": _ElementWithInnerProps(
             "value",
             {
                 "id": ElementProperty(PropertyType.string),
@@ -199,7 +199,7 @@ class _GuiCore(ElementLibrary):
                 ),
             },
         ),
-        "data_node": _Element_with_inner_props(
+        "data_node": _ElementWithInnerProps(
             __DATANODE_VIZ_DATA_NODE_PROP,
             {
                 "id": ElementProperty(PropertyType.string),
@@ -275,7 +275,7 @@ class _GuiCore(ElementLibrary):
                 ),
             },
         ),
-        "job_selector": _Element_with_inner_props(
+        "job_selector": _ElementWithInnerProps(
             "value",
             {
                 "id": ElementProperty(PropertyType.string),
