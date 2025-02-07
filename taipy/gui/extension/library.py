@@ -100,9 +100,6 @@ class Element:
     what the default property name is.
     """
 
-    __RE_PROP_VAR = re.compile(r"<tp:prop:(\w+)>")
-    __RE_UNIQUE_VAR = re.compile(r"<tp:uniq:(\w+)>")
-
     def __init__(
         self,
         default_property: str,
@@ -446,6 +443,9 @@ class ElementLibrary(ABC):
 
 
 class _ElementWithInnerProps(Element):
+    __RE_PROP_VAR = re.compile(r"<tp:prop:(\w+)>")
+    __RE_UNIQUE_VAR = re.compile(r"<tp:uniq:(\w+)>")
+
     def __init__(
         self,
         default_property: str,
@@ -485,7 +485,7 @@ class _ElementWithInnerProps(Element):
                 val = attr.default_value
                 if val:
                     # handling property replacement in inner properties <tp:prop:...>
-                    while m := Element.__RE_PROP_VAR.search(val):
+                    while m := _ElementWithInnerProps.__RE_PROP_VAR.search(val):
                         var = attributes.get(m.group(1))
                         hash_value = None if var is None else gui._evaluate_expr(var)
                         if hash_value:
@@ -496,7 +496,7 @@ class _ElementWithInnerProps(Element):
                         val = val[: m.start()] + hash_value + val[m.end() :]
                     # handling unique id replacement in inner properties <tp:uniq:...>
                     has_uniq = False
-                    while m := Element.__RE_UNIQUE_VAR.search(val):
+                    while m := _ElementWithInnerProps.__RE_UNIQUE_VAR.search(val):
                         has_uniq = True
                         id = uniques.get(m.group(1))
                         if id is None:

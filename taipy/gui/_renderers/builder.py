@@ -218,9 +218,16 @@ class _Builder:
     def __set_dynamic_any_attribute(self, name: str, default_value: t.Optional[str] = None):
         value = self.__prop_values.get(name, default_value)
         self.__set_json_attribute(_to_camel_case(f"default_{name}"), value)
-        if hash_name := self.__hashes.get(name):
-            self.__update_vars.append(f"{name}={hash_name}")
-            self.__set_react_attribute(name, hash_name)
+
+        if hash := self.__hashes.get(name):
+            if isinstance(value, (dict, _MapDict)):
+                hash = self.__get_typed_hash_name(hash, PropertyType.dynamic_dict)
+                react_name = _to_camel_case(name)
+                self.__update_vars.append(f"{react_name}={hash}")
+                self.__set_react_attribute(react_name, hash)
+            else:
+                self.__update_vars.append(f"{name}={hash}")
+                self.__set_react_attribute(name, hash)
         return self
 
     def __get_boolean_attribute(self, name: str, default_value=False):
@@ -239,19 +246,19 @@ class _Builder:
         return self.__set_react_attribute(_to_camel_case(name), value)
 
     def __set_dynamic_bool_attribute(self, name: str, def_val: t.Any, with_update: bool, update_main=True):
-        hash_name = self.__hashes.get(name)
-        val = self.__get_boolean_attribute(name, def_val)
-        default_name = f"default_{name}" if hash_name is not None else name
-        if val != def_val:
-            self.__set_boolean_attribute(default_name, val)
-        if hash_name is not None:
-            hash_name = self.__get_typed_hash_name(hash_name, PropertyType.dynamic_boolean)
-            self.__set_react_attribute(_to_camel_case(name), _get_client_var_name(hash_name))
+        value = self.__get_boolean_attribute(name, def_val)
+        hash = self.__hashes.get(name)
+        default_name = f"default_{name}" if hash is not None else name
+        if value != def_val:
+            self.__set_boolean_attribute(default_name, value)
+        if hash is not None:
+            hash = self.__get_typed_hash_name(hash, PropertyType.dynamic_boolean)
+            self.__set_react_attribute(_to_camel_case(name), _get_client_var_name(hash))
             if with_update:
                 if update_main:
-                    self.__set_update_var_name(hash_name)
+                    self.__set_update_var_name(hash)
                 else:
-                    self.__update_vars.append(f"{_to_camel_case(name)}={hash_name}")
+                    self.__update_vars.append(f"{_to_camel_case(name)}={hash}")
 
     def __set_number_attribute(
         self, name: str, default_value: t.Optional[str] = None, optional: t.Optional[bool] = True
@@ -285,35 +292,34 @@ class _Builder:
         return self.__set_react_attribute(_to_camel_case(name), val)
 
     def __set_dynamic_number_attribute(self, var_name: str, default_value: t.Any):
-        hash_name = self.__hashes.get(var_name)
-        numVal = self.__prop_values.get(var_name)
-        if numVal is None:
-            numVal = default_value
-        if isinstance(numVal, str):
+        value = self.__prop_values.get(var_name)
+        if value is None:
+            value = default_value
+        if isinstance(value, str):
             try:
-                numVal = float(numVal)
+                value = float(value)
             except Exception as e:
                 _warn(f"{self.__element_name}: {var_name} cannot be transformed into a number", e)
-                numVal = 0
-        if isinstance(numVal, numbers.Number):
-            self.__set_react_attribute(_to_camel_case(f"default_{var_name}"), numVal)
-        elif numVal is not None:
-            _warn(f"{self.__element_name}: {var_name} value is not valid ({numVal}).")
-        if hash_name:
-            hash_name = self.__get_typed_hash_name(hash_name, PropertyType.number)
-            self.__update_vars.append(f"{var_name}={hash_name}")
-            self.__set_react_attribute(var_name, hash_name)
+                value = 0
+        if isinstance(value, numbers.Number):
+            self.__set_react_attribute(_to_camel_case(f"default_{var_name}"), value)
+        elif value is not None:
+            _warn(f"{self.__element_name}: {var_name} value is not valid ({value}).")
+        if hash := self.__hashes.get(var_name):
+            hash = self.__get_typed_hash_name(hash, PropertyType.number)
+            self.__update_vars.append(f"{var_name}={hash}")
+            self.__set_react_attribute(var_name, hash)
         return self
 
     def __set_string_attribute(
         self, name: str, default_value: t.Optional[str] = None, optional: t.Optional[bool] = True
     ):
-        str_attr = self.__prop_values.get(name, default_value)
-        if str_attr is None:
+        value = self.__prop_values.get(name, default_value)
+        if value is None:
             if not optional:
                 _warn(f"Property {name} is required for control {self.__control_type}.")
             return self
-        return self.set_attribute(_to_camel_case(name), str(str_attr))
+        return self.set_attribute(_to_camel_case(name), str(value))
 
     def __set_dynamic_string_attribute(
         self,
@@ -322,60 +328,59 @@ class _Builder:
         with_update: t.Optional[bool] = False,
         dynamic_property_name: t.Optional[str] = None,
     ):
-        str_val = self.__prop_values.get(name, default_value)
-        if str_val is not None:
+        value = self.__prop_values.get(name, default_value)
+        if value is not None:
             self.set_attribute(
-                _to_camel_case(f"default_{name}" if dynamic_property_name is None else name), str(str_val)
+                _to_camel_case(f"default_{name}" if dynamic_property_name is None else name), str(value)
             )
-        if hash_name := self.__hashes.get(name):
+        if hash := self.__hashes.get(name):
             prop_name = _to_camel_case(name if dynamic_property_name is None else dynamic_property_name)
             if with_update:
-                self.__update_vars.append(f"{prop_name}={hash_name}")
-            self.__set_react_attribute(prop_name, hash_name)
+                self.__update_vars.append(f"{prop_name}={hash}")
+            self.__set_react_attribute(prop_name, hash)
         return self
 
     def __set_string_or_number_attribute(self, name: str, default_value: t.Optional[t.Any] = None):
-        attr = self.__prop_values.get(name, default_value)
-        if attr is None:
+        value = self.__prop_values.get(name, default_value)
+        if value is None:
             return self
-        if isinstance(attr, numbers.Number):
-            return self.__set_react_attribute(_to_camel_case(name), attr)
+        if isinstance(value, numbers.Number):
+            return self.__set_react_attribute(_to_camel_case(name), value)
         else:
-            return self.set_attribute(_to_camel_case(name), attr)
+            return self.set_attribute(_to_camel_case(name), value)
 
     def __set_dynamic_string_list(self, name: str, default_value: t.Any):
-        hash_name = self.__hashes.get(name)
-        loi = self.__prop_values.get(name)
-        if loi is None:
-            loi = default_value
-        if isinstance(loi, str):
-            loi = [s.strip() for s in loi.split(";") if s.strip()]
-        if isinstance(loi, list):
-            self.__set_json_attribute(_to_camel_case(f"default_{name}"), loi)
-        if hash_name:
-            self.__update_vars.append(f"{name}={hash_name}")
-            self.__set_react_attribute(name, hash_name)
+        value = self.__prop_values.get(name)
+        if value is None:
+            value = default_value
+        if isinstance(value, str):
+            value = [s.strip() for s in value.split(";") if s.strip()]
+        if isinstance(value, list):
+            self.__set_json_attribute(_to_camel_case(f"default_{name}"), value)
+        if hash := self.__hashes.get(name):
+            self.__update_vars.append(f"{name}={hash}")
+            self.__set_react_attribute(name, hash)
         return self
 
     def __set_list_attribute(
         self,
         name: str,
-        hash_name: t.Optional[str],
-        val: t.Any,
+        hash: t.Optional[str],
+        value: t.Any,
         elt_type: t.Type,
         dynamic=True,
         default_val: t.Optional[t.Any] = None,
     ) -> t.List[str]:
-        val = default_val if val is None else val
-        if not hash_name and isinstance(val, str):
-            val = [elt_type(t.strip()) for t in val.split(";")]
-        if isinstance(val, list):
-            if hash_name and dynamic:
-                self.__set_react_attribute(name, hash_name)
-                return [f"{name}={hash_name}"]
+        value = default_val if value is None else value
+        if not hash and isinstance(value, str):
+            value = [elt_type(t.strip()) for t in value.split(";")]
+        if isinstance(value, list):
+            if hash and dynamic:
+                self.__set_react_attribute(name, hash)
+                return [f"{name}={hash}"]
             else:
-                self.__set_json_attribute(name, val)
-        elif val is not None:
+                self.__set_json_attribute(name, value)
+        elif value is not None:
             _warn(f"{self.__element_name}: {name} should be a list of {elt_type}.")
         return []
 
@@ -389,17 +394,17 @@ class _Builder:
             name (str): The property name.
             default value (dict): used if no value is specified.
         """
-        dict_attr = self.__prop_values.get(name)
-        if dict_attr is None:
-            dict_attr = default_value
-        if dict_attr is not None:
-            if isinstance(dict_attr, str):
-                vals = [x.strip().split(":") for x in dict_attr.split(";")]
-                dict_attr = {val[0].strip(): val[1].strip() for val in vals if len(val) > 1}
-            if isinstance(dict_attr, (dict, _MapDict)):
-                self.__set_json_attribute(_to_camel_case(name), dict_attr)
+        value = self.__prop_values.get(name)
+        if value is None:
+            value = default_value
+        if value is not None:
+            if isinstance(value, str):
+                vals = [x.strip().split(":") for x in value.split(";")]
+                value = {val[0].strip(): val[1].strip() for val in vals if len(val) > 1}
+            if isinstance(value, (dict, _MapDict)):
+                self.__set_json_attribute(_to_camel_case(name), value)
             else:
-                _warn(f"{self.__element_name}: {name} should be a dict: '{str(dict_attr)}'.")
+                _warn(f"{self.__element_name}: {name} should be a dict: '{str(value)}'.")
         return self
 
     def __set_dynamic_dict_attribute(self, name: str, default_value: t.Optional[t.Dict[str, t.Any]] = None):
@@ -412,53 +417,53 @@ class _Builder:
             name (str): The property name.
             default value (dict): used if no value is specified.
         """
-        dict_attr = self.__prop_values.get(name)
-        if dict_attr is None:
-            dict_attr = default_value
-        if dict_attr is not None:
-            if isinstance(dict_attr, str):
-                vals = [x.strip().split(":") for x in dict_attr.split(";")]
-                dict_attr = {val[0].strip(): val[1].strip() for val in vals if len(val) > 1}
-            if isinstance(dict_attr, (dict, _MapDict)):
-                self.__set_json_attribute(_to_camel_case("default_" + name), dict_attr)
+        value = self.__prop_values.get(name)
+        if value is None:
+            value = default_value
+        if value is not None:
+            if isinstance(value, str):
+                vals = [x.strip().split(":") for x in value.split(";")]
+                value = {val[0].strip(): val[1].strip() for val in vals if len(val) > 1}
+            if isinstance(value, (dict, _MapDict)):
+                self.__set_json_attribute(_to_camel_case("default_" + name), value)
             else:
-                _warn(f"{self.__element_name}: {name} should be a dict: '{str(dict_attr)}'.")
-        if dict_hash := self.__hashes.get(name):
-            dict_hash = self.__get_typed_hash_name(dict_hash, PropertyType.dynamic_dict)
+                _warn(f"{self.__element_name}: {name} should be a dict: '{str(value)}'.")
+        if hash := self.__hashes.get(name):
+            hash = self.__get_typed_hash_name(hash, PropertyType.dynamic_dict)
             prop_name = _to_camel_case(name)
-            self.__update_vars.append(f"{prop_name}={dict_hash}")
-            self.__set_react_attribute(prop_name, dict_hash)
+            self.__update_vars.append(f"{prop_name}={hash}")
+            self.__set_react_attribute(prop_name, hash)
         return self
 
     def __set_dynamic_date_attribute(self, var_name: str, default_value: t.Optional[str] = None):
-        date_attr = self.__prop_values.get(var_name, default_value)
-        if date_attr is None:
-            date_attr = default_value
-        if isinstance(date_attr, (datetime, date, time)):
-            value = _date_to_string(date_attr)
+        value = self.__prop_values.get(var_name, default_value)
+        if value is None:
+            value = default_value
+        if isinstance(value, (datetime, date, time)):
+            value = _date_to_string(value)
             self.set_attribute(_to_camel_case(var_name), value)
         return self
 
     def __set_function_attribute(
         self, name: str, default_value: t.Optional[str] = None, optional: t.Optional[bool] = True
     ):
-        str_attr = self.__prop_values.get(name, default_value)
-        if str_attr is None:
+        value = self.__prop_values.get(name, default_value)
+        if value is None:
             if not optional:
                 _warn(f"Property {name} is required for control {self.__control_type}.")
             return self
-        elif _is_function(str_attr):
-            str_attr = self.__hashes.get(name)
-            if str_attr is None:
+        elif _is_function(value):
+            value = self.__hashes.get(name)
+            if value is None:
                 return self
-        elif _is_boolean(str_attr) and not _is_true(t.cast(str, str_attr)):
+        elif _is_boolean(value) and not _is_true(t.cast(str, value)):
             return self.__set_react_attribute(_to_camel_case(name), False)
-        elif str_attr:
-            str_attr = str(str_attr)
-            func = self.__gui._get_user_function(str_attr)
-            if func == str_attr:
-                _warn(f"{self.__control_type}.{name}: {str_attr} is not a function.")
-        return self.set_attribute(_to_camel_case(name), str_attr) if str_attr else self
+        elif value:
+            value = str(value)
+            func = self.__gui._get_user_function(value)
+            if func == value:
+                _warn(f"{self.__control_type}.{name}: {value} is not a function.")
+        return self.set_attribute(_to_camel_case(name), value) if value else self
 
     def __set_react_attribute(self, name: str, value: t.Any):
         return self.set_attribute(name, "{!" + (str(value).lower() if isinstance(value, bool) else str(value)) + "!}")
@@ -644,10 +649,10 @@ class _Builder:
                 self.__update_vars.append(f"comparedatas={','.join(cmp_datas_hash)}")
         cols_description = self.__gui._get_accessor().get_cols_description(data_hash, _TaipyData(data, data_hash))
         col_dict = _get_columns_dict(
-            self.__attributes.get("columns", {}),
+            self.__prop_values.get("columns", {}),
             cols_description,
             date_format,
-            self.__attributes.get("number_format"),
+            self.__prop_values.get("number_format"),
         )
 
         rebuild_fn_hash = self.__build_rebuild_fn(
