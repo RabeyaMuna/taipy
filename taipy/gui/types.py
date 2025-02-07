@@ -117,6 +117,10 @@ class PropertyType(Enum):
     dynamic_list = "dynamiclist"
     """
     The property is dynamic and holds a list.
+
+    The React component must have two parameters: "<propertyName>" that must be a list of object, and
+    "default<PropertyName>" that must be a string, set to the JSON representation of the initial value
+    of the property.
     """
     dynamic_string = "dynamicstring"
     """
