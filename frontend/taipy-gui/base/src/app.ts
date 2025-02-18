@@ -11,6 +11,7 @@ import { WsMessageType } from "../../src/context/wsUtils";
 import { getBase } from "./utils";
 import { CookieHandler } from "./cookieHandler";
 import { ElementManager } from "./renderer/elementManager";
+import useStore from "./store";
 
 export type OnInitHandler = (taipyApp: TaipyApp) => void;
 export type OnChangeHandler = (taipyApp: TaipyApp, encodedName: string, value: unknown, dataEventKey?: string) => void;
@@ -18,7 +19,7 @@ export type OnNotifyHandler = (taipyApp: TaipyApp, type: string, message: string
 export type OnReloadHandler = (taipyApp: TaipyApp, removedChanges: ModuleData) => void;
 export type OnWsMessage = (taipyApp: TaipyApp, event: string, payload: unknown) => void;
 export type OnWsStatusUpdate = (taipyApp: TaipyApp, messageQueue: string[]) => void;
-export type OnCanvasReRender = (taipyApp: TaipyApp) => void;
+export type OnCanvasReRender = (taipyApp: TaipyApp, isEditMode: boolean) => void;
 export type OnEvent =
     | OnInitHandler
     | OnChangeHandler
@@ -174,14 +175,14 @@ export class TaipyApp {
     }
 
     set onCanvasReRender(handler: OnCanvasReRender | undefined) {
-        if (handler !== undefined && handler?.length !== 1) {
-            throw new Error("onCanvasReRender() requires one parameter");
+        if (handler !== undefined && handler?.length !== 2) {
+            throw new Error("onCanvasReRender() requires two parameter");
         }
         this._onCanvasReRender = handler;
     }
 
     onCanvasReRenderEvent() {
-        this.onCanvasReRender && this.onCanvasReRender(this);
+        this.onCanvasReRender && this.onCanvasReRender(this, useStore.getState().editMode);
     }
 
     // Utility methods
@@ -316,17 +317,30 @@ export class TaipyApp {
         return getBase();
     }
 
-    createCanvas(domElement: HTMLElement) {
-        this.elementManager.init(domElement);
+    createCanvas(canvasDomElement: HTMLElement, canvasEditModeCanvas?: HTMLElement) {
+        this.elementManager.init(canvasDomElement, canvasEditModeCanvas);
     }
 
     addElement2Canvas(
         type: string,
         properties: Record<string, string> | undefined = undefined,
         wrapperHtml: [string, string] | undefined = undefined,
+        wrapperHtmlEditMode: [string, string] | undefined = undefined,
         id: string | undefined = undefined,
     ) {
-        this.elementManager.addElement({ id, type, properties, wrapperHtml });
+        this.elementManager.addElement({ id, type, properties, wrapperHtml, wrapperHtmlEditMode });
+    }
+
+    setCanvasEditMode(bool: boolean) {
+        this.elementManager.setEditMode(bool);
+    }
+
+    modifyElement(id: string, elemenetProperties: Record<string, string>) {
+        this.elementManager.modifyElement(id, elemenetProperties);
+    }
+
+    deleteElement(id: string) {
+        this.elementManager.deleteElement(id);
     }
 }
 

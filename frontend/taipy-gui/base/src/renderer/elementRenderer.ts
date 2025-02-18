@@ -9,25 +9,28 @@ export class ElementRenderer {
         this.taipyApp = taipyApp;
     }
 
-    async render(elements: Element[], force: boolean = false): Promise<string> {
+    async render(elements: Element[], editMode: boolean, force: boolean = false): Promise<string> {
         const renderedElements = await Promise.all(
             elements.map(async (element) => {
-                if (force || !element.jsx) {
-                    element.jsx = await this.renderSingle(element);
+                const jsxMode = editMode ? "editModeJsx" : "jsx";
+                const wrapperHtml = editMode ? element.wrapperHtmlEditMode : element.wrapperHtml;
+                if (force || !element[jsxMode]) {
+                    element[jsxMode] = await this.renderSingle(element, editMode);
                 }
-                return `${element.wrapperHtml?.[0] || ""}${element.jsx}${element.wrapperHtml?.[1] || ""}`;
+                return `${wrapperHtml?.[0] || ""}${element[jsxMode]}${wrapperHtml?.[1] || ""}`;
             }),
         );
         return renderedElements.join("\n");
     }
 
-    async renderSingle(element: Element): Promise<string> {
+    async renderSingle(element: Element, editMode: boolean): Promise<string> {
         try {
+            const id = element.id + "-el" + (editMode ? "" : "-active");
             const result = await axios.post<{ jsx: string }>(
                 `${this.taipyApp.getBaseUrl()}taipy-element-jsx?client_id=${this.taipyApp.clientId}`,
                 {
                     type: element.type,
-                    properties: { ...element.properties, id: element.id },
+                    properties: { ...element.properties, id, active: !editMode },
                     context: this.taipyApp.getContext(),
                 },
             );

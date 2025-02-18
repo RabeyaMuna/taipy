@@ -32,8 +32,13 @@ import {
 } from "../../../../src/context/taipyReducers";
 import useStore from "../../store";
 
-const TaipyRendered = () => {
-    const jsx = useStore((state) => state.jsx);
+interface TaipyRenderedProps {
+    editMode?: boolean;
+}
+
+const TaipyRendered = (props: TaipyRenderedProps) => {
+    const { editMode } = props;
+    const jsx = useStore((state) => (editMode ? state.editModeJsx : state.jsx));
     const module = useStore((state) => state.module);
     const app = useStore((state) => state.app);
     const pageState = useMemo(() => {
