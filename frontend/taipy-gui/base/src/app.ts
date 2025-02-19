@@ -10,7 +10,7 @@ import { TaipyWsAdapter, WsAdapter } from "./wsAdapter";
 import { WsMessageType } from "../../src/context/wsUtils";
 import { getBase } from "./utils";
 import { CookieHandler } from "./cookieHandler";
-import { ElementManager } from "./renderer/elementManager";
+import { ElementAction, ElementManager } from "./renderer/elementManager";
 import useStore from "./store";
 
 export type OnInitHandler = (taipyApp: TaipyApp) => void;
@@ -19,7 +19,7 @@ export type OnNotifyHandler = (taipyApp: TaipyApp, type: string, message: string
 export type OnReloadHandler = (taipyApp: TaipyApp, removedChanges: ModuleData) => void;
 export type OnWsMessage = (taipyApp: TaipyApp, event: string, payload: unknown) => void;
 export type OnWsStatusUpdate = (taipyApp: TaipyApp, messageQueue: string[]) => void;
-export type OnCanvasReRender = (taipyApp: TaipyApp, isEditMode: boolean) => void;
+export type OnCanvasReRender = (taipyApp: TaipyApp, isEditMode: boolean, elementActions?: ElementAction) => void;
 export type OnEvent =
     | OnInitHandler
     | OnChangeHandler
@@ -175,14 +175,15 @@ export class TaipyApp {
     }
 
     set onCanvasReRender(handler: OnCanvasReRender | undefined) {
-        if (handler !== undefined && handler?.length !== 2) {
-            throw new Error("onCanvasReRender() requires two parameter");
+        if (handler !== undefined && handler?.length !== 3) {
+            throw new Error("onCanvasReRender() requires three parameter");
         }
         this._onCanvasReRender = handler;
     }
 
     onCanvasReRenderEvent() {
-        this.onCanvasReRender && this.onCanvasReRender(this, useStore.getState().editMode);
+        this.onCanvasReRender &&
+            this.onCanvasReRender(this, useStore.getState().editMode, this.elementManager.getElementActionFromQueue());
     }
 
     // Utility methods

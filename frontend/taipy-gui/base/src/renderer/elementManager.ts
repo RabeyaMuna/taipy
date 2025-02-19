@@ -14,10 +14,23 @@ export interface Element {
     editModeJsx?: string;
 }
 
+export enum ElementActionEnum {
+    Add = "add",
+    Modify = "modify",
+    Delete = "delete",
+}
+
+export interface ElementAction {
+    action: ElementActionEnum;
+    id: string;
+    payload?: Record<string, string>;
+}
+
 export class ElementManager {
     _elements: Element[];
     _renderer: ElementRenderer;
     _canvas: TaipyCanvas;
+    _elementActions: ElementAction[];
     taipyApp: TaipyApp;
 
     constructor(taipyApp: TaipyApp) {
@@ -25,6 +38,7 @@ export class ElementManager {
         this._elements = [];
         this._renderer = new ElementRenderer(taipyApp);
         this._canvas = new TaipyCanvas(taipyApp);
+        this._elementActions = [];
     }
 
     init(canvasDomElement: HTMLElement, canvasEditModeCanvas?: HTMLElement) {
@@ -62,6 +76,7 @@ export class ElementManager {
             return;
         }
         this._elements.push(element);
+        this._elementActions.push({ action: ElementActionEnum.Add, id: element.id });
         this.render();
     }
 
@@ -73,11 +88,17 @@ export class ElementManager {
             const properties = { ...el.properties, ...elementProperties };
             return { ...el, properties, jsx: "", editModeJsx: "" };
         });
+        this._elementActions.push({ action: ElementActionEnum.Modify, id, payload: elementProperties });
         this.render();
     }
 
     deleteElement(id: string) {
         this._elements = this._elements.filter((el) => el.id !== id);
+        this._elementActions.push({ action: ElementActionEnum.Delete, id });
         this.render();
+    }
+
+    getElementActionFromQueue() {
+        return this._elementActions.shift();
     }
 }
