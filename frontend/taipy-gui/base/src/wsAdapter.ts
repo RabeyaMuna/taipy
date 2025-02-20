@@ -34,9 +34,10 @@ export class TaipyWsAdapter extends WsAdapter {
                 for (const muPayload of message.payload as [MultipleUpdatePayload]) {
                     const encodedName = muPayload.name;
                     const { value } = muPayload.payload;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     if (value && (value as any).__taipy_refresh !== undefined) {
                         // refresh all requested data for this encodedName var
-                        const requestDataOptions = taipyApp.variableData?._requested_data[encodedName];
+                        const requestDataOptions = taipyApp.variableData?.getRequestedData()[encodedName];
                         for (const dataKey in requestDataOptions) {
                             const requestDataEntry = requestDataOptions[dataKey];
                             const { options } = requestDataEntry;
@@ -47,10 +48,10 @@ export class TaipyWsAdapter extends WsAdapter {
                     const dataKey = getRequestedDataKey(muPayload.payload);
                     taipyApp.variableData?.update(encodedName, value, dataKey);
                     // call the callback if it exists for request data
-                    if (dataKey && (encodedName in taipyApp._rdc && dataKey in taipyApp._rdc[encodedName])) {
-                        const cb = taipyApp._rdc[encodedName]?.[dataKey];
+                    if (dataKey && encodedName in taipyApp.rdc && dataKey in taipyApp.rdc[encodedName]) {
+                        const cb = taipyApp.rdc[encodedName]?.[dataKey];
                         cb(taipyApp, encodedName, dataKey, value);
-                        delete taipyApp._rdc[encodedName][dataKey];
+                        delete taipyApp.rdc[encodedName][dataKey];
                     }
                     taipyApp.onChangeEvent(encodedName, value, dataKey);
                 }
@@ -101,8 +102,8 @@ export class TaipyWsAdapter extends WsAdapter {
                 taipyApp.onNotifyEvent(payload.atype, payload.message);
             } else if (message.type === "ACK") {
                 const { id } = message as unknown as Record<string, string>;
-                taipyApp._ackList = taipyApp._ackList.filter((v) => v !== id);
-                taipyApp.onWsStatusUpdateEvent(taipyApp._ackList);
+                taipyApp.ackList = taipyApp.ackList.filter((v) => v !== id);
+                taipyApp.onWsStatusUpdateEvent(taipyApp.ackList);
             }
             this.postWsMessageProcessing(message, taipyApp);
             return true;

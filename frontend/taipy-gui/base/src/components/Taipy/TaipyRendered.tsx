@@ -11,40 +11,30 @@
  * specific language governing permissions and limitations under the License.
  */
 
-import React, { ComponentType, useEffect, useMemo, useReducer } from "react";
-import { ErrorBoundary } from "react-error-boundary";
-import JsxParser from "react-jsx-parser";
+import React, { useEffect, useReducer } from "react";
 
 import { ThemeProvider } from "@mui/system";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 
-import { PageContext, TaipyContext } from "../../../../src/context/taipyContext";
-import { emptyArray } from "../../../../src/utils";
-import ErrorFallback from "../../../../src/utils/ErrorBoundary";
-import { getRegisteredComponents } from "../../../../src/components/Taipy";
-import { renderError, unregisteredRender } from "../../../../src/components/Taipy/Unregistered";
+import { TaipyContext } from "../../../../src/context/taipyContext";
 import {
     INITIAL_STATE,
     initializeWebSocket,
     taipyInitialize,
     taipyReducer,
 } from "../../../../src/context/taipyReducers";
-import useStore from "../../store";
+import useStore, { getElementAction } from "../../store";
+import TaipyElement from "./TaipyElement";
 
 interface TaipyRenderedProps {
-    editMode?: boolean;
+    editMode: boolean;
 }
 
 const TaipyRendered = (props: TaipyRenderedProps) => {
-    const { editMode } = props;
-    const jsx = useStore((state) => (editMode ? state.editModeJsx : state.jsx));
-    const module = useStore((state) => state.module);
-    const app = useStore((state) => state.app);
-    const pageState = useMemo(() => {
-        return { jsx, module };
-    }, [jsx, module]);
     const [state, dispatch] = useReducer(taipyReducer, INITIAL_STATE, taipyInitialize);
+    const elements = useStore((state) => state.elements);
+    const app = useStore((state) => state.app);
     const themeClass = "taipy-" + state.theme.palette.mode;
 
     useEffect(() => {
@@ -62,28 +52,16 @@ const TaipyRendered = (props: TaipyRenderedProps) => {
     }, [themeClass]);
 
     useEffect(() => {
-        app && app.onCanvasReRenderEvent();
-    }, [jsx, app]);
+        app && app.onCanvasReRenderEvent(props.editMode, getElementAction(props.editMode));
+    }, [elements, app, props.editMode]);
 
     return (
         <TaipyContext.Provider value={{ state, dispatch }}>
             <ThemeProvider theme={state.theme}>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <PageContext.Provider value={pageState}>
-                        <ErrorBoundary FallbackComponent={ErrorFallback}>
-                            <JsxParser
-                                disableKeyGeneration={true}
-                                bindings={state.data}
-                                components={getRegisteredComponents() as Record<string, ComponentType>}
-                                jsx={pageState.jsx}
-                                renderUnrecognized={unregisteredRender}
-                                allowUnknownElements={false}
-                                renderError={renderError}
-                                blacklistedAttrs={emptyArray}
-                                renderInWrapper={false}
-                            />
-                        </ErrorBoundary>
-                    </PageContext.Provider>
+                    {elements.map((element) => (
+                        <TaipyElement element={element} key={element.id} editMode={props.editMode} />
+                    ))}
                 </LocalizationProvider>
             </ThemeProvider>
         </TaipyContext.Provider>
