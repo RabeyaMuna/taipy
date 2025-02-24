@@ -10,7 +10,7 @@ interface TaipyGuiBaseState {
     setEditMode: (newEditMode: boolean) => void;
     setApp: (newApp: TaipyApp) => void;
     addElement: (newElement: Element) => void;
-    editElement: (id: string, payload: Element["properties"]) => void;
+    editElement: (id: string, payload: Record<string, unknown>) => void;
     resetMainCanvas: () => void;
     deleteElement: (id: string) => void;
     addElementAction: (action: ElementAction) => void;
@@ -25,7 +25,7 @@ export const useStore = create<TaipyGuiBaseState>()((set) => ({
     setEditMode: (newEditMode: boolean) => set(() => ({ editMode: newEditMode })),
     setApp: (newApp: TaipyApp) => set(() => ({ app: newApp })),
     addElement: (newElement: Element) => set((state) => ({ elements: [...state.elements, newElement] })),
-    editElement: (id: string, payload: Element["properties"]) =>
+    editElement: (id: string, payload: Record<string, unknown>) =>
         set((state) => ({
             elements: state.elements.map((element) => (element.id === id ? { ...element, ...payload } : element)),
         })),
@@ -43,8 +43,10 @@ export const getStore = () => useStore.getState();
 
 export const isElementExisted = (id: string) => getStore().elements.find((element) => element.id === id) !== undefined;
 
-export const getElementAction = (editMode: boolean) => {
-    const action = getStore().elementActions.find((a) => a.editMode === editMode);
+export const getElementAction = (elementAction: ElementAction) => {
+    const action = getStore().elementActions.find(
+        (a) => elementAction.id === a.id && elementAction.action === a.action && elementAction.editMode == a.editMode,
+    );
     if (action) {
         getStore().deleteElementAction(action);
     }

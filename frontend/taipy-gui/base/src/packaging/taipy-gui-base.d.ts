@@ -125,7 +125,7 @@ declare class ElementManager {
         wrapper: CanvasRenderConfig["wrapper"],
         properties?: Element["properties"] | undefined,
     ): void;
-    modifyElement(id: string, elementProperties: Element["properties"]): void;
+    modifyElement(id: string, elementProperties: Record<string, unknown>): void;
     deleteElement(id: string): void;
 }
 export type OnInitHandler = (taipyApp: TaipyApp) => void;
@@ -216,7 +216,7 @@ export declare class TaipyApp {
         properties?: Element["properties"] | undefined,
     ): void;
     setCanvasEditMode(bool: boolean): void;
-    modifyElement(id: string, elemenetProperties: Element["properties"]): void;
+    modifyElement(id: string, modifiedRecord: Record<string, unknown>): void;
     deleteElement(id: string): void;
 }
 export declare const createApp: (

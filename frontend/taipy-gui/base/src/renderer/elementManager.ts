@@ -81,11 +81,11 @@ export class ElementManager {
             return;
         }
         // modify element if existed
-        getStore().addElementAction({ action: ElementActionEnum.Add, id, payload: properties });
+        getStore().addElementAction({ action: ElementActionEnum.Modify, id, payload: properties });
         getStore().editElement(id, { ...renderConfig, properties });
     }
 
-    modifyElement(id: string, elementProperties: Element["properties"]) {
+    modifyElement(id: string, elementProperties: Record<string, unknown>) {
         getStore().addElementAction({ action: ElementActionEnum.Modify, id, payload: elementProperties });
         getStore().editElement(id, elementProperties);
     }

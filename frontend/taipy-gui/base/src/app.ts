@@ -333,8 +333,12 @@ export class TaipyApp {
         this.elementManager.setEditMode(bool);
     }
 
-    modifyElement(id: string, elemenetProperties: Element["properties"]) {
-        this.elementManager.modifyElement(id, elemenetProperties);
+    modifyElement(id: string, modifiedRecord: Record<string, unknown>) {
+        if ("id" in modifiedRecord) {
+            console.error(`Error modifying element '${id}'. Cannot modify id of an existing element.`);
+            return;
+        }
+        this.elementManager.modifyElement(id, modifiedRecord);
     }
 
     deleteElement(id: string) {

@@ -24,7 +24,7 @@ import {
     taipyInitialize,
     taipyReducer,
 } from "../../../../src/context/taipyReducers";
-import useStore, { getElementAction } from "../../store";
+import useStore from "../../store";
 import TaipyElement from "./TaipyElement";
 
 interface TaipyRenderedProps {
@@ -34,7 +34,6 @@ interface TaipyRenderedProps {
 const TaipyRendered = (props: TaipyRenderedProps) => {
     const [state, dispatch] = useReducer(taipyReducer, INITIAL_STATE, taipyInitialize);
     const elements = useStore((state) => state.elements);
-    const app = useStore((state) => state.app);
     const themeClass = "taipy-" + state.theme.palette.mode;
 
     useEffect(() => {
@@ -50,10 +49,6 @@ const TaipyRendered = (props: TaipyRenderedProps) => {
         });
         document.body.className = classes.join(" ");
     }, [themeClass]);
-
-    useEffect(() => {
-        app && app.onCanvasReRenderEvent(props.editMode, getElementAction(props.editMode));
-    }, [elements, app, props.editMode]);
 
     return (
         <TaipyContext.Provider value={{ state, dispatch }}>

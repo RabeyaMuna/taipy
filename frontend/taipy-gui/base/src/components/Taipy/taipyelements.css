@@ -1,0 +1,11 @@
+.taipy-designer-widget {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.taipy-slider {
+    width: 100% !important;
+    height: 100% !important;
+    padding-left: 10px;
+    padding-right: 10px;
+}

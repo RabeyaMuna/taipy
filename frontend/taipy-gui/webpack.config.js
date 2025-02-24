@@ -171,54 +171,6 @@ module.exports = (env, options) => {
             ],
     },
     {
-        mode: options.mode,
-        target: "web",
-        entry: {
-            "default": "./base/src/index.ts",
-        },
-        output: {
-            filename: (arg) => {
-                if (arg.chunk.name === "default") {
-                    return "taipy-gui-base.js";
-                }
-                return "[name].taipy-gui-base.js";
-            },
-            chunkFilename: "[name].taipy-gui-base.js",
-            path: webAppPath,
-            globalObject: "this",
-            library: {
-                name: taipyGuiBaseBundleName,
-                type: "umd",
-            },
-        },
-        optimization: {
-            splitChunks: {
-                chunks: 'all',
-                name: "shared",
-            },
-        },
-        module: {
-            rules: [
-                {
-                    test: /\.tsx?$/,
-                    use: "ts-loader",
-                    exclude: /node_modules/,
-                },
-            ],
-        },
-        resolve: {
-            extensions: [".tsx", ".ts", ".js", ".tsx"],
-        },
-        // externals: {
-        //     "socket.io-client": {
-        //         commonjs: "socket.io-client",
-        //         commonjs2: "socket.io-client",
-        //         amd: "socket.io-client",
-        //         root: "_",
-        //     },
-        // },
-    },
-    {
         entry: "./base/src/exports.ts",
         output: {
             filename: "taipy-gui-base.js",
@@ -235,6 +187,10 @@ module.exports = (env, options) => {
                     test: /\.tsx?$/,
                     use: "ts-loader",
                     exclude: /node_modules/,
+                },
+                {
+                    test: /\.css$/,
+                    use: ["style-loader", "css-loader"],
                 },
             ],
         },
