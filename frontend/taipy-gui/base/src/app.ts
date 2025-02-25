@@ -10,7 +10,7 @@ import { TaipyWsAdapter, WsAdapter } from "./wsAdapter";
 import { WsMessageType } from "../../src/context/wsUtils";
 import { getBase } from "./utils";
 import { CookieHandler } from "./cookieHandler";
-import { CanvasRenderConfig, Element, ElementAction, ElementManager } from "./renderer/elementManager";
+import { CanvasRenderConfig, Element, ElementAction, ElementManager } from "./element/elementManager";
 
 export type OnInitHandler = (taipyApp: TaipyApp) => void;
 export type OnChangeHandler = (taipyApp: TaipyApp, encodedName: string, value: unknown, dataEventKey?: string) => void;
@@ -315,8 +315,12 @@ export class TaipyApp {
     }
 
     // ElementManager API
-    createCanvas(canvasDomElement: HTMLElement, canvasEditModeCanvas?: HTMLElement) {
-        this.elementManager.init(canvasDomElement, canvasEditModeCanvas);
+    createCanvas(
+        canvasDomElement: HTMLElement,
+        canvasEditModeCanvas?: HTMLElement,
+        propertyEditorElement?: HTMLElement,
+    ) {
+        this.elementManager.init(canvasDomElement, canvasEditModeCanvas, propertyEditorElement);
     }
 
     addElement2Canvas(
@@ -343,6 +347,14 @@ export class TaipyApp {
 
     deleteElement(id: string) {
         this.elementManager.deleteElement(id);
+    }
+
+    openPropertyEditor(id: string) {
+        this.elementManager.openPropertyEditor(id);
+    }
+
+    closePropertyEditor() {
+        this.elementManager.closePropertyEditor();
     }
 }
 

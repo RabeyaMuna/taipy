@@ -3,6 +3,7 @@ import { createRoot, Root } from "react-dom/client";
 import { getStore } from "../store";
 import { createElement } from "react";
 import TaipyRendered from "../components/Taipy/TaipyRendered";
+import TaipyElementEditor from "../components/Taipy/TaipyElementEditor";
 
 export class TaipyCanvas {
     taipyApp: TaipyApp;
@@ -13,7 +14,7 @@ export class TaipyCanvas {
         this.taipyApp = taipyApp;
     }
 
-    init(canvasElement: HTMLElement, canvasEditModeElement?: HTMLElement) {
+    init(canvasElement: HTMLElement, canvasEditModeElement?: HTMLElement, propertyEditorElement?: HTMLElement) {
         if (!canvasElement) {
             console.error("Root element not found!");
             return;
@@ -23,6 +24,10 @@ export class TaipyCanvas {
         if (canvasEditModeElement) {
             this.initCanvas(canvasEditModeElement, true);
             getStore().setEditMode(true);
+            if (propertyEditorElement) {
+                const editorRoot = createRoot(propertyEditorElement);
+                editorRoot.render(createElement(TaipyElementEditor));
+            }
         }
     }
 

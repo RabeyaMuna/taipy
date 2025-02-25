@@ -38,8 +38,8 @@ export class ElementManager {
         this.#canvas = new TaipyCanvas(taipyApp);
     }
 
-    init(canvasDomElement: HTMLElement, canvasEditModeCanvas?: HTMLElement) {
-        this.#canvas.init(canvasDomElement, canvasEditModeCanvas);
+    init(canvasDomElement: HTMLElement, canvasEditModeCanvas?: HTMLElement, propertyEditorElement?: HTMLElement) {
+        this.#canvas.init(canvasDomElement, canvasEditModeCanvas, propertyEditorElement);
     }
 
     setEditMode(editMode: boolean) {
@@ -81,7 +81,7 @@ export class ElementManager {
             return;
         }
         // modify element if existed
-        getStore().addElementAction({ action: ElementActionEnum.Modify, id, payload: properties });
+        getStore().addElementAction({ action: ElementActionEnum.Add, id, payload: properties });
         getStore().editElement(id, { ...renderConfig, properties });
     }
 
@@ -93,5 +93,13 @@ export class ElementManager {
     deleteElement(id: string) {
         getStore().addElementAction({ action: ElementActionEnum.Delete, id });
         getStore().deleteElement(id);
+    }
+
+    openPropertyEditor(id: string) {
+        getStore().setSelectedElement(getStore().elements.find((element) => element.id === id));
+    }
+
+    closePropertyEditor() {
+        getStore().setSelectedElement(undefined);
     }
 }

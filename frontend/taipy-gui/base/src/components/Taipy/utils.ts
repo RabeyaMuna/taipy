@@ -1,6 +1,6 @@
 import axios from "axios";
 import { TaipyApp } from "../../app";
-import { Element } from "../../renderer/elementManager";
+import { Element } from "../../element/elementManager";
 
 export const getJsx = async (taipyApp: TaipyApp, element: Element, editMode: boolean): Promise<string> => {
     try {

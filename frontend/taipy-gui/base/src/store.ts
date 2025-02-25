@@ -1,12 +1,13 @@
 import { create } from "zustand";
 import { TaipyApp } from "./app";
-import { Element, ElementAction } from "./renderer/elementManager";
+import { Element, ElementAction } from "./element/elementManager";
 
 interface TaipyGuiBaseState {
     editMode: boolean;
     app?: TaipyApp;
     elements: Element[];
     elementActions: ElementAction[];
+    selectedElement?: Element;
     setEditMode: (newEditMode: boolean) => void;
     setApp: (newApp: TaipyApp) => void;
     addElement: (newElement: Element) => void;
@@ -15,6 +16,7 @@ interface TaipyGuiBaseState {
     deleteElement: (id: string) => void;
     addElementAction: (action: ElementAction) => void;
     deleteElementAction: (action: ElementAction) => void;
+    setSelectedElement: (action: Element | undefined) => void;
 }
 
 export const useStore = create<TaipyGuiBaseState>()((set) => ({
@@ -22,6 +24,7 @@ export const useStore = create<TaipyGuiBaseState>()((set) => ({
     app: undefined,
     elements: [],
     elementActions: [],
+    selectedElement: undefined,
     setEditMode: (newEditMode: boolean) => set(() => ({ editMode: newEditMode })),
     setApp: (newApp: TaipyApp) => set(() => ({ app: newApp })),
     addElement: (newElement: Element) => set((state) => ({ elements: [...state.elements, newElement] })),
@@ -37,6 +40,7 @@ export const useStore = create<TaipyGuiBaseState>()((set) => ({
         set((state) => ({ elementActions: [...state.elementActions, { ...action, editMode: state.editMode }] })),
     deleteElementAction: (action: ElementAction) =>
         set((state) => ({ elementActions: state.elementActions.filter((a) => a !== action) })),
+    setSelectedElement: (element: Element | undefined) => set(() => ({ selectedElement: element })),
 }));
 
 export const getStore = () => useStore.getState();

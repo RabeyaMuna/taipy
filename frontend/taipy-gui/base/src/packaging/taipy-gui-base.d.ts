@@ -116,7 +116,7 @@ declare class ElementManager {
     #private;
     taipyApp: TaipyApp;
     constructor(taipyApp: TaipyApp);
-    init(canvasDomElement: HTMLElement, canvasEditModeCanvas?: HTMLElement): void;
+    init(canvasDomElement: HTMLElement, canvasEditModeCanvas?: HTMLElement, propertyEditorElement?: HTMLElement): void;
     setEditMode(editMode: boolean): void;
     addElement(
         type: string,
@@ -127,6 +127,8 @@ declare class ElementManager {
     ): void;
     modifyElement(id: string, elementProperties: Record<string, unknown>): void;
     deleteElement(id: string): void;
+    openPropertyEditor(id: string): void;
+    closePropertyEditor(): void;
 }
 export type OnInitHandler = (taipyApp: TaipyApp) => void;
 export type OnChangeHandler = (taipyApp: TaipyApp, encodedName: string, value: unknown, dataEventKey?: string) => void;
@@ -207,7 +209,11 @@ export declare class TaipyApp {
     getPageMetadata(): Record<string, unknown>;
     getWsStatus(): string[];
     getBaseUrl(): string;
-    createCanvas(canvasDomElement: HTMLElement, canvasEditModeCanvas?: HTMLElement): void;
+    createCanvas(
+        canvasDomElement: HTMLElement,
+        canvasEditModeCanvas?: HTMLElement,
+        propertyEditorElement?: HTMLElement,
+    ): void;
     addElement2Canvas(
         type: string,
         id: string,
@@ -218,6 +224,8 @@ export declare class TaipyApp {
     setCanvasEditMode(bool: boolean): void;
     modifyElement(id: string, modifiedRecord: Record<string, unknown>): void;
     deleteElement(id: string): void;
+    openPropertyEditor(id: string): void;
+    closePropertyEditor(): void;
 }
 export declare const createApp: (
     onInit?: OnInitHandler,

@@ -4,7 +4,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import JsxParser from "react-jsx-parser";
 
 import { PageContext, TaipyContext } from "../../../../src/context/taipyContext";
-import { Element, ElementActionEnum } from "../../renderer/elementManager";
+import { Element, ElementActionEnum } from "../../element/elementManager";
 import useStore, { getElementAction } from "../../store";
 import { getJsx } from "./utils";
 import { emptyArray } from "../../../../src/utils";
