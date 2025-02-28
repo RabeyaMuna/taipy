@@ -345,6 +345,10 @@ export class TaipyApp {
         this.elementManager.modifyElement(id, modifiedRecord);
     }
 
+    modifyElementProperties(id: string, properties: Record<string, unknown>) {
+        this.elementManager.modifyElementProperties(id, properties);
+    }
+
     deleteElement(id: string) {
         this.elementManager.deleteElement(id);
     }

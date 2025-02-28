@@ -61,6 +61,9 @@ export class ElementManager {
         wrapper: CanvasRenderConfig["wrapper"],
         properties: Element["properties"] | undefined = undefined,
     ) {
+        if (properties === undefined) {
+            properties = {};
+        }
         const root = document.getElementById(rootId);
         if (!root) {
             console.error(`Root element with id '${rootId}' not found!`);
@@ -81,13 +84,22 @@ export class ElementManager {
             return;
         }
         // modify element if existed
-        getStore().addElementAction({ action: ElementActionEnum.Add, id, payload: properties });
-        getStore().editElement(id, { ...renderConfig, properties });
+        const editedProperties = {
+            ...getStore().elements.find((element) => element.id === id)?.properties,
+            ...properties,
+        };
+        getStore().addElementAction({ action: ElementActionEnum.Add, id, payload: editedProperties });
+        getStore().editElement(id, { ...renderConfig, properties: editedProperties });
     }
 
     modifyElement(id: string, elementProperties: Record<string, unknown>) {
         getStore().addElementAction({ action: ElementActionEnum.Modify, id, payload: elementProperties });
         getStore().editElement(id, elementProperties);
+    }
+
+    modifyElementProperties(id: string, payload: Record<string, unknown>) {
+        const properties = { ...getStore().elements.find((element) => element.id === id)?.properties, ...payload };
+        this.modifyElement(id, { properties });
     }
 
     deleteElement(id: string) {
