@@ -11,9 +11,12 @@ const darkTheme = createTheme({
 });
 
 const TaipyElementEditor = () => {
+    // element from the selected item will not be updated since it is not a reference just a copy
+    // -> need to use the elemnent from the main entry
     const elementId = useStore((state) => state.selectedElement?.id);
     const elements = useStore((state) => state.elements);
     const element = useMemo(() => elements.find((e) => e.id === elementId), [elementId, elements]);
+
     const app = useStore((state) => state.app);
     const [modifiedProperties, setModifiedProperties] = useState<Record<string, unknown>>({});
     const elementProperties = useMemo(() => element?.properties, [element?.properties]);
