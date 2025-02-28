@@ -209,7 +209,8 @@
                         "name": "step",
                         "type": "Union[int,float]",
                         "default_value": "1",
-                        "doc": "The step value, which is the gap between two consecutive values the slider set. It is a good practice to have (<i>max</i>-<i>min</i>) being divisible by <i>step</i>.<br/>This property is ignored when <i>lov</i> is defined."
+                        "doc": "The step value, which is the gap between two consecutive values the slider set. It is a good practice to have (<i>max</i>-<i>min</i>) being divisible by <i>step</i>.<br/>This property is ignored when <i>lov</i> is defined.",
+                        "designer_input_types": ["number"]
                     },
                     {
                         "name": "text_anchor",
@@ -1954,7 +1955,8 @@
                             ["state", "State"],
                             ["var_name", "str"],
                             ["value", ""]
-                        ]
+                        ],
+                        "designer_input_types": ["functionbinding"]
                     }
                 ]
             }

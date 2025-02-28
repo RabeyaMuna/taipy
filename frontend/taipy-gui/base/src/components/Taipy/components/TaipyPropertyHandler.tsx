@@ -37,7 +37,7 @@ const inlineElementTypeComponenetMap: Record<string, React.FC<TaipyElementInput>
 const tooltipPropsSx = {
     tooltip: {
         sx: {
-            fontSize: 16,
+            fontSize: 12,
         },
     },
 };
@@ -58,16 +58,16 @@ const TaipyPropertyHandler = (props: TaipyPropertyHandlerProps) => {
     return (
         <>
             <Box display="flex" alignItems="center" sx={{ mt: 3, mb: 1 }}>
-                <Typography fontSize={22} fontWeight={500}>
+                <Typography fontSize={18} fontWeight={500}>
                     {name}
                 </Typography>
                 <Tooltip title={parse(description)} slotProps={tooltipPropsSx}>
-                    <InfoIcon sx={{ ml: 0.5, fontSize: 16 }} />
+                    <InfoIcon sx={{ ml: 0.5, fontSize: 12 }} />
                 </Tooltip>
                 {inputTypes.length > 1 ? (
                     <Tooltip title={"Switch to next input type"} slotProps={tooltipPropsSx}>
                         <IconButton onClick={switchType}>
-                            <ChangeCircleIcon sx={{ ml: 1, fontSize: 25 }} />
+                            <ChangeCircleIcon sx={{ ml: 1, fontSize: 20 }} />
                         </IconButton>
                     </Tooltip>
                 ) : (

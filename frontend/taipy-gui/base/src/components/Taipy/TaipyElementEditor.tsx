@@ -11,10 +11,12 @@ const darkTheme = createTheme({
 });
 
 const TaipyElementEditor = () => {
-    const element = useStore((state) => state.selectedElement);
+    const elementId = useStore((state) => state.selectedElement?.id);
+    const elements = useStore((state) => state.elements);
+    const element = useMemo(() => elements.find((e) => e.id === elementId), [elementId, elements]);
     const app = useStore((state) => state.app);
     const [modifiedProperties, setModifiedProperties] = useState<Record<string, unknown>>({});
-    const elementProperties = useMemo(() => element?.properties, [element]);
+    const elementProperties = useMemo(() => element?.properties, [element?.properties]);
     const [availableProperties, propertyOrder] = useMemo(
         () =>
             element
@@ -51,7 +53,7 @@ const TaipyElementEditor = () => {
     }, [modifiedProperties, elementProperties, defaultProperties]);
 
     // USE_EFFECT
-    // update property selection everytime element property changes
+    // update property selection every time element property changes
     useEffect(() => {
         setModifiedProperties({ ...defaultProperties, ...elementProperties });
     }, [elementProperties, defaultProperties]);
@@ -78,7 +80,7 @@ const TaipyElementEditor = () => {
                 },
                 {},
             );
-            app?.modifyElementProperties(element.id, filteredModifiedProperties);
+            app?.modifyElement(element.id, { properties: filteredModifiedProperties });
         }
     }, [app, modifiedProperties, element]);
 
