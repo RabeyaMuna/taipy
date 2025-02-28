@@ -18,3 +18,27 @@ export const getJsx = async (taipyApp: TaipyApp, element: Element, editMode: boo
         throw new Error(`Failed to render element '${element.type} - ${element.id}': ${error}`);
     }
 };
+
+export const getVarList = (app?: TaipyApp) => {
+    if (!app) {
+        return [];
+    }
+    const varData = app.getDataTree();
+    if (!varData) {
+        return [];
+    }
+    const varDataModule = varData[app.getContext()];
+    return Object.keys(varDataModule)
+        .filter((key: string) => !key.includes("chlkt") && !key.toLowerCase().includes("taipy"))
+        .map((key: string) => [varDataModule[key].encoded_name, key]);
+};
+
+export const getFunctionList = (app?: TaipyApp) => {
+    if (!app) {
+        return [];
+    }
+    return app
+        .getFunctionList()
+        .filter((key: string) => !key.includes("chlkt") && !key.toLowerCase().includes("taipy"))
+        .map((key: string) => [key, key]);
+};

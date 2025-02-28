@@ -9,7 +9,7 @@ const StringInput = (props: TaipyElementInput) => {
     };
     return (
         <Box>
-            <TextField variant="outlined" value={value !== undefined ? value : ""} onChange={inputOnChange} />
+            <TextField variant="outlined" value={value !== undefined ? value : defaultValue} onChange={inputOnChange} />
         </Box>
     );
 };

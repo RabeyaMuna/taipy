@@ -3,7 +3,7 @@ import { TaipyElementInput } from "./TaipyPropertyHandler";
 import { Box, TextField } from "@mui/material";
 
 const ExpressionInput = (props: TaipyElementInput) => {
-    const { value, defaultValue, onChange } = props;
+    const { value, onChange } = props;
     const inputOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         onChange(event.target.value);
     };
