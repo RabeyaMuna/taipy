@@ -30,7 +30,8 @@ export const getVarList = (app?: TaipyApp) => {
     const varDataModule = varData[app.getContext()];
     return Object.keys(varDataModule)
         .filter((key: string) => !key.includes("chlkt") && !key.toLowerCase().includes("taipy"))
-        .map((key: string) => [varDataModule[key].encoded_name, key]);
+        .map((key: string) => [key, key]);
+    // .map((key: string) => [varDataModule[key].encoded_name, key]);
 };
 
 export const getFunctionList = (app?: TaipyApp) => {
