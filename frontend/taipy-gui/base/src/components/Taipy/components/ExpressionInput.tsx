@@ -42,10 +42,17 @@ const ExpressionInput = (props: TaipyElementInput) => {
         monacoInstance.languages.registerCompletionItemProvider(LANGUAGE_ID, {
             triggerCharacters: ["{"],
             provideCompletionItems: (model, position, context) => {
-                const word = model.getWordAtPosition(position);
-                const range = word
-                    ? new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn)
-                    : new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
+                // const word = model.getWordAtPosition(position);
+                // const range = word
+                //     ? new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn)
+                //     : new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
+                const wordUntil = model.getWordUntilPosition(position);
+                const range = new monaco.Range(
+                    position.lineNumber,
+                    wordUntil.startColumn,
+                    position.lineNumber,
+                    wordUntil.endColumn,
+                );
                 const isCurlyTrigger =
                     context.triggerKind === monaco.languages.CompletionTriggerKind.TriggerCharacter &&
                     context.triggerCharacter === "{";
