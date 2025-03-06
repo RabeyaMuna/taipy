@@ -90,7 +90,8 @@
                         "default_property": true,
                         "type": "dynamic(Any)",
                         "default_value": "None",
-                        "doc": "The value represented by this control."
+                        "doc": "The value represented by this control.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "password",
@@ -102,7 +103,8 @@
                         "name": "label",
                         "type": "str",
                         "default_value": "None",
-                        "doc": "The label associated with the input field.<br/>This provides context to the user and improves accessibility."
+                        "doc": "The label associated with the input field.<br/>This provides context to the user and improves accessibility.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "multiline",

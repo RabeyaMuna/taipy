@@ -7,6 +7,7 @@ import parse from "html-react-parser";
 import NumberInput from "./NumberInput";
 import { BindingInput, FunctionBindingInput } from "./BindingInput";
 import ExpressionInput from "./ExpressionInput";
+import StringInput from "./StringInput";
 
 interface TaipyPropertyHandlerProps {
     name: string;
@@ -28,6 +29,7 @@ const elementTypeComponentMap: Record<string, React.FC<TaipyElementInput>> = {
     binding: BindingInput,
     expression: ExpressionInput,
     functionbinding: FunctionBindingInput,
+    string: StringInput,
 };
 
 const inlineElementTypeComponenetMap: Record<string, React.FC<TaipyElementInput>> = {

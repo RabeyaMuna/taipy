@@ -177,7 +177,7 @@ class _Server:
                     )
                     return response
                 try:
-                    return resource_handler.get_resources(path, static_folder, base_url)
+                    return resource_handler.get_resources(path, static_folder, base_url, client_config)
                 except Exception as e:
                     raise RuntimeError("Can't get resources from custom resource handler") from e
             if path == "" or path == "index.html" or "." not in path:
