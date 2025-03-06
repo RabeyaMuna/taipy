@@ -60,9 +60,7 @@ class ResourceHandler(ABC):
         return self.rh_id if self.rh_id != "" else str(id(self))
 
     @abstractmethod
-    def get_resources(
-        self, path: str, taipy_resource_path: str, base_url: str, client_config: t.Dict[str, t.Any]
-    ) -> t.Any:
+    def get_resources(self, path: str, config: t.Dict[str, t.Any]) -> t.Any:
         raise NotImplementedError
 
 

@@ -177,7 +177,15 @@ class _Server:
                     )
                     return response
                 try:
-                    return resource_handler.get_resources(path, static_folder, base_url, client_config)
+                    config = {
+                        "base_url": base_url,
+                        "taipy_resource_path": static_folder,
+                        "config": client_config,
+                        "css_vars": css_vars,
+                        "scripts": scripts,
+                        "styles": styles,
+                    }
+                    return resource_handler.get_resources(path, config)
                 except Exception as e:
                     raise RuntimeError("Can't get resources from custom resource handler") from e
             if path == "" or path == "index.html" or "." not in path:
