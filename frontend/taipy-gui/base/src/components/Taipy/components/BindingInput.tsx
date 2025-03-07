@@ -7,7 +7,7 @@ import FormControl from "@mui/material/FormControl";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import { getFunctionList, getVarList } from "../utils";
 
-const common = (props: TaipyElementInput, bindingInfo: string[][]) => {
+const common = (props: TaipyElementInput, bindingInfo: string[][], wrappedCurlyBraces: boolean = true) => {
     const { onChange, value } = props;
     const handleChange = (event: SelectChangeEvent) => {
         if (event.target.value === "") {
@@ -22,7 +22,7 @@ const common = (props: TaipyElementInput, bindingInfo: string[][]) => {
                 <Select value={value !== undefined ? (value as string) : ("" as string)} onChange={handleChange}>
                     <MenuItem value="">None</MenuItem>
                     {bindingInfo.map((item) => (
-                        <MenuItem key={item[0]} value={`{${item[0]}}`}>
+                        <MenuItem key={item[0]} value={wrappedCurlyBraces ? `{${item[0]}}` : item[0]}>
                             {item[1]}
                         </MenuItem>
                     ))}
@@ -44,5 +44,5 @@ export const FunctionBindingInput = (props: TaipyElementInput) => {
     const data = useMemo(() => {
         return getFunctionList(app);
     }, [app]);
-    return common(props, data);
+    return common(props, data, false);
 };

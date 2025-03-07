@@ -8,6 +8,7 @@ import NumberInput from "./NumberInput";
 import { BindingInput, FunctionBindingInput } from "./BindingInput";
 import ExpressionInput from "./ExpressionInput";
 import StringInput from "./StringInput";
+import BooleanInput from "./BooleanInput";
 
 interface TaipyPropertyHandlerProps {
     name: string;
@@ -33,7 +34,7 @@ const elementTypeComponentMap: Record<string, React.FC<TaipyElementInput>> = {
 };
 
 const inlineElementTypeComponenetMap: Record<string, React.FC<TaipyElementInput>> = {
-    boolean: BindingInput,
+    boolean: BooleanInput,
 };
 
 const tooltipPropsSx = {

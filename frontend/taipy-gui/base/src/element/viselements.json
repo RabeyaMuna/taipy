@@ -47,19 +47,22 @@
                         "default_property": true,
                         "type": "dynamic(Union[str,Icon])",
                         "default_value": "\"\"",
-                        "doc": "The label displayed in the button."
+                        "doc": "The label displayed in the button.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "size",
                         "type": "str",
                         "default_value": "\"medium\"",
-                        "doc": "The size of the button. Valid values: \"small\", \"medium\", or \"large\"."
+                        "doc": "The size of the button. Valid values: \"small\", \"medium\", or \"large\".",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "variant",
                         "type": "str",
                         "default_value": "\"outlined\"",
-                        "doc": "The variant of the button. Valid values: \"contained\", \"outlined\", or \"text\"."
+                        "doc": "The variant of the button. Valid values: \"contained\", \"outlined\", or \"text\".",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "on_action",
@@ -69,7 +72,8 @@
                             ["state", "State"],
                             ["id", "str"],
                             ["payload", "dict"]
-                        ]
+                        ],
+                        "designer_input_types": ["functionbinding", "string"]
                     },
                     {
                         "name": "width",
@@ -97,12 +101,13 @@
                         "name": "password",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, the text is obscured, and all characters are displayed as asterisks ('*').<br/>This can be useful for sensitive information such as passwords."
+                        "doc": "If True, the text is obscured, and all characters are displayed as asterisks ('*').<br/>This can be useful for sensitive information such as passwords.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "label",
                         "type": "str",
-                        "default_value": "None",
+                        "default_value": "",
                         "doc": "The label associated with the input field.<br/>This provides context to the user and improves accessibility.",
                         "designer_input_types": ["string"]
                     },
@@ -110,25 +115,29 @@
                         "name": "multiline",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, the input is rendered as a multi-line text area<br/>The default behavior is a single-line input."
+                        "doc": "If True, the input is rendered as a multi-line text area<br/>The default behavior is a single-line input.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "lines_shown",
                         "type": "int",
                         "default_value": "5",
-                        "doc": "The number of lines displayed in the input control when multiline is True."
+                        "doc": "The number of lines displayed in the input control when multiline is True.",
+                        "designer_input_types": ["number"]
                     },
                     {
                         "name": "type",
                         "type": "str",
                         "default_value": "\"text\"",
-                        "doc": "The type of input element, as per <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#input_types\">HTML input types</a>.<br/>This property enforces specific input formats where applicable. Supported values include \"text\", \"tel\", \"email\", \"url\", etc."
+                        "doc": "The type of input element, as per <a href=\"https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#input_types\">HTML input types</a>.<br/>This property enforces specific input formats where applicable. Supported values include \"text\", \"tel\", \"email\", \"url\", etc.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "action_on_blur",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, the <code>on_action</code> callback is triggered when the input control looses keyboard focus (e.g., when the user presses the Tab key). When this happens, the key name for the event (set in the <i>args</i> property of the <i>payload</i> parameter to the callback function) is set to \"Tab\"."
+                        "doc": "If True, the <code>on_action</code> callback is triggered when the input control looses keyboard focus (e.g., when the user presses the Tab key). When this happens, the key name for the event (set in the <i>args</i> property of the <i>payload</i> parameter to the callback function) is set to \"Tab\".",
+                        "designer_input_types": ["boolean"]
                     }
                 ]
             }
@@ -218,24 +227,27 @@
                         "name": "text_anchor",
                         "type": "str",
                         "default_value": "\"bottom\"",
-                        "doc": "When the <i>lov</i> property is used, this property indicates the location of the label.<br/>Possible values are:\n<ul>\n<li>\"bottom\"</li><li>\"top\"</li><li>\"left\"</li><li>\"right\"</li><li>\"none\" (no label is displayed)</li></ul>"
+                        "doc": "When the <i>lov</i> property is used, this property indicates the location of the label.<br/>Possible values are:\n<ul>\n<li>\"bottom\"</li><li>\"top\"</li><li>\"left\"</li><li>\"right\"</li><li>\"none\" (no label is displayed)</li></ul>",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "labels",
                         "type": "Union[bool,dict[str,str]]",
-                        "doc": "The labels for specific points of the slider.<br/>If set to True, this slider uses the labels of the <i>lov</i> if there are any.<br/>If set to a dictionary, the slider uses the dictionary keys as a <i>lov</i> key or index, and the associated value as the label."
+                        "doc": "The labels for specific points of the slider.<br/>If set to True, this slider uses the labels of the <i>lov</i> if there are any.<br/>If set to a dictionary, the slider uses the dictionary keys as a <i>lov</i> key or index, and the associated value as the label.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "continuous",
                         "type": "bool",
                         "default_value": "True",
-                        "doc": "If set to False, the control emits an <code>on_change</code> notification only when the mouse button is released, otherwise notifications are emitted during the cursor movements.<br/>If <i>lov</i> is defined, the default value is False."
+                        "doc": "If set to False, the control emits an <code>on_change</code> notification only when the mouse button is released, otherwise notifications are emitted during the cursor movements.<br/>If <i>lov</i> is defined, the default value is False.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "change_delay",
                         "type": "int",
-                        "default_value": "<i>App config</i>",
-                        "doc": "Minimum time between triggering two <code>on_change</code> callbacks.<br/>The default value is defined at the application configuration level by the <strong>change_delay</strong> configuration option. if None or 0, there's no delay."
+                        "doc": "Minimum time between triggering two <code>on_change</code> callbacks.<br/>The default value is defined at the application configuration level by the <strong>change_delay</strong> configuration option. if None or 0, there's no delay.",
+                        "designer_input_types": ["number"]
                     },
                     {
                         "name": "width",
@@ -252,7 +264,8 @@
                         "name": "orientation",
                         "type": "str",
                         "default_value": "\"horizontal\"",
-                        "doc": "The orientation of the slider.<br/>Valid values are \"horizontal\" or \"vertical\"."
+                        "doc": "The orientation of the slider.<br/>Valid values are \"horizontal\" or \"vertical\".",
+                        "designer_input_types": ["string"]
                     }
                 ]
             }
@@ -1903,7 +1916,8 @@
                         "name": "active",
                         "type": "dynamic(bool)",
                         "default_value": "True",
-                        "doc": "Indicates if this element is active.<br/>If False, the element is disabled, and user interaction is not allowed."
+                        "doc": "Indicates if this element is active.<br/>If False, the element is disabled, and user interaction is not allowed.",
+                        "designer_input_types": ["boolean"]
                     }
                 ]
             }
@@ -1922,25 +1936,27 @@
                     {
                         "name": "lov",
                         "type": "dict[str, Any]",
-                        "doc": "The list of values. See the <a href=\"../../../../../userman/gui/binding/#list-of-values\">section on List of Values</a> for more details."
+                        "doc": "The list of values. See the <a href=\"../../../../../userman/gui/binding/#list-of-values\">section on List of Values</a> for more details.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "adapter",
                         "type": "Union[str, Callable]",
-                        "default_value": "<code>lambda x: str(x)</code>",
-                        "doc": "A function or the name of the function that transforms an element of <i>lov</i> into a <i>tuple(id:str, label:Union[str,Icon])</i>.<br/>The default value is a function that returns the string representation of the <i>lov</i> element."
+                        "doc": "A function or the name of the function that transforms an element of <i>lov</i> into a <i>tuple(id:str, label:Union[str,Icon])</i>.<br/>The default value is a function that returns the string representation of the <i>lov</i> element.",
+                        "designer_input_types": ["functionbinding", "string"]
                     },
                     {
                         "name": "type",
                         "type": "str",
-                        "default_value": "<i>Type name of the first lov element</i>",
-                        "doc": "This property is required if <i>lov</i> contains a non-specific type of data (e.g., a dictionary).<br/>Then:<ul><li><i>value</i> must be of that type</li><li><i>lov</i> must be an iterable containing elements of this type</li><li>The function set to <i>adapter</i> will receive an object of this type.</li></ul><br/>The default value is the type of the first element in <i>lov</i>."
+                        "doc": "This property is required if <i>lov</i> contains a non-specific type of data (e.g., a dictionary).<br/>Then:<ul><li><i>value</i> must be of that type</li><li><i>lov</i> must be an iterable containing elements of this type</li><li>The function set to <i>adapter</i> will receive an object of this type.</li></ul><br/>The default value is the type of the first element in <i>lov</i>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "value_by_id",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If False, the selection value (in <i>value</i>) is the selected element in <i>lov</i>. If set to True, then <i>value</i> is set to the id of the selected element in <i>lov</i>."
+                        "doc": "If False, the selection value (in <i>value</i>) is the selected element in <i>lov</i>. If set to True, then <i>value</i> is set to the id of the selected element in <i>lov</i>.",
+                        "designer_input_types": ["boolean"]
                     }
                 ]
             }
@@ -1958,7 +1974,7 @@
                             ["var_name", "str"],
                             ["value", ""]
                         ],
-                        "designer_input_types": ["functionbinding"]
+                        "designer_input_types": ["functionbinding", "string"]
                     }
                 ]
             }
@@ -1989,7 +2005,8 @@
                         "name": "propagate",
                         "type": "bool",
                         "default_value": "<i>App config</i>",
-                        "doc": "Determines whether the control's value is automatically reflected in the bound application variable.<br/>The default value is defined at the application configuration level by the <strong>propagate</strong> configuration option.<br/>If True, any change to the control's value is immediately reflected in the variable."
+                        "doc": "Determines whether the control's value is automatically reflected in the bound application variable.<br/>The default value is defined at the application configuration level by the <strong>propagate</strong> configuration option.<br/>If True, any change to the control's value is immediately reflected in the variable.",
+                        "designer_input_types": ["boolean"]
                     }
                 ]
             }
@@ -2001,8 +2018,8 @@
                     {
                         "name": "change_delay",
                         "type": "int",
-                        "default_value": "<i>App config</i>",
-                        "doc": "The minimum interval (in milliseconds) between two consecutive calls to the <code>on_change</code> callback.<br/>The default value is defined at the application configuration level by the <strong>change_delay</strong> configuration option.<br/>if None, the delay is set to 300 ms.<br/>If set to -1, the callback is triggered only when the user presses the Enter key."
+                        "doc": "The minimum interval (in milliseconds) between two consecutive calls to the <code>on_change</code> callback.<br/>The default value is defined at the application configuration level by the <strong>change_delay</strong> configuration option.<br/>if None, the delay is set to 300 ms.<br/>If set to -1, the callback is triggered only when the user presses the Enter key.",
+                        "designer_input_types": ["number"]
                     },
                     {
                         "name": "on_action",
@@ -2012,19 +2029,21 @@
                             ["state", "State"],
                             ["id", "str"],
                             ["payload", "dict"]
-                        ]
+                        ],
+                        "designer_input_types": ["functionbinding", "string"]
                     },
                     {
                         "name": "action_keys",
                         "type": "str",
                         "default_value": "\"Enter\"",
-                        "doc": "A semicolon-separated list of keys that can trigger the <code>on_action</code> callback.<br/>Authorized values are Enter, Escape, and function keys F1 to F12."
+                        "doc": "A semicolon-separated list of keys that can trigger the <code>on_action</code> callback.<br/>Authorized values are Enter, Escape, and function keys F1 to F12.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "width",
                         "type": "Union[str,int]",
-                        "default_value": "None",
-                        "doc": "The width of the element, in CSS units."
+                        "doc": "The width of the element, in CSS units.",
+                        "designer_input_types": ["string"]
                     }
                 ]
             }
@@ -2036,22 +2055,26 @@
                     {
                         "name": "id",
                         "type": "str",
-                        "doc": "The identifier assigned to the rendered HTML component.<br/>This can be used in callbacks or to target the element for styling."
+                        "doc": "The identifier assigned to the rendered HTML component.<br/>This can be used in callbacks or to target the element for styling.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "properties",
                         "type": "dict[str, Any]",
-                        "doc": "A dictionary of additional properties that can be set to the element."
+                        "doc": "A dictionary of additional properties that can be set to the element.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "class_name",
                         "type": "dynamic(str)",
-                        "doc": "A space-separated list of CSS class names to be applied to the generated HTML element.<br/>These classes are added to the default <code>taipy-[element_type]</code> class."
+                        "doc": "A space-separated list of CSS class names to be applied to the generated HTML element.<br/>These classes are added to the default <code>taipy-[element_type]</code> class.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "hover_text",
                         "type": "dynamic(str)",
-                        "doc": "The text that is displayed when the user hovers over the element."
+                        "doc": "The text that is displayed when the user hovers over the element.",
+                        "designer_input_types": ["string"]
                     }
                 ]
             }

@@ -96,23 +96,25 @@ const TaipyElementEditor = () => {
     return element ? (
         <ThemeProvider theme={darkTheme}>
             <CssBaseline />
-            <Box>
-                <h2>Properties for {element.type} widget</h2>
+            <Box className="panel--selected--content">
+                <Box>
+                    <h2>Properties for {element.type} widget</h2>
+                </Box>
+                <Box sx={{ my: 2 }}>
+                    {propertyOrder.map((propertyName) => (
+                        <TaipyPropertyHandler
+                            name={propertyName}
+                            value={modifiedProperties[propertyName]}
+                            defaultValue={availableProperties[propertyName].default_value}
+                            onChange={updateModifiedProperties(propertyName)}
+                            inputTypes={availableProperties[propertyName].designer_input_types}
+                            description={availableProperties[propertyName].doc}
+                            key={propertyName}
+                        />
+                    ))}
+                </Box>
             </Box>
-            <Box sx={{ my: 2 }}>
-                {propertyOrder.map((propertyName) => (
-                    <TaipyPropertyHandler
-                        name={propertyName}
-                        value={modifiedProperties[propertyName]}
-                        defaultValue={availableProperties[propertyName].default_value}
-                        onChange={updateModifiedProperties(propertyName)}
-                        inputTypes={availableProperties[propertyName].designer_input_types}
-                        description={availableProperties[propertyName].doc}
-                        key={propertyName}
-                    />
-                ))}
-            </Box>
-            <Box display="flex" alignItems="center" justifyContent="center" sx={{ mt: 3 }}>
+            <Box className="panel--footer" display="flex" alignItems="center" justifyContent="center" sx={{ mt: 3 }}>
                 <Button
                     onClick={resetModifiedProperties}
                     variant="contained"

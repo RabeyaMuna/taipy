@@ -9,7 +9,7 @@ export const getJsx = async (taipyApp: TaipyApp, element: Element, editMode: boo
             `${taipyApp.getBaseUrl()}taipy-element-jsx?client_id=${taipyApp.clientId}`,
             {
                 type: element.type,
-                properties: { ...element.properties, id },
+                properties: { id, ...element.properties },
                 context: taipyApp.getContext(),
             },
         );
