@@ -1327,9 +1327,15 @@ class Gui:
             allow_grouping=False,
         )
 
-    def __send_ws_download(self, content: str, name: str, on_action: str) -> None:
+    def __send_ws_download(self, content: str, name: str, on_action: str, module: str) -> None:
         self.__send_ws(
-            {"type": _WsType.DOWNLOAD_FILE.value, "content": content, "name": name, "onAction": on_action},
+            {
+                "type": _WsType.DOWNLOAD_FILE.value,
+                "content": content,
+                "name": name,
+                "onAction": on_action,
+                "context": module,
+            },
             send_back_only=True,
         )
 
@@ -2152,6 +2158,8 @@ class Gui:
         partial = partials.get(route)
         if partial is None:
             partial = next((p for p in self._config.partials if p._route == route), None)
+            partials[route] = partial
+            _setscopeattr(self, Partial._PARTIALS, partials)
         return partial
 
     # Main binding method (bind in markdown declaration)
@@ -2241,12 +2249,15 @@ class Gui:
                 else _get_expr_var_name(on_action.__name__)
             )
             if on_action_name:
-                self._bind_var_val(on_action_name, on_action)
-                on_action = on_action_name
+                encoded_action_name = self.__var_dir.add_var(on_action_name, self._get_locals_context())
+                self._bind_var_val(encoded_action_name, on_action)
+                on_action = encoded_action_name
             else:
                 _warn("download() on_action is invalid.")
         content_str = self._get_content("Gui.download", content, False)
-        self.__send_ws_download(content_str, str(name), str(on_action) if on_action is not None else "")
+        self.__send_ws_download(
+            content_str, str(name), str(on_action) if on_action is not None else "", self._get_locals_context()
+        )
 
     def _notify(
         self,
