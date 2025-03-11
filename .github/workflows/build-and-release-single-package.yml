@@ -142,25 +142,12 @@ jobs:
       - name: Build Package Structure
         working-directory: ${{ steps.set-variables.outputs.package_dir }}
         run: |
-          python tools/release/build_package_structure.py  ${{ github.event.inputs.target_package }}
-
-      - name: Copy Taipy Logger
-        if: github.event.inputs.target_package == 'common'
-        run: |
-          cp -r taipy/logger/. ${{ steps.set-variables.outputs.package_dir }}/taipy/logger
-
-      - name: Copy _cli folder
-        run: |
-          cp -r taipy/_cli/. ${{ steps.set-variables.outputs.package_dir }}/taipy/_cli
+          python tools/release/build_package_structure.py ${{ github.event.inputs.target_package }}
 
       - name: Build package
         working-directory: ${{ steps.set-variables.outputs.package_dir }}
         run: |
           python -m build
-
-      - name: Rename files
-        working-directory: ${{ steps.set-variables.outputs.package_dir }}
-        run: |
           for file in ./dist/*; do mv "$file" "${file//_/-}"; done
 
       - name: Create tag and release

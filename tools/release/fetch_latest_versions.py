@@ -42,32 +42,43 @@ def fetch_latest_releases_from_github(dev=False, target_version="", target_packa
 
 
 def fetch_latest_releases_from_pypi(dev=False, target_version="", target_package=""):
-    releases = {}
-
-    for pkg in ["common", "core", "gui", "rest", "templates"]:
-        url = f"https://pypi.org/pypi/taipy-{pkg}/json"
+    def retrieve_package_version(package: str, dev: bool) -> str:
+        url = f"https://pypi.org/pypi/{package}/json"
         response = requests.get(url)
         resp_json = response.json()
         versions = list(resp_json["releases"].keys())
         versions.reverse()
+        return next(v for v in versions if dev or ".dev" not in v)
 
-        for ver in versions:
-            if not dev and ".dev" in ver:
-                continue
-            releases[pkg] = ver
-            break
+    releases = {
+        pkg: retrieve_package_version(f"taipy-{pkg}", dev) for pkg in ["common", "core", "gui", "rest", "templates"]
+    }
+    releases["taipy"] = retrieve_package_version("taipy", dev)
     releases[target_package] = target_version
     return releases
 
 
+def usage() -> None:
+    print(f"Usage: {sys.argv[0]} <dev_version> <is_pypi> <target_version> <target_package>")  # noqa: T201
+    print("   <release_type> must be one of 'dev' or 'production'")  # noqa: T201
+    print("   <from_pypi> must be 'true' or 'false', indicating if dependencies should be pulled out from Pypi")  # noqa: T201
+    print("   <target_version> must of the form: <Maj>.<Min>.<Tech>[.dev*]. Target package version")  # noqa: T201
+    print("   <target_package> must be a Taipy package name")  # noqa: T201
+
+
 if __name__ == "__main__":
+    if len(sys.argv) < 5:
+        usage()
+        raise ValueError("Version does not contain suffix .dev")
     is_dev_version = sys.argv[1] == "dev"
     is_pypi = sys.argv[2] == "true"
     target_version = sys.argv[3]
     target_package = sys.argv[4]
+    if target_package.startswith("taipy-"):
+        target_package = target_package[6:]
 
     if is_dev_version and ".dev" not in target_version:
-        raise Exception("Version does not contain suffix .dev")
+        raise ValueError("Version does not contain suffix .dev")
 
     versions = {}
 
