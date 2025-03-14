@@ -472,7 +472,8 @@
                         "default_property": true,
                         "required": true,
                         "type": "indexed(dynamic(Any))",
-                        "doc": "The data object bound to this chart control.<br/>See the section on the <a href=\"#the-data-property\"><i>data</i> property</a> below for more details."
+                        "doc": "The data object bound to this chart control.<br/>See the section on the <a href=\"#the-data-property\"><i>data</i> property</a> below for more details.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "type",
@@ -743,7 +744,8 @@
                         "default_property": true,
                         "required": true,
                         "type": "dynamic(Any)",
-                        "doc": "The data to be represented in this table. This property can be indexed to define other data for comparison."
+                        "doc": "The data to be represented in this table. This property can be indexed to define other data for comparison.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "page_size",

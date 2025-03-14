@@ -55,7 +55,7 @@
     "doc": "typedoc --plugin typedoc-plugin-markdown --excludeNotDocumented --disableSources src/extensions/exports.ts",
     "doc.json": "typedoc --json docs/taipy-gui.json src/extensions/exports.ts",
     "mkdocs": "typedoc --options typedoc-mkdocs.json",
-    "pack-base": "cd ../../taipy/gui/webapp/taipy-gui-base-export && npm pack && mv taipy-gui-base-4.1.0.tgz ../taipy-gui-base.tgz && cd ../ && rm -rf taipy-gui-base-export"
+    "pack-base": "cd ../../taipy/gui/webapp/taipy-gui-base-export && npm pack && mv taipy-gui-base-4.1.0.tgz ../taipy-gui-base.tgz"
   },
   "husky": {
     "hooks": {
