@@ -24,7 +24,7 @@ from common import PACKAGES
 
 def usage() -> None:
     print(f"Usage: {sys.argv[0]} <root_path> <version>")  # noqa: T201
-    print("   Checks that all <package>-<version> archives exist in <root_path>.")  # noqa: T201")
+    print("   Checks that all <package>-<version> archives exist in <root_path>.")  # noqa: T201
 
 
 if __name__ == "__main__":

@@ -25,9 +25,9 @@ from common import PACKAGES, Version
 
 def usage() -> None:
     print(f"Usage: {sys.argv[0]} <path> <release_type> [<version> <branch>]")  # noqa: T201
-    print("   Checks that all <package>-<version> archives exist in <root_path>.")  # noqa: T201"
-    print("   if <path> is 'ALL' then ")  # noqa: T201"
-    print("   <release_type> must be 'dev' or 'production'")  # noqa: T201"
+    print("   Checks that all <package>-<version> archives exist in <root_path>.")  # noqa: T201
+    print("   if <path> is 'ALL' then ")  # noqa: T201
+    print("   <release_type> must be 'dev' or 'production'")  # noqa: T201
 
 
 def __write_version_to_path(base_path: str, version: Version) -> None:
