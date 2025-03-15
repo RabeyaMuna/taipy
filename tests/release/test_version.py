@@ -73,42 +73,42 @@ def test_compatibility():
     # Different major version number
     v1 = Version(major=1, minor=2, patch=3)
     v2 = Version(major=2, minor=2, patch=3)
-    assert not v1.is_compatible(v2)
+    assert not v1.is_compatible(v2), "Major versions differ"
 
     # Different minor version number
     v1 = Version(major=1, minor=2, patch=3)
     v2 = Version(major=1, minor=3, patch=3)
-    assert not v1.is_compatible(v2)
+    assert not v1.is_compatible(v2), "Minor versions differ"
 
     # All the same
     v1 = Version(major=1, minor=2, patch=3)
     v2 = Version(major=1, minor=2, patch=3)
-    assert v1.is_compatible(v2)
+    assert v1.is_compatible(v2), "Identical versions"
 
     # Greater patch number
     v1 = Version(major=1, minor=2, patch=4)
     v2 = Version(major=1, minor=2, patch=3)
-    assert v1.is_compatible(v2)
+    assert v1.is_compatible(v2), "Patch number is greater"
 
     # Smaller patch number
-    v1 = Version(major=1, minor=2, patch=4)
-    v2 = Version(major=1, minor=2, patch=3)
-    assert not v1.is_compatible(v2)
+    v1 = Version(major=1, minor=2, patch=3)
+    v2 = Version(major=1, minor=2, patch=4)
+    assert not v1.is_compatible(v2), "Patch number is smaller"
 
     # Same patch number, extension
     v1 = Version(major=1, minor=2, patch=3, ext="ext")
     v2 = Version(major=1, minor=2, patch=3)
-    assert v1.is_compatible(v2)
+    assert v1.is_compatible(v2), "Same version, extension set"
 
     # Same patch number, no extension
     v1 = Version(major=1, minor=2, patch=3)
     v2 = Version(major=1, minor=2, patch=3, ext="ext")
-    assert not v1.is_compatible(v2)
+    assert not v1.is_compatible(v2), "Same version, no extension is expected"
 
     # Same patch number, different extension
     v1 = Version(major=1, minor=2, patch=3, ext="some_ext")
     v2 = Version(major=1, minor=2, patch=3, ext="another_ext")
-    assert not v1.is_compatible(v2)
+    assert not v1.is_compatible(v2), "Same version, different extensions"
 
 
 def test_bump_ext():
