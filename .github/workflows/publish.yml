@@ -8,6 +8,16 @@ on:
         required: true
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate version input
+        run: |
+          if [[ ! "${{ github.event.inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[a-zA-Z]+[0-9]*)?$ ]]; then
+            echo "❌ Invalid version format. Expected format: M.m.t[.ext]"
+            exit 1
+          fi
+
   test-package:
     timeout-minutes: 20
     runs-on: ubuntu-latest

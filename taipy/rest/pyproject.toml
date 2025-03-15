@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "taipy-rest"
 description = "Library to expose taipy-core REST APIs."
 readme = "package_desc.md"
-requires-python = ">=3.9"
+requires-python = ">=3.9,<3.13"
 license = {text = "Apache License 2.0"}
 authors = [{name = "Avaiga", email = "dev@taipy.io"}]
 keywords = ["taipy-rest"]

@@ -3,17 +3,22 @@ name: Build all taipy packages and release them
 on:
   workflow_dispatch:
     inputs:
-      internal_dep_on_pypi:
-        description: "Point taipy internal dependencies to Pypi? If false it will point to the github .tar.gz release file"
-        default: "false"
+      target_version:
+        description: "Package version"
         required: true
       release_type:
-        description: "The type of release to be made (dev or production)"
+        description: "Release type"
+        required: true
+        type: choice
+        options:
+          - dev
+          - production
         default: "dev"
+      pypi_dependencies:
+        description: "Fetch dependencies from PyPI? False means dependencies will use direct links to release archives stored in GitHub."
         required: true
-      target_version:
-        description: "The version of the package to be released"
-        required: true
+        type: boolean
+        default: false
 
 env:
   NODE_OPTIONS: --max-old-space-size=4096
@@ -22,6 +27,16 @@ permissions:
   contents: write
 
 jobs:
+  check-target-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate target version input
+        run: |
+          if [[ ! "${{ github.event.inputs.target_version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[a-zA-Z]+[0-9]*)?$ ]]; then
+            echo "❌ Invalid target version format. Expected format: M.m.t[.ext]"
+            exit 1
+          fi
+
   fetch-versions:
     runs-on: ubuntu-latest
     outputs:
@@ -35,9 +50,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Extract branch name
+        id: extract_branch
         shell: bash
         run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-        id: extract_branch
 
       - name: Setup Version
         id: version-setup
@@ -64,9 +79,9 @@ jobs:
           node-version: '20'
 
       - name: Extract commit hash
+        id: extract_hash
         shell: bash
         run: echo "HASH=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-        id: extract_hash
 
       - name: Set Build Variables
         id: set-variables
@@ -101,13 +116,13 @@ jobs:
 
       - name: Update setup.requirements.txt
         run: |
-          python tools/release/update_setup_requirements.py taipy-${{ matrix.package }} \
-            ${{needs.fetch-versions.outputs.common_VERSION}} \
-            ${{needs.fetch-versions.outputs.core_VERSION}} \
-            ${{needs.fetch-versions.outputs.gui_VERSION}} \
-            ${{needs.fetch-versions.outputs.rest_VERSION}} \
-            ${{needs.fetch-versions.outputs.templates_VERSION}} \
-            ${{ github.event.inputs.internal_dep_on_pypi }}
+          python tools/release/update_setup_requirements.py ${{ matrix.package }} \
+            ${{ needs.fetch-versions.outputs.common_VERSION }} \
+            ${{ needs.fetch-versions.outputs.core_VERSION }} \
+            ${{ needs.fetch-versions.outputs.gui_VERSION }} \
+            ${{ needs.fetch-versions.outputs.rest_VERSION }} \
+            ${{ needs.fetch-versions.outputs.templates_VERSION }} \
+            ${{ github.event.inputs.pypi_dependencies }}
 
       - name: Copy tools
         run: |
@@ -135,7 +150,7 @@ jobs:
 
       - name: Copy files from tools
         run: |
-          cp -r tools/packages/taipy-${{matrix.package}}/. ${{ steps.set-variables.outputs.package_dir }}
+          cp -r tools/packages/taipy-${{ matrix.package }}/. ${{ steps.set-variables.outputs.package_dir }}
 
       - name: Build Package Structure
         working-directory: ${{ steps.set-variables.outputs.package_dir }}
@@ -151,11 +166,11 @@ jobs:
       - name: Create tag and release
         working-directory: ${{ steps.set-variables.outputs.package_dir }}
         run: |
-           if [ "${{ github.event.inputs.release_type }}" == "dev" ]; then
+          if [ "${{ github.event.inputs.release_type }}" == "dev" ]; then
             gh release create ${{ steps.set-variables.outputs.release_name }} ${{ steps.set-variables.outputs.tar_path }} --target ${{ steps.extract_hash.outputs.HASH }} --prerelease --title ${{ steps.set-variables.outputs.release_name }} --notes "Release Draft ${{ steps.set-variables.outputs.release_name }}"
-           else
+          else
             gh release create ${{ steps.set-variables.outputs.release_name }} ${{ steps.set-variables.outputs.tar_path }} --target ${{ steps.extract_hash.outputs.HASH }} --title ${{ steps.set-variables.outputs.release_name }} --notes "Release ${{ steps.set-variables.outputs.release_name }}"
-           fi
+          fi
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -169,9 +184,9 @@ jobs:
         with:
           ssh-key: ${{secrets.DEPLOY_KEY}}
       - name: Extract commit hash
+        id: extract_hash
         shell: bash
         run: echo "HASH=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-        id: extract_hash
 
       - name: Set Build Variables
         id: set-variables
@@ -188,7 +203,7 @@ jobs:
             ${{needs.fetch-versions.outputs.gui_VERSION}} \
             ${{needs.fetch-versions.outputs.rest_VERSION}} \
             ${{needs.fetch-versions.outputs.templates_VERSION}} \
-            ${{ github.event.inputs.internal_dep_on_pypi }}
+            ${{ github.event.inputs.pypi_dependencies }}
 
       - name: Install dependencies
         run: |
@@ -238,9 +253,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Bump Version
+        id: bump-version
+        if: github.event.inputs.release_type == 'dev'
+        run: |
+          python tools/release/bump_version.py
+
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          file_pattern: '*/version.json'
+          file_pattern: '**/version.json'
           commit_message: Update version to ${{ needs.fetch-versions.outputs.NEW_VERSION }}
 
       - name: Reset changes

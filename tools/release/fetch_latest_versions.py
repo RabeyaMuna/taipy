@@ -8,84 +8,135 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
+# --------------------------------------------------------------------------------------------------
+# Returns the latest released versions for every Taipy package that is compatible with the target
+# version (major and minor numbers match).
+# The target package's version is set to the target version.
+#
+# Invoked from the workflow in build-and-release-single-package.yml.
+# --------------------------------------------------------------------------------------------------
 
 import sys
 
-import requests  # type: ignore
-
-
-def fetch_latest_releases_from_github(dev=False, target_version="", target_package=""):
-    releases = {}
-    url = "https://api.github.com/repos/Avaiga/taipy/releases"
-    response = requests.get(url)
-    resp_json = response.json()
-
-    for rel in resp_json:
-        tag = rel["tag_name"]
-
-        if not dev and ".dev" in tag:
-            continue
-        if "common" in tag:
-            releases["common"] = releases.get("common") or tag.split("-")[0]
-        elif "core" in tag:
-            releases["core"] = releases.get("core") or tag.split("-")[0]
-        elif "gui" in tag:
-            releases["gui"] = releases.get("gui") or tag.split("-")[0]
-        elif "rest" in tag:
-            releases["rest"] = releases.get("rest") or tag.split("-")[0]
-        elif "templates" in tag:
-            releases["templates"] = releases.get("templates") or tag.split("-")[0]
-        elif "-" not in tag:
-            releases["taipy"] = releases.get("taipy") or tag
-    releases[target_package] = target_version
-    return releases
-
-
-def fetch_latest_releases_from_pypi(dev=False, target_version="", target_package=""):
-    def retrieve_package_version(package: str, dev: bool) -> str:
-        url = f"https://pypi.org/pypi/{package}/json"
-        response = requests.get(url)
-        resp_json = response.json()
-        versions = list(resp_json["releases"].keys())
-        versions.reverse()
-        return next(v for v in versions if dev or ".dev" not in v)
-
-    releases = {
-        pkg: retrieve_package_version(f"taipy-{pkg}", dev) for pkg in ["common", "core", "gui", "rest", "templates"]
-    }
-    releases["taipy"] = retrieve_package_version("taipy", dev)
-    releases[target_package] = target_version
-    return releases
+import requests
+from common import PACKAGES, Package, Version
 
 
 def usage() -> None:
-    print(f"Usage: {sys.argv[0]} <dev_version> <is_pypi> <target_version> <target_package>")  # noqa: T201
-    print("   <release_type> must be one of 'dev' or 'production'")  # noqa: T201
-    print("   <from_pypi> must be 'true' or 'false', indicating if dependencies should be pulled out from Pypi")  # noqa: T201
-    print("   <target_version> must of the form: <Maj>.<Min>.<Tech>[.dev*]. Target package version")  # noqa: T201
-    print("   <target_package> must be a Taipy package name")  # noqa: T201
+    print(f"Usage: {sys.argv[0]} <package> <version> <dev_version> <pypi_deps>")  # noqa: T201
+    print("   <package> must be a Taipy package name.")  # noqa: T201
+    print("   <version> is the target version for *package*. It must of the form: <Maj>.<Min>.<Tech>[.dev*].")  # noqa: T201
+    print("   <release_type> must be one of 'dev' or 'production'.")  # noqa: T201
+    print("   <pypi_deps> must be 'true' or 'false', indicating if dependencies should be pulled out from Pypi.")  # noqa: T201
+
+
+def fetch_latest_github_releases(package: Package, version: Version, dev) -> dict[Package, Version]:
+    """Find the latest release version for each package, in the GitHub releases.
+
+    All release versions are retrieved from GitHub, and we keep the ones that have a version that
+    is compatible with *version*.
+    "dev" releases are kept only if *dev* is True.
+
+    Return:
+        A dictionary make of [package, version] pairs where the *package* package's version is set
+        to *version*.
+    """
+    # Retrieve all available releases (potentially paginating results) for all packages
+    available_releases = {}
+    # url = "https://api.github.com/repos/Avaiga/taipy/releases"
+    url = "https://api.github.com/repos/FabienLelaquais/taipy/releases"
+    page = 1
+    while url:
+        response = requests.get(url, params={"per_page": 50, "page": page})
+        response.raise_for_status()  # Raise error for bad responses
+        for release in response.json():
+            tag_name = release["tag_name"]
+            pkg_ver, pkg = tag_name.split("-") if "-" in tag_name else (tag_name, "taipy")
+            versions: list[str] = available_releases.get(pkg, [])
+            versions.append(pkg_ver)
+            available_releases[pkg] = versions
+
+        # Check for pagination in the `Link` header
+        link_header = response.headers.get("Link", "")
+        if 'rel="next"' in link_header:
+            url = link_header.split(";")[0].strip("<>")  # Extract next page URL
+            page += 1
+        else:
+            url = None  # No more pages
+
+    # For each package, pick the latest that *version* is compatible with
+    releases = {}
+    for pkg_name in PACKAGES:
+        available = available_releases.get(pkg_name, None)
+        if available:
+            pkg = Package(pkg_name)
+            for pkg_ver in available:
+                pkg_version = Version.from_string(pkg_ver)
+                if pkg_version.ext and (not dev or not pkg_version.validate_extension("dev")):
+                    continue
+                if version.is_compatible(pkg_version):
+                    releases[pkg] = pkg_version
+                    break
+
+    # Fill in missing versions
+    for p in PACKAGES:
+        if p not in releases:
+            releases[Package(p)] = Version.UNKNOWN
+    releases[package] = version
+    return releases
+
+
+def fetch_latest_pypi_releases(package: Package, version: Version, dev: bool) -> dict[Package, Version]:
+    """Find the latest release version for each package, in the Pypi releases.
+
+    All release versions are retrieved from Pypi, and we keep the ones that have a version that
+    is compatible with *version*.
+    "dev" releases are kept only if *dev* is True.
+
+    Return:
+        A dictionary make of [package, version] pairs where the *package* package's version is set
+        to *version*.
+    """
+
+    def retrieve_package_version(sub_pkg: Package, dev: bool) -> Version:
+        """Returns the latest release version for *sub_pkg* on Pypi that is compatible with *version*."""
+        url = f"https://pypi.org/pypi/{sub_pkg.name}/json"
+        response = requests.get(url)
+        resp_json = response.json()
+        # All release versions for the <sub_pkg> package
+        versions = list(resp_json["releases"].keys())
+        if versions:
+            versions.reverse()  # More recent release is last
+            # Find first that <version> would be compatible with
+            for v in versions:
+                check_version = Version.from_string(v)
+                # Drop all version with extension if not dev
+                # Keep 'dev' extensions if dev
+                if check_version.ext and (not dev or not check_version.validate_extension("dev")):
+                    continue
+                if version.is_compatible(check_version):
+                    return check_version
+        return Version.UNKNOWN
+
+    releases = {pkg: retrieve_package_version(pkg, dev) for pkg in [Package(p) for p in PACKAGES]}
+    releases[package] = version
+    return releases
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
         usage()
-        raise ValueError("Version does not contain suffix .dev")
-    is_dev_version = sys.argv[1] == "dev"
-    is_pypi = sys.argv[2] == "true"
-    target_version = sys.argv[3]
-    target_package = sys.argv[4]
-    if target_package.startswith("taipy-"):
-        target_package = target_package[6:]
+        raise ValueError("Missing arguments.")
+    package = Package(sys.argv[1])
+    version = Version.from_string(sys.argv[2])
 
-    if is_dev_version and ".dev" not in target_version:
-        raise ValueError("Version does not contain suffix .dev")
+    is_dev_version = sys.argv[3] == "dev"
+    if is_dev_version and (version.ext is None or not version.validate_extension("dev")):
+        raise ValueError("Version extension does not contain 'dev'.")
 
-    versions = {}
+    pypi_deps = sys.argv[4] == "true"
+    fetch_latest_releases = fetch_latest_pypi_releases if pypi_deps else fetch_latest_github_releases
+    versions = fetch_latest_releases(package, version, is_dev_version)
 
-    if not is_pypi:
-        versions = fetch_latest_releases_from_github(is_dev_version, target_version, target_package)
-    else:
-        versions = fetch_latest_releases_from_pypi(is_dev_version, target_version, target_package)
-
-    for name, version in versions.items():
-        print(f"{name}_VERSION={version}")  # noqa: T201
+    for p, v in versions.items():
+        print(f"{p.short_name}_VERSION={v}")  # noqa: T201

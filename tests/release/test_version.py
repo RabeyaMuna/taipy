@@ -1,0 +1,121 @@
+# Copyright 2021-2024 Avaiga Private Limited
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+# an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+# specific language governing permissions and limitations under the License.
+import pytest
+
+from tools.release.common import Version
+
+
+def test_from_string():
+    with pytest.raises(ValueError):
+        Version.from_string("invalid")
+    with pytest.raises(ValueError):
+        Version.from_string("1")
+    with pytest.raises(ValueError):
+        Version.from_string("1.2")
+    with pytest.raises(ValueError):
+        Version.from_string("1.x.2")
+
+    version = Version.from_string("1.2.3")
+    assert version.major == 1
+    assert version.minor == 2
+    assert version.patch == 3
+    assert version.ext is None
+
+    version = Version.from_string("1.2.3.some_ext")
+    assert version.major == 1
+    assert version.minor == 2
+    assert version.patch == 3
+    assert version.ext == "some_ext"
+
+    version = Version.from_string("1.2.3.some_ext.more_ext")
+    assert version.major == 1
+    assert version.minor == 2
+    assert version.patch == 3
+    assert version.ext == "some_ext.more_ext"
+
+def test_extension():
+    version = Version.from_string("1.2.3")
+    extension = version._split_ext()
+    assert extension == ("", -1)
+
+    version = Version.from_string("1.2.3.some_ext")
+    extension = version._split_ext()
+    assert extension == ("some_ext", -1)
+
+    version = Version.from_string("1.2.3.some_ext123")
+    extension = version._split_ext()
+    assert extension == ("some_ext", 123)
+
+
+def test_to_string():
+    version = Version(major=1, minor=2, patch=3)
+    assert str(version) == "1.2.3"
+
+    version = Version(major=1, minor=2, patch=3, ext="some_ext")
+    assert str(version) == "1.2.3.some_ext"
+
+def test_to_dict():
+    version = Version(major=1, minor=2, patch=3)
+    assert version.to_dict() == { "major": 1, "minor": 2, "patch": 3}
+
+    version = Version(major=1, minor=2, patch=3, ext="some_ext")
+    assert version.to_dict() == {"major": 1, "minor": 2, "patch": 3, "ext": "some_ext"}
+
+def test_compatibility():
+    # Different major version number
+    v1 = Version(major=1, minor=2, patch=3)
+    v2 = Version(major=2, minor=2, patch=3)
+    assert not v1.is_compatible(v2)
+
+    # Different minor version number
+    v1 = Version(major=1, minor=2, patch=3)
+    v2 = Version(major=1, minor=3, patch=3)
+    assert not v1.is_compatible(v2)
+
+    # All the same
+    v1 = Version(major=1, minor=2, patch=3)
+    v2 = Version(major=1, minor=2, patch=3)
+    assert v1.is_compatible(v2)
+
+    # Greater patch number
+    v1 = Version(major=1, minor=2, patch=4)
+    v2 = Version(major=1, minor=2, patch=3)
+    assert v1.is_compatible(v2)
+
+    # Smaller patch number
+    v1 = Version(major=1, minor=2, patch=4)
+    v2 = Version(major=1, minor=2, patch=3)
+    assert not v1.is_compatible(v2)
+
+    # Same patch number, extension
+    v1 = Version(major=1, minor=2, patch=3, ext="ext")
+    v2 = Version(major=1, minor=2, patch=3)
+    assert v1.is_compatible(v2)
+
+    # Same patch number, no extension
+    v1 = Version(major=1, minor=2, patch=3)
+    v2 = Version(major=1, minor=2, patch=3, ext="ext")
+    assert not v1.is_compatible(v2)
+
+    # Same patch number, different extension
+    v1 = Version(major=1, minor=2, patch=3, ext="some_ext")
+    v2 = Version(major=1, minor=2, patch=3, ext="another_ext")
+    assert not v1.is_compatible(v2)
+
+
+def test_bump_ext():
+    version = Version(major=1, minor=2, patch=3)
+    new_version = version.bump_ext_version()
+    assert version == new_version
+
+    version = Version(major=1, minor=2, patch=3, ext="ext0")
+    new_version = version.bump_ext_version()
+    assert new_version.ext == "ext1"
