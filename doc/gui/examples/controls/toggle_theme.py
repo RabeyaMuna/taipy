@@ -15,7 +15,14 @@
 # -----------------------------------------------------------------------------------------
 from taipy.gui import Gui
 
-page = "<|toggle|theme|>"
+dark_theme = True
+
+
+def on_change(state):
+    print(f"Dark theme set: {state.dark_theme}")  # noqa: T201
+
+
+page = "<|{dark_theme}|toggle|theme|>"
 
 if __name__ == "__main__":
     Gui(page).run(title="Toggle - Theme")

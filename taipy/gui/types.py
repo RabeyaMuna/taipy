@@ -53,6 +53,7 @@ class _WsType(Enum):
     GET_ROUTES = "GR"
     FAVICON = "FV"
     BROADCAST = "BC"
+    LOCAL_STORAGE = "LS"
 
 
 NumberTypes = {"int", "int64", "float", "float64"}
@@ -71,6 +72,14 @@ class PropertyType(Enum):
     See `ElementProperty^` for more details.
     """
 
+    any = "any"
+    """
+    The property holds a value of any serializable type.
+    """
+    dynamic_any = "dynamicany"
+    """
+    The property is dynamic and holds a value of any serializable type.
+    """
     boolean = "boolean"
     """
     The property holds a Boolean value.
@@ -108,6 +117,10 @@ class PropertyType(Enum):
     dynamic_list = "dynamiclist"
     """
     The property is dynamic and holds a list.
+
+    The React component must have two parameters: "<propertyName>" that must be a list of object, and
+    "default<PropertyName>" that must be a string, set to the JSON representation of the initial value
+    of the property.
     """
     dynamic_string = "dynamicstring"
     """
@@ -158,8 +171,7 @@ class PropertyType(Enum):
 
 
 @t.overload  # noqa: F811
-def _get_taipy_type(a_type: None) -> None:
-    ...
+def _get_taipy_type(a_type: None) -> None: ...
 
 
 @t.overload
@@ -174,14 +186,13 @@ def _get_taipy_type(a_type: PropertyType) -> t.Type[_TaipyBase]:  # noqa: F811
 
 @t.overload
 def _get_taipy_type(  # noqa: F811
-    a_type: t.Optional[t.Union[t.Type[_TaipyBase], t.Type[Decimator], PropertyType]],
-) -> t.Optional[t.Union[t.Type[_TaipyBase], t.Type[Decimator], PropertyType]]:
-    ...
+    a_type: t.Union[t.Type[_TaipyBase], t.Type[Decimator], PropertyType, None],
+) -> t.Union[t.Type[_TaipyBase], t.Type[Decimator], PropertyType, None]: ...
 
 
 def _get_taipy_type(  # noqa: F811
-    a_type: t.Optional[t.Union[t.Type[_TaipyBase], t.Type[Decimator], PropertyType]],
-) -> t.Optional[t.Union[t.Type[_TaipyBase], t.Type[Decimator], PropertyType]]:
+    a_type: t.Union[t.Type[_TaipyBase], t.Type[Decimator], PropertyType, None],
+) -> t.Union[t.Type[_TaipyBase], t.Type[Decimator], PropertyType, None]:
     if a_type is None:
         return None
     if isinstance(a_type, PropertyType) and not isinstance(a_type.value, str):

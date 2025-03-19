@@ -19,8 +19,8 @@ from unittest import mock
 
 import pytest
 
+from taipy import Scope
 from taipy.common.config import Config
-from taipy.common.config.common.scope import Scope
 from taipy.core._orchestrator._dispatcher import _StandaloneJobDispatcher
 from taipy.core._orchestrator._orchestrator_factory import _OrchestratorFactory
 from taipy.core.config.job_config import JobConfig
@@ -414,7 +414,7 @@ def test_is_deletable():
 
     rc = _JobManager._is_deletable("some_job")
     assert not rc
-    assert "Entity some_job does not exist in the repository." in rc.reasons
+    assert "Entity 'some_job' does not exist in the repository." in rc.reasons
 
     assert job.is_completed()
     assert _JobManager._is_deletable(job)

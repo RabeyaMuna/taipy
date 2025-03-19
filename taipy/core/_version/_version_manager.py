@@ -18,6 +18,7 @@ from taipy.common.config.exceptions.exceptions import InconsistentEnvVariableErr
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
 from .._manager._manager import _Manager
+from .._repository._abstract_repository import _AbstractRepository
 from ..exceptions.exceptions import (
     ConfigCoreVersionMismatched,
     ConflictedConfigurationError,
@@ -27,7 +28,6 @@ from ..exceptions.exceptions import (
 )
 from ..reason import ReasonCollection
 from ._version import _Version
-from ._version_fs_repository import _VersionFSRepository
 
 
 class _VersionManager(_Manager[_Version]):
@@ -41,7 +41,7 @@ class _VersionManager(_Manager[_Version]):
 
     _DEFAULT_VERSION = _LATEST_VERSION
 
-    _repository: _VersionFSRepository
+    _repository: _AbstractRepository
 
     @classmethod
     def _get(cls, entity: Union[str, _Version], default=None) -> _Version:
@@ -72,7 +72,7 @@ class _VersionManager(_Manager[_Version]):
         return version
 
     @classmethod
-    def _get_all(cls, version_number: Optional[Union[str, List]] = "all") -> List[_Version]:
+    def _get_all(cls, version_number: Union[str, List, None] = "all") -> List[_Version]:
         """
         Returns all entities.
         """
@@ -136,8 +136,13 @@ class _VersionManager(_Manager[_Version]):
             return ""
 
         try:
-            if version := cls._get(version_number):
-                return version.id
+            if version_number == cls._get_development_version():
+                if cls._exists(version_number):
+                    return version_number
+            else:
+                if cls._get(version_number):
+                    return version_number
+
         except InconsistentEnvVariableError:  # The version exist but the Config is alternated
             return version_number
         except ConfigCoreVersionMismatched as e:
@@ -183,6 +188,9 @@ class _VersionManager(_Manager[_Version]):
                 cls._set_experiment_version(current_version_number, Config.core.force)
             except VersionAlreadyExistsAsDevelopment as err:
                 raise SystemExit(err.message) from None
+            except ConfigCoreVersionMismatched as e:
+                cls._logger.error(e.message)
+                raise SystemExit() from e
 
         else:
             raise SystemExit(f"Undefined execution mode: {Config.core.mode}.")

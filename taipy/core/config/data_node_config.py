@@ -21,12 +21,12 @@ from taipy.common.config import Config
 from taipy.common.config._config import _Config
 from taipy.common.config.common._config_blocker import _ConfigBlocker
 from taipy.common.config.common._template_handler import _TemplateHandler as _tpl
-from taipy.common.config.common.scope import Scope
 from taipy.common.config.section import Section
 
 from ..common._utils import _normalize_path
 from ..common._warnings import _warn_deprecated
 from ..common.mongo_default_document import MongoDefaultDocument
+from ..common.scope import Scope
 
 
 class DataNodeConfig(Section):
@@ -506,6 +506,10 @@ class DataNodeConfig(Section):
                     self._properties[optional_property] = default_value
 
     @staticmethod
+    def _types_to_register() -> List[type]:
+        return [Scope]
+
+    @staticmethod
     def _set_default_configuration(
         storage_type: str, scope: Optional[Scope] = None, validity_period: Optional[timedelta] = None, **properties
     ) -> "DataNodeConfig":
@@ -768,7 +772,7 @@ class DataNodeConfig(Section):
         id: str,
         default_path: Optional[str] = None,
         has_header: Optional[bool] = None,
-        sheet_name: Optional[Union[List[str], str]] = None,
+        sheet_name: Union[List[str], str, None] = None,
         exposed_type: Optional[str] = None,
         scope: Optional[Scope] = None,
         validity_period: Optional[timedelta] = None,
@@ -780,7 +784,7 @@ class DataNodeConfig(Section):
             id (str): The unique identifier of the new Excel data node configuration.
             default_path (Optional[str]): The path of the Excel file.
             has_header (Optional[bool]): If True, indicates that the Excel file has a header.
-            sheet_name (Optional[Union[List[str], str]]): The list of sheet names to be used.
+            sheet_name (Union[List[str], str]): The list of sheet names to be used.
                 This can be a unique name.
             exposed_type (Optional[str]): The exposed type of the data read from Excel file.<br/>
                 The default value is `pandas`.

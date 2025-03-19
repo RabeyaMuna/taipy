@@ -75,7 +75,8 @@ export type WsMessageType =
     | "AID"
     | "GR"
     | "FV"
-    | "BC";
+    | "BC"
+    | "LS"
 export interface WsMessage {
     type: WsMessageType | string;
     name: string;

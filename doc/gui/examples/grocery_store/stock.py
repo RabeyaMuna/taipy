@@ -9,23 +9,26 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 # -----------------------------------------------------------------------------------------
-# To execute this script, make sure that the taipy-gui package is installed in your
-# Python environment and run:
-#     python <script>
+# Example on Page Modules.
+# Stock page.
 # -----------------------------------------------------------------------------------------
-from taipy.gui import Gui, Icon
+from taipy.gui import Markdown
 
-lov = [
-    ("id1", "Label 1"),
-    ("id2", Icon("https://docs.taipy.io/en/latest/assets/images/favicon.png", "Taipy Logo"), "Label 2"),
-    ("id3", "Label 3"),
-]
-value = lov[0]
+# Whether stock details are displayed or not
+show_details = False
 
-page = """<|{value}|toggle|lov={lov}|>
-Value: <|"{value[1].text if isinstance(value[1], Icon) else value[1]}"|>
-"""
+# Compute and return the total stock value based on purchase price and stock quantity
+def compute_stock_value(data: dict[str, list[float]]) -> float:
+    return sum([v * n for v, n in zip(data["Purchase"], data["Stock"])])
 
+# Define the Stock page as a Markdown page
+page = Markdown("""# Stock
 
-if __name__ == "__main__":
-    Gui(page).run(title="Toggle - List tuples")
+Stock value: $<|{compute_stock_value(data)}|>
+
+<|Stock details|expandable|expanded={show_details}|
+<|{data}|table|columns=Items;Stock|>
+|>
+
+[Goto Sales](sales)
+""")

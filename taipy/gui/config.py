@@ -30,6 +30,7 @@ from .utils import _is_in_notebook
 
 ConfigParameter = t.Literal[
     "allow_unsafe_werkzeug",
+    "app_id",
     "async_mode",
     "change_delay",
     "chart_dark_template",
@@ -92,9 +93,9 @@ Stylekit = t.TypedDict(
 ServerConfig = t.TypedDict(
     "ServerConfig",
     {
-        "cors": t.Optional[t.Union[bool, t.Dict[str, t.Any]]],
+        "cors": t.Union[bool, t.Dict[str, t.Any], None],
         "socketio": t.Optional[t.Dict[str, t.Any]],
-        "ssl_context": t.Optional[t.Union[str, t.Tuple[str, str]]],
+        "ssl_context": t.Union[str, t.Tuple[str, str], None],
         "flask": t.Optional[t.Dict[str, t.Any]],
     },
     total=False,
@@ -104,6 +105,7 @@ Config = t.TypedDict(
     "Config",
     {
         "allow_unsafe_werkzeug": bool,
+        "app_id": t.Optional[bool],
         "async_mode": str,
         "change_delay": t.Optional[int],
         "chart_dark_template": t.Optional[t.Dict[str, t.Any]],
@@ -268,7 +270,7 @@ class _Config(object):
                         if key == "port" and str(value).strip() == "auto":
                             config["port"] = "auto"
                         else:
-                            config[key] = value if config[key] is None else type(config[key])(value)  # type: ignore
+                            config[key] = value if config[key] is None else type(config[key])(value)  # type: ignore[reportCallIssue]
                     except Exception as e:
                         _warn(
                             f"Invalid env value in Gui.run(): {key} - {value}. Unable to parse value to the correct type",  # noqa: E501

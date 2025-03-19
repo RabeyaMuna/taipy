@@ -99,7 +99,7 @@ def __check_dict(values: t.List[t.Any], properties: t.Iterable[_Chart_iprops]) -
 def __get_multiple_indexed_attributes(
     attributes: t.Dict[str, t.Any], names: t.Iterable[str], index: t.Optional[int] = None
 ) -> t.List[t.Optional[str]]:
-    names = names if index is None else [f"{n}[{index}]" for n in names]  # type: ignore
+    names = names if index is None else [f"{n}[{index}]" for n in names]
     return [attributes.get(name) for name in names]
 
 
@@ -112,7 +112,9 @@ def __get_col_from_indexed(col_name: str, idx: int) -> t.Optional[str]:
     return col_name
 
 
-def _build_chart_config(gui: "Gui", attributes: t.Dict[str, t.Any], col_types_list: t.List[t.Dict[str, str]]):  # noqa: C901
+def _build_chart_config(  # noqa: C901
+    gui: "Gui", attributes: t.Dict[str, t.Any], cols_descriptions_list: t.List[t.Dict[str, t.Dict[str, str]]]
+):
     if "data" not in attributes and "figure" in attributes:
         return {"traces": []}
     default_type = attributes.get("_default_type", "scatter")
@@ -200,11 +202,10 @@ def _build_chart_config(gui: "Gui", attributes: t.Dict[str, t.Any], col_types_li
 
     # Validate the column names
     col_dicts = []
-    for idx, col_types in enumerate(col_types_list):
+    for idx, cols_description in enumerate(cols_descriptions_list):
         if add_col_dict := _get_columns_dict(
-            attributes.get("data" if idx == 0 else f"data[{idx}]"),
             list(columns[idx] if idx < len(columns) else columns[0]),
-            col_types,
+            cols_description,
             opt_columns=opt_cols[idx] if idx < len(opt_cols) else opt_cols[0],
         ):
             col_dicts.append(add_col_dict)
@@ -213,7 +214,7 @@ def _build_chart_config(gui: "Gui", attributes: t.Dict[str, t.Any], col_types_li
     decimators: t.List[t.Optional[str]] = []
     for tr in traces:
         if tr[_Chart_iprops.decimator.value]:
-            cls = gui._get_user_instance(
+            cls = gui._get_user_instance(  # type: ignore[attr-defined]
                 class_name=str(tr[_Chart_iprops.decimator.value]), class_type=PropertyType.decimator.value
             )
             if isinstance(cls, PropertyType.decimator.value):

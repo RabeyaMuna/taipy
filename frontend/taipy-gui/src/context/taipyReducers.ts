@@ -16,7 +16,7 @@ import { createTheme, Theme } from "@mui/material/styles";
 import merge from "lodash/merge";
 import { Dispatch } from "react";
 import { io, Socket } from "socket.io-client";
-import { nanoid } from 'nanoid';
+import { nanoid } from "nanoid";
 
 import { FilterDesc } from "../components/Taipy/tableUtils";
 import { stylekitModeThemes, stylekitTheme } from "../themes/stylekit";
@@ -24,7 +24,7 @@ import { getBaseURL, TIMEZONE_CLIENT } from "../utils";
 import { parseData } from "../utils/dataFormat";
 import { MenuProps } from "../utils/lov";
 import { changeFavicon, getLocalStorageValue, IdMessage, storeClientId } from "./utils";
-import { lightenPayload, sendWsMessage, TAIPY_CLIENT_ID, WsMessage } from "./wsUtils";
+import { lightenPayload, sendWsMessage, TAIPY_APP_ID, TAIPY_CLIENT_ID, WsMessage } from "./wsUtils";
 
 export enum Types {
     SocketConnected = "SOCKET_CONNECTED",
@@ -48,6 +48,7 @@ export enum Types {
     Partial = "PARTIAL",
     Acknowledgement = "ACKNOWLEDGEMENT",
     Broadcast = "BROADCAST",
+    LocalStorage = "LOCAL_STORAGE",
 }
 
 /**
@@ -88,11 +89,12 @@ export interface NamePayload {
 }
 
 export interface NotificationMessage {
-    atype: string;
+    nType: string;
     message: string;
     system: boolean;
     duration: number;
     notificationId?: string;
+    snackbarId: string;
 }
 
 interface TaipyAction extends NamePayload, TaipyBaseAction {
@@ -110,8 +112,8 @@ interface TaipyMultipleMessageAction extends TaipyBaseAction {
 
 interface TaipyNotificationAction extends TaipyBaseAction, NotificationMessage {}
 
-interface TaipyDeleteAlertAction extends TaipyBaseAction {
-    notificationId: string;
+interface TaipyDeleteNotificationAction extends TaipyBaseAction {
+    snackbarId: string;
 }
 
 export const BLOCK_CLOSE = { action: "", message: "", close: true, noCancel: false } as BlockMessage;
@@ -138,6 +140,7 @@ export interface FileDownloadProps {
     content?: string;
     name?: string;
     onAction?: string;
+    context?: string;
 }
 
 interface TaipyIdAction extends TaipyBaseAction, IdMessage {}
@@ -239,6 +242,8 @@ export const messageToAction = (message: WsMessage) => {
             changeFavicon((message.payload as Record<string, string>)?.value);
         } else if (message.type == "BC") {
             stackBroadcast((message as NamePayload).name, (message as NamePayload).payload.value);
+        } else if (message.type == "AID") {
+            checkAppId((message.payload as Record<string, string>).id);
         }
     }
     return {} as TaipyBaseAction;
@@ -267,7 +272,8 @@ export const getWsMessageListener = (dispatch: Dispatch<TaipyBaseAction>) => {
 // Broadcast
 const __BroadcastRepo: Record<string, Array<unknown>> = {};
 
-const stackBroadcast = (name: string, value: unknown) => (__BroadcastRepo[name] = __BroadcastRepo[name] || []).push(value);
+const stackBroadcast = (name: string, value: unknown) =>
+    (__BroadcastRepo[name] = __BroadcastRepo[name] || []).push(value);
 
 const broadcast_timeout = 250;
 
@@ -282,24 +288,46 @@ const initializeBroadcastManagement = (dispatch: Dispatch<TaipyBaseAction>) => {
     }, broadcast_timeout);
 };
 
+// App id
+const checkAppId = (appId: string) => {
+    if (!appId) {
+        return;
+    }
+    appId = `${appId}`;
+    const localAppId = getLocalStorageValue(TAIPY_APP_ID, "");
+    if (!localAppId || localAppId !== appId) {
+        localStorage && localStorage.setItem(TAIPY_APP_ID, appId);
+        localAppId && window.location.assign(getBaseURL());
+    }
+};
+
+let lastReasonServer = false;
+
+// web socket
 export const initializeWebSocket = (socket: Socket | undefined, dispatch: Dispatch<TaipyBaseAction>): void => {
     if (socket) {
         // Websocket confirm successful initialization
         socket.on("connect", () => {
             const id = getLocalStorageValue(TAIPY_CLIENT_ID, "");
-            sendWsMessage(socket, "ID", TAIPY_CLIENT_ID, id, id, undefined, false, () => {
+            const payload: Record<string, unknown> = { id };
+            if (lastReasonServer) {
+                payload["app_id"] = Number(getLocalStorageValue(TAIPY_APP_ID, ""));
+            }
+            sendWsMessage(socket, "ID", TAIPY_CLIENT_ID, payload, id, undefined, false, () => {
                 dispatch({ type: Types.SocketConnected });
             });
         });
         // try to reconnect on connect_error
-        socket.on("connect_error", () => {
-            setTimeout(() => {
-                socket.connect();
-            }, 500);
+        socket.on("connect_error", (error) => {
+            if (error && (error as unknown as Record<string, unknown>).type === "TransportError") {
+                lastReasonServer = true;
+            }
+            setTimeout(() => socket.connect(), 500);
         });
         // try to reconnect on server disconnection
         socket.on("disconnect", (reason) => {
             if (reason === "io server disconnect") {
+                lastReasonServer = true;
                 socket.connect();
             }
         });
@@ -381,11 +409,12 @@ export const taipyReducer = (state: TaipyState, baseAction: TaipyBaseAction): Ta
                 notifications: [
                     ...state.notifications,
                     {
-                        atype: notificationAction.atype,
+                        nType: notificationAction.nType,
                         message: notificationAction.message,
                         system: notificationAction.system,
                         duration: notificationAction.duration,
-                        notificationId: notificationAction.notificationId || nanoid(),
+                        notificationId: notificationAction.notificationId,
+                        snackbarId: notificationAction.nType ? nanoid() : notificationAction.nType
                     },
                 ],
             };
@@ -393,7 +422,9 @@ export const taipyReducer = (state: TaipyState, baseAction: TaipyBaseAction): Ta
             const deleteNotificationAction = action as unknown as TaipyNotificationAction;
             return {
                 ...state,
-                notifications: state.notifications.filter(notification => notification.notificationId !== deleteNotificationAction.notificationId),
+                notifications: state.notifications.filter(
+                    (notification) => notification.snackbarId !== deleteNotificationAction.snackbarId
+                ),
             };
         case Types.SetBlock:
             const blockAction = action as unknown as TaipyBlockAction;
@@ -469,7 +500,7 @@ export const taipyReducer = (state: TaipyState, baseAction: TaipyBaseAction): Ta
                 delete state.download;
                 return { ...state };
             }
-            return { ...state, download: { content: dAction.content, name: dAction.name, onAction: dAction.onAction } };
+            return { ...state, download: { content: dAction.content, name: dAction.name, onAction: dAction.onAction, context: dAction.context } };
         }
         case Types.Partial: {
             const pAction = baseAction as TaipyPartialAction;
@@ -506,6 +537,9 @@ export const taipyReducer = (state: TaipyState, baseAction: TaipyBaseAction): Ta
             break;
         case Types.RequestUpdate:
             ackId = sendWsMessage(state.socket, "RU", action.name, action.payload, state.id, action.context);
+            break;
+        case Types.LocalStorage:
+            ackId = sendWsMessage(state.socket, "LS", action.name, action.payload, state.id, action.context);
             break;
     }
     if (ackId) return { ...state, ackList: [...state.ackList, ackId] };
@@ -802,11 +836,11 @@ export const createTimeZoneAction = (timeZone: string, fromBackend = false): Tai
     payload: { timeZone: timeZone, fromBackend: fromBackend },
 });
 
-const getNotificationType = (aType: string) => {
-    aType = aType.trim();
-    if (aType) {
-        aType = aType.charAt(0).toLowerCase();
-        switch (aType) {
+const getNotificationType = (nType: string) => {
+    nType = nType.trim();
+    if (nType) {
+        nType = nType.charAt(0).toLowerCase();
+        switch (nType) {
             case "e":
                 return "error";
             case "w":
@@ -817,22 +851,25 @@ const getNotificationType = (aType: string) => {
                 return "info";
         }
     }
-    return aType;
+    return nType;
 };
 
 export const createNotificationAction = (notification: NotificationMessage): TaipyNotificationAction => ({
     type: Types.SetNotification,
-    atype: getNotificationType(notification.atype),
+    nType: getNotificationType(notification.nType),
     message: notification.message,
     system: notification.system,
     duration: notification.duration,
     notificationId: notification.notificationId,
+    snackbarId: notification.snackbarId
 });
 
-export const createDeleteAlertAction = (notificationId: string): TaipyDeleteAlertAction => ({
-    type: Types.DeleteNotification,
-    notificationId,
-});
+export const createDeleteNotificationAction = (snackbarId: string): TaipyDeleteNotificationAction => {
+    return {
+        type: Types.DeleteNotification,
+        snackbarId,
+    }
+}
 
 export const createBlockAction = (block: BlockMessage): TaipyBlockAction => ({
     type: Types.SetBlock,
@@ -870,6 +907,7 @@ export const createDownloadAction = (dMessage?: FileDownloadProps): TaipyDownloa
     content: dMessage?.content,
     name: dMessage?.name,
     onAction: dMessage?.onAction,
+    context: dMessage?.context,
 });
 
 export const createSetMenuAction = (menu: MenuProps): TaipySetMenuAction => ({
@@ -881,4 +919,10 @@ export const createPartialAction = (name: string, create: boolean): TaipyPartial
     type: Types.Partial,
     name,
     create,
+});
+
+export const createLocalStorageAction = (localStorageData: Record<string, string>): TaipyAction => ({
+    type: Types.LocalStorage,
+    name: "",
+    payload: localStorageData,
 });

@@ -15,8 +15,8 @@ interface MultipleUpdatePayload {
     payload: { value: unknown };
 }
 
-interface AlertMessage extends WsMessage {
-    atype: string;
+interface NotificationMessage extends WsMessage {
+    nType: string;
     message: string;
 }
 
@@ -98,8 +98,8 @@ export class TaipyWsAdapter extends WsAdapter {
                 const payload = message.payload as [string, string][];
                 taipyApp.routes = payload;
             } else if (message.type === "AL") {
-                const payload = message as AlertMessage;
-                taipyApp.onNotifyEvent(payload.atype, payload.message);
+                const payload = message as NotificationMessage;
+                taipyApp.onNotifyEvent(payload.nType, payload.message);
             } else if (message.type === "ACK") {
                 const { id } = message as unknown as Record<string, string>;
                 taipyApp.ackList = taipyApp.ackList.filter((v) => v !== id);

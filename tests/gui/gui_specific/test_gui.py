@@ -38,8 +38,7 @@ def test__get_real_var_name(gui: Gui):
 def test__get_user_instance(gui: Gui):
     gui.run(run_server=False)
     with gui.get_flask_app().app_context():
-        with pytest.warns(UserWarning):
-            gui._get_user_instance("", type(None))
+        gui._get_user_instance("", type(None))
 
 
 def test__refresh_expr(gui: Gui):
@@ -108,5 +107,5 @@ def test_on_action_call(gui:Gui):
 
     gui.run(run_server=False)
     with gui.get_flask_app().app_context():
-        gui._Gui__on_action(an_id, a_non_action_payload) # type: ignore[reportAttributeAccessIssue]
-        gui._Gui__on_action(an_id, an_action_payload) # type: ignore[reportAttributeAccessIssue]
+        gui._Gui__on_action(an_id, a_non_action_payload) # type: ignore[attr-defined]
+        gui._Gui__on_action(an_id, an_action_payload) # type: ignore[attr-defined]

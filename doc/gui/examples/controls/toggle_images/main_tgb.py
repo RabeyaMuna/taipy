@@ -13,14 +13,19 @@
 # Python environment and run:
 #     python <script>
 # -----------------------------------------------------------------------------------------
-from taipy.gui import Gui
+from taipy.gui import Gui, Icon
+from taipy.gui import builder as tgb
 
-value = True
+lov = [
+    "Label 1",
+    Icon("https://docs.taipy.io/en/latest/assets/images/favicon.png", "Taipy Logo"),
+    "Label 3",
+]
+value = lov[0]
 
-page = """
-<|{value}|toggle|label=Is this True?|>
-Value: <|{str(value)}|>
-"""
+with tgb.Page() as page:
+    tgb.toggle("{value}", lov="{lov}")
+    tgb.text("{value.text if isinstance(value, Icon) else value}")
 
 if __name__ == "__main__":
-    Gui(page).run(title="Toggle - Switch")
+    Gui(page).run(title="Toggle - Images")

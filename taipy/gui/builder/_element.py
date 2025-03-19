@@ -108,7 +108,7 @@ class _Element(ABC):
             return value
         if isinstance(value, FunctionType):
             if key.startswith("on_") or self._is_callable(key):
-                return value if value.__name__.startswith("<") else value.__name__
+                return value if "<" in value.__qualname__ else value.__name__
             # Parse lambda function_is_callable
             if (lambda_call := self.__parse_lambda_property(key, value)) is not None:
                 return lambda_call
@@ -274,7 +274,7 @@ class _Control(_Element):
     def _render(self, gui: "Gui") -> str:
         self._evaluate_lambdas(gui)
         el = _BuilderFactory.create_element(gui, self._ELEMENT_NAME, self._deepcopy_properties())
-        inline_block = 'style="display:inline-block;"' if self._is_inline else ""
+        inline_block = 'class="__tgb_inline"' if self._is_inline else ""
         return (
             f"<div {inline_block}>{el[0]}</{el[1]}></div>"
             if f"<{el[1]}" in el[0] and f"</{el[1]}" not in el[0]

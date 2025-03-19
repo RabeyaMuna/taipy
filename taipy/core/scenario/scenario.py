@@ -17,6 +17,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Union
 import networkx as nx
 
 from taipy.common.config.common._validate_id import _validate_id
+from taipy.common.logger._taipy_logger import _TaipyLogger
 
 from .._entity._entity import _Entity
 from .._entity._labeled import _Labeled
@@ -106,12 +107,14 @@ class Scenario(_Entity, Submittable, _Labeled):
     id: ScenarioId
     """The unique identifier of this scenario."""
 
+    _logger = _TaipyLogger._get_logger()
+
     def __init__(
         self,
         config_id: str,
-        tasks: Optional[Union[Set[TaskId], Set[Task]]],
+        tasks: Union[Set[TaskId], Set[Task], None],
         properties: Dict[str, Any],
-        additional_data_nodes: Optional[Union[Set[DataNodeId], Set[DataNode]]] = None,
+        additional_data_nodes: Union[Set[DataNodeId], Set[DataNode], None] = None,
         scenario_id: Optional[ScenarioId] = None,
         creation_date: Optional[datetime] = None,
         is_primary: bool = False,
@@ -386,7 +389,7 @@ class Scenario(_Entity, Submittable, _Labeled):
         callbacks: Optional[List[Callable]] = None,
         force: bool = False,
         wait: bool = False,
-        timeout: Optional[Union[float, int]] = None,
+        timeout: Union[float, int, None] = None,
         **properties,
     ) -> Submission:
         """Submit this scenario for execution.
@@ -410,6 +413,58 @@ class Scenario(_Entity, Submittable, _Labeled):
         from ._scenario_manager_factory import _ScenarioManagerFactory
 
         return _ScenarioManagerFactory._build_manager()._submit(self, callbacks, force, wait, timeout, **properties)
+
+    def can_duplicate(self) -> ReasonCollection:
+        """Indicate if a scenario can be duplicated.
+
+        Returns:
+            True if the given scenario can be duplicated. False otherwise.
+        """
+        from ._scenario_manager_factory import _ScenarioManagerFactory
+
+        return _ScenarioManagerFactory._build_manager()._can_duplicate(self)
+
+    def duplicate(
+        self,
+        new_creation_date: Optional[datetime] = None,
+        new_name: Optional[str] = None,
+        data_to_duplicate: Union[Set[str], bool] = True
+    ) -> "Scenario":
+        """Duplicate the scenario and return the new one.
+
+        If the scenario belongs to a cycle, the cycle (corresponding to the creation_date
+        and the configuration frequency attribute) is created if it does not exist yet.
+
+        The nested entities are duplicated or not depending on the creation date of the new
+        scenario, its cycle, and the various data node scopes.
+
+        !!! warning "Data and data nodes duplication"
+
+            Note that for now, Taipy can only duplicate data for file-based data nodes. For
+            other types of data nodes (sql, mongo, etc.), the new data nodes are created
+            referencing the exact same data as the original data nodes. This can lead to
+            conflicts if the data is modified in one of the scenarios.
+
+            Users must ensure after a duplication that the data nodes' data are correctly
+            set for the new scenario.
+
+            For example, the table name of a SQL table data node must be manually updated to
+            avoid conflicts.
+
+        Arguments:
+            new_creation_date (Optional[datetime.datetime]): The creation date of the new scenario.
+                If None, the current date and time is used.
+            new_name (Optional[str]): The displayable name of the new scenario.
+                If None, the name of the current scenario is used.
+            data_to_duplicate (Union[Set[str], bool]): A set of data node configuration ids used
+                to duplicate only the data nodes' data with the specified configuration ids.
+                If True, all data nodes are duplicated. If False, no data nodes are duplicated.
+        Returns:
+            Scenario: The newly duplicated scenario.
+        """
+        from ._scenario_manager_factory import _ScenarioManagerFactory
+
+        return _ScenarioManagerFactory._build_manager()._duplicate(self, new_creation_date, new_name, data_to_duplicate)
 
     def set_primary(self) -> None:
         """Promote the scenario as the primary scenario of its cycle.
@@ -611,12 +666,32 @@ class Scenario(_Entity, Submittable, _Labeled):
         if dag.number_of_nodes() == 0:
             return True
         if not nx.is_directed_acyclic_graph(dag):
+            self._logger.error(f'The DAG of scenario "{self.id}" is not a directed acyclic graph')
             return False
         for left_node, right_node in dag.edges:
             if (isinstance(left_node, DataNode) and isinstance(right_node, Task)) or (
                 isinstance(left_node, Task) and isinstance(right_node, DataNode)
             ):
                 continue
+
+            left_node_desc = (
+                f'{left_node.__class__.__name__} "{left_node.get_label()}"'
+                if isinstance(left_node, _Labeled)
+                else left_node.__class__.__name__
+                if left_node
+                else "None"
+            )
+            right_node_desc = (
+                f'{right_node.__class__.__name__} "{right_node.get_label()}"'
+                if isinstance(right_node, _Labeled)
+                else right_node.__class__.__name__
+                if right_node
+                else "None"
+            )
+            self._logger.error(
+                f'Invalid edge detected in scenario "{self.id}": left node {left_node_desc} and right node '
+                f"{right_node_desc} must connect a Task and a DataNode"
+            )
             return False
         return True
 

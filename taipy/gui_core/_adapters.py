@@ -23,6 +23,7 @@ from operator import attrgetter, contains, eq, ge, gt, le, lt, ne
 
 import pandas as pd
 
+from taipy.common.config import Config
 from taipy.core import (
     Cycle,
     DataNode,
@@ -35,7 +36,6 @@ from taipy.core import (
     is_submittable,
 )
 from taipy.core import get as core_get
-from taipy.core.config import Config
 from taipy.core.data import JSONDataNode
 from taipy.core.data._file_datanode_mixin import _FileDataNodeMixin
 from taipy.core.data._tabular_datanode_mixin import _TabularDataNodeMixin
@@ -50,7 +50,7 @@ from .filters import DataNodeFilter, ParamType, ScenarioFilter, _Filter
 # prevent gui from trying to push scenario instances to the front-end
 class _GuiCoreDoNotUpdate(_DoNotUpdate):
     def __repr__(self):
-        return self.get_label() if hasattr(self, "get_label") else super().__repr__()  # type: ignore[reportAttributeAccessIssue]
+        return self.get_label() if hasattr(self, "get_label") else super().__repr__()  # type: ignore[attr-defined]
 
 
 class _EntityType(Enum):
@@ -416,7 +416,7 @@ class _GuiCoreProperties(ABC):
         return {}
 
     def get(self):
-        data = super().get()  # type: ignore[reportAttributeAccessIssue]
+        data = super().get()  # type: ignore[attr-defined]
         if _is_boolean(data):
             if _is_true(data):
                 data = self.get_default_list()

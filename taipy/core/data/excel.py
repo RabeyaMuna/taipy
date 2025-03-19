@@ -16,10 +16,9 @@ import numpy as np
 import pandas as pd
 from openpyxl import load_workbook
 
-from taipy.common.config.common.scope import Scope
-
 from .._entity._reload import _Reloader
 from .._version._version_manager_factory import _VersionManagerFactory
+from ..common.scope import Scope
 from ..exceptions.exceptions import ExposedTypeLengthMismatch, NonExistingExcelSheet, SheetNameLengthMismatch
 from ._file_datanode_mixin import _FileDataNodeMixin
 from ._tabular_datanode_mixin import _TabularDataNodeMixin
@@ -162,7 +161,7 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
 
     def _read_sheet_with_exposed_type(
         self, path: str, sheet_exposed_type: str, sheet_name: str
-    ) -> Optional[Union[np.ndarray, pd.DataFrame]]:
+    ) -> Union[np.ndarray, pd.DataFrame, None]:
         if sheet_exposed_type in [self._EXPOSED_TYPE_NUMPY, self._EXPOSED_TYPE_NUMPY_NDARRAY]:
             return self._read_as_numpy(path, sheet_name)
         elif sheet_exposed_type in [self._EXPOSED_TYPE_PANDAS, self._EXPOSED_TYPE_PANDAS_DATAFRAME]:

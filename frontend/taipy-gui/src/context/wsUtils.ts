@@ -2,6 +2,7 @@ import { Socket } from "socket.io-client";
 import { nanoid } from 'nanoid'
 
 export const TAIPY_CLIENT_ID = "TaipyClientId";
+export const TAIPY_APP_ID = "TaipyAppId";
 
 export type WsMessageType =
     | "A"
@@ -22,7 +23,8 @@ export type WsMessageType =
     | "AID"
     | "GR"
     | "FV"
-    | "BC";
+    | "BC"
+    | "LS";
 
 export interface WsMessage {
     type: WsMessageType;

@@ -15,8 +15,8 @@ from unittest.mock import ANY
 
 import pytest
 
+from taipy import Scope
 from taipy.common.config import Config
-from taipy.common.config.common.scope import Scope
 from taipy.core._orchestrator._orchestrator import _Orchestrator
 from taipy.core._version._version_manager import _VersionManager
 from taipy.core.common import _utils
@@ -208,7 +208,7 @@ def test_is_submittable():
 
     rc = _SequenceManager._is_submittable("some_sequence")
     assert not rc
-    assert "Entity some_sequence does not exist in the repository." in rc.reasons
+    assert "Entity 'some_sequence' does not exist in the repository." in rc.reasons
 
     scenario.add_sequences({"sequence": [task]})
     sequence = scenario.sequences["sequence"]

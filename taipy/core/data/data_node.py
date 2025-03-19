@@ -21,7 +21,6 @@ import networkx as nx
 
 from taipy.common.config import Config
 from taipy.common.config.common._validate_id import _validate_id
-from taipy.common.config.common.scope import Scope
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
 from .._entity._entity import _Entity
@@ -30,6 +29,7 @@ from .._entity._properties import _Properties
 from .._entity._ready_to_run_property import _ReadyToRunProperty
 from .._entity._reload import _Reloader, _self_reload, _self_setter
 from .._version._version_manager_factory import _VersionManagerFactory
+from ..common.scope import Scope
 from ..exceptions.exceptions import DataNodeIsBeingEdited, NoData
 from ..job.job_id import JobId
 from ..notification.event import Event, EventEntityType, EventOperation, _make_event
@@ -433,22 +433,27 @@ class DataNode(_Entity, _Labeled):
                 corresponding to this write.
         """
         from ._data_manager_factory import _DataManagerFactory
-        if (editor_id
+
+        if (
+            editor_id
             and self.edit_in_progress
             and self.editor_id != editor_id
-            and (not self.editor_expiration_date or self.editor_expiration_date > datetime.now())):
+            and (not self.editor_expiration_date or self.editor_expiration_date > datetime.now())
+        ):
             raise DataNodeIsBeingEdited(self.id, self.editor_id)
         self._append(data)
         self.track_edit(editor_id=editor_id, comment=comment, **kwargs)
         self.unlock_edit()
         _DataManagerFactory._build_manager()._set(self)
 
-    def write(self,
-              data,
-              job_id: Optional[JobId] = None,
-              editor_id: Optional[str] = None,
-              comment: Optional[str] = None,
-              **kwargs: Any):
+    def write(
+        self,
+        data,
+        job_id: Optional[JobId] = None,
+        editor_id: Optional[str] = None,
+        comment: Optional[str] = None,
+        **kwargs: Any,
+    ):
         """Write some data to this data node.
 
         once the data is written, the data node is unlocked and the edit is tracked.
@@ -461,10 +466,12 @@ class DataNode(_Entity, _Labeled):
             **kwargs (Any): Extra information to attach to the edit document
                 corresponding to this write.
         """
-        if (editor_id
+        if (
+            editor_id
             and self.edit_in_progress
             and self.editor_id != editor_id
-            and (not self.editor_expiration_date or self.editor_expiration_date > datetime.now())):
+            and (not self.editor_expiration_date or self.editor_expiration_date > datetime.now())
+        ):
             raise DataNodeIsBeingEdited(self.id, self.editor_id)
         self._write(data)
         self.track_edit(job_id=job_id, editor_id=editor_id, comment=comment, **kwargs)
@@ -473,12 +480,14 @@ class DataNode(_Entity, _Labeled):
 
         _DataManagerFactory._build_manager()._set(self)
 
-    def track_edit(self,
-                   job_id: Optional[str] = None,
-                   editor_id: Optional[str] = None,
-                   timestamp: Optional[datetime] = None,
-                   comment: Optional[str] = None,
-                   **options: Any):
+    def track_edit(
+        self,
+        job_id: Optional[str] = None,
+        editor_id: Optional[str] = None,
+        timestamp: Optional[datetime] = None,
+        comment: Optional[str] = None,
+        **options: Any,
+    ):
         """Creates and adds a new entry in the edits attribute without writing the data.
 
         Arguments:
@@ -504,13 +513,54 @@ class DataNode(_Entity, _Labeled):
         self.edits = self._edits
 
     def lock_edit(self, editor_id: Optional[str] = None):
-        """Lock the data node modification.
+        """Lock the data node modification to prevent concurrent modifications of the data node.
 
-        Note:
+        If locked by an editor, the data node cannot be modified by another editor until
+        the lock is released or after 30 minutes (default timeout) from the last modification.
+        If the data node is already locked by another editor, an exception is raised.
+
+        If no editor is provided, the data node is locked for everyone until it is unlocked
+        with no expiration date. This is not recommended as it can lead to a deadlock.
+
+        It sets the editor identifier `editor_id`, the editor expiration date `editor_expiration_date`,
+        and the edit in progress flag `edit_in_progress`.
+
+        ??? example "Usage"
+
+            ``` python
+            # Locks the data node modification as a specific editor
+            data_node.lock_edit("editor_id")
+            ```
+
+            To check if the data node is locked, use the property `(DataNode.)edit_in_progress^`.
+            ``` python
+            # Returns True if the data node is locked for modification.
+            data_node.edit_in_progress
+            ```
+
+            To get the editor identifier, use the property `(DataNode.)editor_id^`.
+            ``` python
+            # Returns the editor identifier
+            data_node.editor_id
+            ```
+
+            To get the editor expiration date, use the property `(DataNode.)editor_expiration_date^`.
+            ``` python
+            # Returns the editor expiration date
+            data_node.editor_expiration_date
+            ```
+
             The data node can be unlocked with the method `(DataNode.)unlock_edit()^`.
+            ``` python
+            # Unlocks the data node modification as a specific editor
+            data_node.unlock_edit("editor_id")
+            ```
 
         Arguments:
             editor_id (Optional[str]): The editor's identifier.
+
+        Raises:
+            DataNodeIsBeingEdited: If the data node is already locked by another editor.
         """
         if editor_id:
             if (
@@ -627,15 +677,15 @@ class DataNode(_Entity, _Labeled):
             If the data node config is not part of the scenario config, 0xfffc is returned as an infinite rank.
         """
         if not scenario_config_id:
-            return 0xfffb
+            return 0xFFFB
         dn_config = Config.data_nodes.get(self._config_id, None)
         if not dn_config:
             self._logger.error(f"Data node config `{self.config_id}` for data node `{self.id}` is not found.")
-            return 0xfffd
+            return 0xFFFD
         if not dn_config._ranks:
             self._logger.error(f"Data node config `{self.config_id}` for data node `{self.id}` has no rank.")
-            return 0xfffe
-        return dn_config._ranks.get(scenario_config_id, 0xfffc)
+            return 0xFFFE
+        return dn_config._ranks.get(scenario_config_id, 0xFFFC)
 
     @abstractmethod
     def _read(self):
