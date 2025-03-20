@@ -19,6 +19,7 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
 
 import { TaipyContext } from "../../../../src/context/taipyContext";
 import {
+    createRefreshThemesAction,
     INITIAL_STATE,
     initializeWebSocket,
     taipyInitialize,
@@ -49,6 +50,16 @@ const TaipyRendered = (props: TaipyRenderedProps) => {
         });
         document.body.className = classes.join(" ");
     }, [themeClass]);
+
+    useEffect(() => {
+        const refreshThemes = () => {
+            dispatch(createRefreshThemesAction());
+        };
+        window.addEventListener("refreshThemes", refreshThemes);
+        return () => {
+            window.removeEventListener("refreshThemes", refreshThemes);
+        };
+    }, []);
 
     return (
         <TaipyContext.Provider value={{ state, dispatch }}>

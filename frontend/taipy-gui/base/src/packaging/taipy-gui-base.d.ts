@@ -76,7 +76,7 @@ export type WsMessageType =
     | "GR"
     | "FV"
     | "BC"
-    | "LS"
+    | "LS";
 export interface WsMessage {
     type: WsMessageType | string;
     name: string;
@@ -127,6 +127,7 @@ declare class ElementManager {
         properties?: Element["properties"] | undefined,
     ): void;
     modifyElement(id: string, elementProperties: Record<string, unknown>): void;
+    modifyElementProperties(id: string, payload: Record<string, unknown>): void;
     deleteElement(id: string): void;
     openPropertyEditor(id: string): void;
     closePropertyEditor(): void;
@@ -224,9 +225,11 @@ export declare class TaipyApp {
     ): void;
     setCanvasEditMode(bool: boolean): void;
     modifyElement(id: string, modifiedRecord: Record<string, unknown>): void;
+    modifyElementProperties(id: string, properties: Record<string, unknown>): void;
     deleteElement(id: string): void;
     openPropertyEditor(id: string): void;
     closePropertyEditor(): void;
+    refreshThemes(): void;
 }
 export declare const createApp: (
     onInit?: OnInitHandler,

@@ -360,6 +360,10 @@ export class TaipyApp {
     closePropertyEditor() {
         this.elementManager.closePropertyEditor();
     }
+
+    refreshThemes() {
+        window.dispatchEvent(new Event("refreshThemes"));
+    }
 }
 
 export const createApp = (
