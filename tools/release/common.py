@@ -13,7 +13,6 @@
 # --------------------------------------------------------------------------------------------------
 import os
 import re
-import subprocess
 import typing as t
 from dataclasses import asdict, dataclass
 
@@ -199,3 +198,16 @@ class Package:
     def __str__(self) -> str:
         """Returns a full string representation of this package."""
         return self.name
+
+
+def retrieve_github_path() -> t.Optional[str]:
+    # Retrieve current Git branch remote URL
+    def run(*args) -> str:
+        return subprocess.run(args, stdout=subprocess.PIPE, text=True, check=True).stdout.strip()
+    branch_name = run("git", "branch", "--show-current")
+    remote_name = run("git", "config", f"branch.{branch_name}.remote")
+    url = run("git", "remote", "get-url", remote_name)
+    if match := re.fullmatch(r"git@github.com:(.*)\.git", url):
+        return match[1]
+    print("ERROR - Could not retrieve GibHub branch path")  # noqa: T201
+    return None
