@@ -25,11 +25,14 @@ on:
           - dev
           - production
         default: "dev"
-      pypi_dependencies:
-        description: "Fetch dependencies from PyPI? False means dependencies will use direct links to release archives stored in GitHub."
+      sub_packages_location:
+        description: "Dependencies location"
         required: true
-        type: boolean
-        default: false
+        type: choice
+        options:
+          - GitHub
+          - Pypi
+        default: "GitHub"
 
 env:
   NODE_OPTIONS: --max-old-space-size=4096
@@ -38,16 +41,6 @@ permissions:
   contents: write
 
 jobs:
-  check-target-version:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Validate target version input
-        run: |
-          if [[ ! "${{ github.event.inputs.target_version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[a-zA-Z]+[0-9]*)?$ ]]; then
-            echo "❌ Invalid target version format. Expected format: M.m.t[.ext]"
-            exit 1
-          fi
-
   fetch-versions:
     runs-on: ubuntu-latest
     outputs:
@@ -77,10 +70,11 @@ jobs:
           ${{ github.event.inputs.target_package }} \
           ${{ github.event.inputs.target_version }} \
           ${{ github.event.inputs.release_type }} \
-          ${{ github.event.inputs.pypi_dependencies }} >> $GITHUB_OUTPUT
+          ${{ github.event.inputs.sub_packages_location }}  \
+          ${{ github.repository }} >> $GITHUB_OUTPUT
 
   build-and-release-package:
-    needs: [fetch-versions]
+    needs: fetch-versions
     timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
@@ -103,36 +97,13 @@ jobs:
         id: set-variables
         shell: bash
         run: |
-          if [ "${{ github.event.inputs.target_package }}" == "common" ]; then
-            echo "package_dir=./taipy/common" >> $GITHUB_OUTPUT
-            echo "package_version=${{ needs.fetch-versions.outputs.common_VERSION }}" >> $GITHUB_OUTPUT
-            echo "release_name=${{ needs.fetch-versions.outputs.common_VERSION }}-common" >> $GITHUB_OUTPUT
-            echo "tar_path=./dist/${{ github.event.repository.name }}-common-${{ needs.fetch-versions.outputs.common_VERSION }}.tar.gz" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event.inputs.target_package }}" == "core" ]; then
-            echo "package_dir=./taipy/core" >> $GITHUB_OUTPUT
-            echo "package_version=${{ needs.fetch-versions.outputs.core_VERSION }}" >> $GITHUB_OUTPUT
-            echo "release_name=${{ needs.fetch-versions.outputs.core_VERSION }}-core" >> $GITHUB_OUTPUT
-            echo "tar_path=./dist/${{ github.event.repository.name }}-core-${{ needs.fetch-versions.outputs.core_VERSION }}.tar.gz" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event.inputs.target_package }}" == "gui" ]; then
-            echo "package_dir=./taipy/gui" >> $GITHUB_OUTPUT
-            echo "package_version=${{ needs.fetch-versions.outputs.gui_VERSION }}" >> $GITHUB_OUTPUT
-            echo "release_name=${{ needs.fetch-versions.outputs.gui_VERSION }}-gui" >> $GITHUB_OUTPUT
-            echo "tar_path=./dist/${{ github.event.repository.name }}-gui-${{ needs.fetch-versions.outputs.gui_VERSION }}.tar.gz" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event.inputs.target_package }}" == "rest" ]; then
-            echo "package_dir=./taipy/rest" >> $GITHUB_OUTPUT
-            echo "package_version=${{ needs.fetch-versions.outputs.rest_VERSION }}" >> $GITHUB_OUTPUT
-            echo "release_name=${{ needs.fetch-versions.outputs.rest_VERSION }}-rest" >> $GITHUB_OUTPUT
-            echo "tar_path=./dist/${{ github.event.repository.name }}-rest-${{ needs.fetch-versions.outputs.rest_VERSION }}.tar.gz" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event.inputs.target_package }}" == "templates" ]; then
-            echo "package_dir=./taipy/templates" >> $GITHUB_OUTPUT
-            echo "package_version=${{ needs.fetch-versions.outputs.templates_VERSION }}" >> $GITHUB_OUTPUT
-            echo "release_name=${{ needs.fetch-versions.outputs.templates_VERSION }}-templates" >> $GITHUB_OUTPUT
-            echo "tar_path=./dist/${{ github.event.repository.name }}-templates-${{ needs.fetch-versions.outputs.templates_VERSION }}.tar.gz" >> $GITHUB_OUTPUT
-          elif [ "${{ github.event.inputs.target_package }}" == "taipy" ]; then
-            echo "package_dir=./taipy" >> $GITHUB_OUTPUT
-            echo "package_version=${{ needs.fetch-versions.outputs.taipy_VERSION }}" >> $GITHUB_OUTPUT
-            echo "release_name=${{ needs.fetch-versions.outputs.taipy_VERSION }}" >> $GITHUB_OUTPUT
-            echo "tar_path=./dist/${{ github.event.repository.name }}-${{ needs.fetch-versions.outputs.taipy_VERSION }}.tar.gz" >> $GITHUB_OUTPUT
+          echo "package_version=${{ github.event.inputs.target_version }}" >> $GITHUB_OUTPUT
+          if [ "${{ github.event.inputs.target_package }}" == "taipy" ]; then
+            echo "release_name=${{ github.event.inputs.target_version }}" >> $GITHUB_OUTPUT
+            echo "tar_path=./dist/${{ github.event.repository.name }}-${{ github.event.inputs.target_version }}.tar.gz" >> $GITHUB_OUTPUT
+          else
+            echo "release_name=${{ github.event.inputs.target_version }}-${{ github.event.inputs.target_package }}" >> $GITHUB_OUTPUT
+            echo "tar_path=./dist/${{ github.event.repository.name }}-${{ github.event.inputs.target_package }}-${{ github.event.inputs.target_version }}.tar.gz" >> $GITHUB_OUTPUT
           fi
 
       - name: Update setup.requirements.txt
@@ -143,11 +114,8 @@ jobs:
             ${{ needs.fetch-versions.outputs.gui_VERSION }} \
             ${{ needs.fetch-versions.outputs.rest_VERSION }} \
             ${{ needs.fetch-versions.outputs.templates_VERSION }} \
-            ${{ github.event.inputs.pypi_dependencies }}
-
-      - name: Copy tools
-        run: |
-          cp -r tools ${{ steps.set-variables.outputs.package_dir }}
+            ${{ github.event.inputs.sub_packages_location }} \
+            ${{ github.repository }}
 
       - name: Install dependencies
         run: |
@@ -155,7 +123,7 @@ jobs:
           pip install build wheel pipenv mypy black isort
 
       - name: Install GUI dependencies
-        if: github.event.inputs.target_package == 'gui'
+        if: ${{ github.event.inputs.target_package == 'gui' || github.event.inputs.target_package == 'taipy' }}
         run: |
           pipenv install --dev
 
@@ -164,35 +132,31 @@ jobs:
         run: |
           pipenv run python tools/gui/generate_pyi.py
 
-      - name: Build frontends
-        if: github.event.inputs.target_package == 'gui'
+      - name: Build Taipy GUI front-end
+        if: ${{ github.event.inputs.target_package == 'gui' || github.event.inputs.target_package == 'taipy' }}
         run: |
-          python tools/frontend/bundle_build.py
+          python tools/frontend/bundle_build.py gui
 
-      - name: Copy files from tools
+      - name: Build Taipy front-end
+        if: ${{ github.event.inputs.target_package == 'taipy' }}
         run: |
-          if [ "${{ github.event.inputs.target_package }}" == "taipy" ]; then
-            cp -r tools/packages/taipy/. ${{ steps.set-variables.outputs.package_dir }}
-          else
-            cp -r tools/packages/taipy-${{ github.event.inputs.target_package }}/. ${{ steps.set-variables.outputs.package_dir }}
-          fi
+          python tools/frontend/bundle_build.py taipy
 
       - name: Build Package Structure
-        working-directory: ${{ steps.set-variables.outputs.package_dir }}
         run: |
           python tools/release/build_package_structure.py ${{ github.event.inputs.target_package }}
 
       - name: Build package
-        working-directory: ${{ steps.set-variables.outputs.package_dir }}
+        working-directory: "build_${{ github.event.inputs.target_package }}"
         run: |
           python -m build
           for file in ./dist/*; do mv "$file" "${file//_/-}"; done
 
       - name: Create tag and release
-        working-directory: ${{ steps.set-variables.outputs.package_dir }}
+        working-directory: "build_${{ github.event.inputs.target_package }}"
         run: |
           if [ "${{ github.event.inputs.release_type }}" == "dev" ]; then
-            gh release create ${{ steps.set-variables.outputs.release_name }} ${{ steps.set-variables.outputs.tar_path }} --target ${{ steps.extract_hash.outputs.HASH }} --prerelease --title ${{ steps.set-variables.outputs.release_name }} --notes "Release Draft ${{ steps.set-variables.outputs.release_name }}"
+            gh release create ${{ steps.set-variables.outputs.release_name }} ${{ steps.set-variables.outputs.tar_path }} --target ${{ steps.extract_hash.outputs.HASH }} --prerelease --title ${{ steps.set-variables.outputs.release_name }} --notes "Dev Release ${{ steps.set-variables.outputs.release_name }}"
           else
             gh release create ${{ steps.set-variables.outputs.release_name }} ${{ steps.set-variables.outputs.tar_path }} --target ${{ steps.extract_hash.outputs.HASH }} --title ${{ steps.set-variables.outputs.release_name }} --notes "Release ${{ steps.set-variables.outputs.release_name }}"
           fi

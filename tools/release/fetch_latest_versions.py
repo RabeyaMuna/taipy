@@ -19,18 +19,19 @@
 import sys
 
 import requests
-from common import PACKAGES, Package, Version
+from common import PACKAGES, Package, Version, retrieve_github_path
 
 
 def usage() -> None:
-    print(f"Usage: {sys.argv[0]} <package> <version> <dev_version> <pypi_deps>")  # noqa: T201
+    print(f"Usage: {sys.argv[0]} <package> <version> <dev_version> <deps> [<gh_path>]")  # noqa: T201
     print("   <package> must be a Taipy package name.")  # noqa: T201
     print("   <version> is the target version for *package*. It must of the form: <Maj>.<Min>.<Tech>[.dev*].")  # noqa: T201
     print("   <release_type> must be one of 'dev' or 'production'.")  # noqa: T201
-    print("   <pypi_deps> must be 'true' or 'false', indicating if dependencies should be pulled out from Pypi.")  # noqa: T201
+    print("   <deps> must be 'Pypi' or 'GitHub', indicating where to find Taipy package dependencies.")  # noqa: T201
+    print("   <gh_path>: The path of GitHub repository (owner/repo), used if <deps> is 'GitHub'.")  # noqa: T201
 
 
-def fetch_latest_github_releases(package: Package, version: Version, dev) -> dict[Package, Version]:
+def fetch_latest_github_releases(package: Package, version: Version, dev: bool, gh_path: str) -> dict[Package, Version]:
     """Find the latest release version for each package, in the GitHub releases.
 
     All release versions are retrieved from GitHub, and we keep the ones that have a version that
@@ -43,8 +44,7 @@ def fetch_latest_github_releases(package: Package, version: Version, dev) -> dic
     """
     # Retrieve all available releases (potentially paginating results) for all packages
     available_releases = {}
-    # url = "https://api.github.com/repos/Avaiga/taipy/releases"
-    url = "https://api.github.com/repos/FabienLelaquais/taipy/releases"
+    url = f"https://api.github.com/repos/{gh_path}/releases"
     page = 1
     while url:
         response = requests.get(url, params={"per_page": 50, "page": page})
@@ -69,24 +69,23 @@ def fetch_latest_github_releases(package: Package, version: Version, dev) -> dic
     for pkg_name in PACKAGES:
         available = available_releases.get(pkg_name, None)
         if available:
-            pkg = Package(pkg_name)
             for pkg_ver in available:
                 pkg_version = Version.from_string(pkg_ver)
                 if pkg_version.ext and (not dev or not pkg_version.validate_extension("dev")):
                     continue
                 if version.is_compatible(pkg_version):
-                    releases[pkg] = pkg_version
+                    releases[pkg_name] = pkg_version
                     break
 
     # Fill in missing versions
+    releases[package.short_name] = version
     for p in PACKAGES:
         if p not in releases:
-            releases[Package(p)] = Version.UNKNOWN
-    releases[package] = version
+            releases[p] = Version.UNKNOWN
     return releases
 
 
-def fetch_latest_pypi_releases(package: Package, version: Version, dev: bool) -> dict[Package, Version]:
+def fetch_latest_pypi_releases(package: Package, version: Version, dev: bool, _gh_path: str) -> dict[Package, Version]:
     """Find the latest release version for each package, in the Pypi releases.
 
     All release versions are retrieved from Pypi, and we keep the ones that have a version that
@@ -134,9 +133,19 @@ if __name__ == "__main__":
     if is_dev_version and (version.ext is None or not version.validate_extension("dev")):
         raise ValueError("Version extension does not contain 'dev'.")
 
-    pypi_deps = sys.argv[4] == "true"
+    pypi_deps = sys.argv[4] == "Pypi" or sys.argv[4] == "true"  # true to keep pre-4.0.3 compatibility
+    gh_path = ""
+    if not pypi_deps:
+        if len(sys.argv) < 6:
+            gh_path = retrieve_github_path()
+            if gh_path is None:
+                usage()
+                raise ValueError("Couldn't figure out GitHub branch path.")
+        else:
+            gh_path = sys.argv[5]
+
     fetch_latest_releases = fetch_latest_pypi_releases if pypi_deps else fetch_latest_github_releases
-    versions = fetch_latest_releases(package, version, is_dev_version)
+    versions = fetch_latest_releases(package, version, is_dev_version, gh_path)
 
     for p, v in versions.items():
-        print(f"{p.short_name}_VERSION={v}")  # noqa: T201
+        print(f"{p}_VERSION={v}")  # noqa: T201

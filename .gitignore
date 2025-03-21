@@ -11,6 +11,7 @@ Pipfile.lock
 .Python
 env/
 build/
+build_*/
 develop-eggs/
 dist/
 downloads/

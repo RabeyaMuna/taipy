@@ -13,6 +13,7 @@
 # --------------------------------------------------------------------------------------------------
 import os
 import re
+import subprocess
 import typing as t
 from dataclasses import asdict, dataclass
 
@@ -91,37 +92,42 @@ class Version:
         return Version(self.major, self.minor, self.patch, f"{self.ext[: m.start(1)]}{ext_ver}")
 
     def validate_extension(self, ext="dev"):
-        """Returns True if the extension part of this Version starts with a string."""
-        return self.ext and self.ext.startswith(ext)
+        """Returns True if the extension part of this Version is the one queried."""
+        return self._split_ext()[0] == ext
 
     def _split_ext(self) -> t.Tuple[str, int]:
-        """Splits ext into (extension identifier, index)."""
-        if not self.ext or (match := re.fullmatch(r"(.*?)(\d+)?", self.ext)) is None:
-            return ("", -1)  # No extension, lowest priority in comparisons
+        """Splits extension into the (identifier, index) tuple
 
-        if match[2]:
-            return (match[1], int(match[2]))
-        else:
-            return (match[1], -1)  # No index, lowest priority in comparisons
+        Returns:
+            ("", -1) if there is no extension.
+            (extension, -1) if there is no extension index.
+            (extension, index) if there is an extension index (e.g. "dev3").
+        """
+        if not self.ext or (match := re.fullmatch(r"(.*?)(\d+)?", self.ext)) is None:
+            return ("", -1)  # No extension
+        # Potentially no index
+        return (match[1], int(match[2]) if match[2] else -1)
 
     def is_compatible(self, version: "Version") -> bool:
         """Checks if this version is compatible with another.
 
-        Version v1 is defined as being compatible version v2 if a package built with version v1 can
-        safely depend on another package build with version v2.<br/>
+        Version v1 is defined as being compatible with version v2 if a package built with version v1
+        can safely depend on another package built with version v2.<br/>
         Here are the conditions set when checking whether v1 is compatible with v2:
 
         - If v1 and v2 have different major or minor numbers, they are not compatible.
-        - If v1.patch is greater than v2.patch, they are compatible.
-        - If v1.patch is equal to v2.patch:
-           - If v1 and v2 have no extension, they are compatible.
-           - If v1 has an extension and v2 doesn't, they are compatible.
-           - If v2 has an extension and v1 doesn't, they are not compatible.
-           - If v1 and v2 have dissimilar extensions (different identifiers independently from their
-             index), v1 and v2 are not compatible.
-           - If v1 and v2 have similar extensions (same identifiers), then v1 and v2 are compatible
-             if and only if the extension index for v1 is greater or equal to the extension index
-             for v2.
+        - If v1 has no extension, it is compatible only with v2 that have no extension.
+        - If v1 has an extension, it is compatible with any v2 that has the same extension, no
+          matter the extension index.
+
+        I.e.:
+            package-1.[m].[t] is NOT compatible with any sub-package-[M].* where M != 1
+            package-1.2.[t] is NOT compatible with any sub-package-1.[m].* where m != 2
+            package-1.2.[t] is compatible with all sub-package-1.2.*
+            package-1.2.[t].ext[X] is compatible with all sub-package-1.2.*.ext*
+            package-1.2.3 is NOT compatible with any sub-package-1.2.*.*
+            package-1.2.3.extA is NOT compatible with any sub-package-1.2.*.extB if extA != extB,
+               independently of a potential extension index.
 
         Parameters:
             version: the version to check compatibility against.
@@ -146,18 +152,16 @@ class Version:
             if not self.ext and version.ext:
                 return False
 
-            # Case: Both have extensions → check identifier and index
-            self_prefix, self_index = self._split_ext()
-            other_prefix, other_index = version._split_ext()
-
-            # Dissimilar identifiers → Not compatible
+            # Both have extensions → check identifiers. Dissimilar identifiers → Not compatible
+            self_prefix, _ = self._split_ext()
+            other_prefix, _ = version._split_ext()
             if self_prefix != other_prefix:
                 return False
 
-            # Same identifiers → Compare indices
-            return self_index >= other_index
+            # Same identifiers → Compatible
+            return True
 
-        # Rule 4: If self.patch < version.patch → Not compatible
+        # If self.patch < version.patch → Not compatible
         return False
 
 Version.UNKNOWN = Version(0, 0, 0)

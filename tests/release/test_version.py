@@ -98,7 +98,7 @@ def test_compatibility():
     # Same patch number, extension
     v1 = Version(major=1, minor=2, patch=3, ext="ext")
     v2 = Version(major=1, minor=2, patch=3)
-    assert v1.is_compatible(v2), "Same version, extension set"
+    assert v1.is_compatible(v2), "Same version, with extension"
 
     # Same patch number, no extension
     v1 = Version(major=1, minor=2, patch=3)

@@ -8,6 +8,17 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
+# --------------------------------------------------------------------------------------------------
+# Builds the Taipy GUI or Taipy frontend bundle.
+#
+# Invoked from the workflows:
+#          actions\install\action.yml
+#          workflows\build-and-release.yml
+#          workflows\build-and-release-single-package.yml
+#          workflows\packaging.yml
+#          workflows\partial-tests.yml
+#          workflows\prebuild.yml
+# --------------------------------------------------------------------------------------------------
 
 import platform
 import subprocess
@@ -15,6 +26,14 @@ import sys
 from pathlib import Path
 
 with_shell = platform.system() == "Windows"
+
+
+def usage() -> None:
+    print(f"Usage: {sys.argv[0]} [<bundle>]")  # noqa: T201
+    print("   Builds the Taipy frontend bundles.")  # noqa: T201
+    print("   If <bundle> is 'gui', only the Taipy GUI bundle is built.")  # noqa: T201
+    print("   If <bundle> is 'taipy', only the Taipy bundle is built (expecting Taipy GUI's to exist).")  # noqa: T201
+    print("   In all other cases, both bundles are built.")  # noqa: T201
 
 
 def build_gui(root_path: Path):
@@ -48,8 +67,9 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         if sys.argv[1] == "gui":
             build_gui(root_path)
+            exit(0)
         elif sys.argv[1] == "taipy":
             build_taipy(root_path)
-    else:
-        build_gui(root_path)
-        build_taipy(root_path)
+            exit(0)
+    build_gui(root_path)
+    build_taipy(root_path)

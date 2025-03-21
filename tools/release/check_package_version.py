@@ -39,3 +39,18 @@ if __name__ == "__main__":
                 f"Version mismatch for package {package}: "
                 + f"building '{version}' but '{package_version}' is defined in 'version.json'."
             )
+    # Check Taipy GUI and Taipy packages bundle versions
+    package_json_path = None
+    if package.name == "taipy":
+        package_json_path = "frontend/taipy/package.json"
+    elif package.short_name == "gui":
+        package_json_path = "frontend/taipy-gui/package.json"
+    if package_json_path:
+        with open(package_json_path) as package_file:
+            package_config = json.load(package_file)
+            package_version = Version.from_string(package_config["version"])
+            if version != package_version:
+                raise ValueError(
+                    f"Version mismatch for frontend of package {package}: "
+                    + f"building '{version}' but '{package_version}' is defined in '{package_json_path}'."
+                )
