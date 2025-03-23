@@ -16,6 +16,7 @@
 # --------------------------------------------------------------------------------------------------
 
 import os
+import re
 import sys
 import typing as t
 
@@ -43,7 +44,7 @@ def __build_taipy_package_line(line: str, version: str, use_pypi: bool, gh_path:
     if use_pypi:
         # Target dependency version should the latest compatible with 'version'
         major, minor = version.split(".")[:2]
-        return f"{line} >={version},<{major}.{int(minor) + 1}"
+        return f"{line} >={major}.{minor},<{major}.{int(minor) + 1}\n"
     tag = f"{version}-{line.split('-')[1]}"
     tar_name = f"{line}-{version}"
     return f"{line} @ https://github.com/{gh_path}/releases/download/{tag}/{tar_name}.tar.gz\n"
@@ -56,10 +57,12 @@ def update_setup_requirements(
     lines = []
     with open(path, mode="r") as req:
         for line in req:
-            if v := versions.get(line.strip()):
-                if v.startswith("0.0"):
-                    raise ValueError(f"Missing version for dependency '{line.strip()}'.")
-                line = __build_taipy_package_line(line, v, publish_on_py_pi, gh_path)
+            if match := re.match(r"^taipy(:?\-\w+)?\s*", line, re.MULTILINE):
+                # Add subpackage version if not forced
+                if not line[match.end():] and (v := versions.get(line.strip())):
+                    if v.startswith("0.0"):
+                        raise ValueError(f"Missing version for dependency '{line.strip()}'.")
+                    line = __build_taipy_package_line(line, v, publish_on_py_pi, gh_path)
             lines.append(line)
 
     with open(path, "w") as file:
@@ -88,4 +91,4 @@ if __name__ == "__main__":
         else:
             gh_path = sys.argv[len(PACKAGES) + 3]
 
-    update_setup_requirements(package, versions, pypi_deps)
+    update_setup_requirements(package, versions, pypi_deps, gh_path)
