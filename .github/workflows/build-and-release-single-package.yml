@@ -164,9 +164,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Ensure Taipy release is marked as latest
+      - name: Ensure 'taipy' release is marked as latest
+        if: ${{ github.event.inputs.target_package != 'taipy' || github.event.inputs.release_type == 'production' }}
         run: |
-          gh release edit ${{ steps.set-variables.outputs.release_name }} --latest
+          gh release edit ${{ needs.fetch-versions.outputs.taipy_VERSION }} --latest
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

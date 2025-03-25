@@ -19,9 +19,13 @@ def test_from_string():
     with pytest.raises(ValueError):
         Version.from_string("1")
     with pytest.raises(ValueError):
-        Version.from_string("1.2")
-    with pytest.raises(ValueError):
         Version.from_string("1.x.2")
+
+    version = Version.from_string("1.2")
+    assert version.major == 1
+    assert version.minor == 2
+    assert version.patch == 0
+    assert version.ext is None
 
     version = Version.from_string("1.2.3")
     assert version.major == 1
@@ -56,6 +60,9 @@ def test_extension():
 
 
 def test_to_string():
+    version = Version(major=1, minor=2)
+    assert str(version) == "1.2.0"
+
     version = Version(major=1, minor=2, patch=3)
     assert str(version) == "1.2.3"
 

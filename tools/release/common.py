@@ -29,7 +29,7 @@ class Version:
 
     major: int
     minor: int
-    patch: int
+    patch: int = 0
     ext: t.Optional[str] = None
 
     # Unknown version constant
@@ -55,21 +55,21 @@ class Version:
 
         Parameters:
             version: a version name as a string.<br/>
-              The format should be "<major>.<minor>.<patch>[.<extension>] where
+              The format should be "<major>.<minor>[.<patch>[.<extension>]] where
 
               - <major> must be a number, indicating the major number of the version
               - <minor> must be a number, indicating the minor number of the version
-              - <patch> must be a number, indicating the patch level of the version
+              - <patch> must be a number, indicating the patch level of the version. Optional.
               - <extension> must be a string. It is common practice that <extension> ends with a
-                number, but it is not required.
+                number, but it is not required. Optional.
         Returns:
             A new Version object with the appropriate values that were parsed.
         """
-        match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)(?:\.([^\s]+))?", version)
+        match = re.fullmatch(r"(\d+)\.(\d+)(?:\.(\d+))?(?:\.([^\s]+))?", version)
         if match:
             major = int(match[1])
             minor = int(match[2])
-            patch = int(match[3])
+            patch = int(match[3]) if match[3] else 0
             ext = match[4]
             return cls(major=major, minor=minor, patch=patch, ext=ext)
         else:
@@ -164,7 +164,7 @@ class Version:
         # If self.patch < version.patch → Not compatible
         return False
 
-Version.UNKNOWN = Version(0, 0, 0)
+Version.UNKNOWN = Version(0, 0)
 
 class Package:
     """Information on any Taipy package and sub-package.

@@ -248,7 +248,7 @@ const TableSort = (props: TableSortProps) => {
                 anchorOrigin={anchorOrigin}
                 open={showSort}
                 onClose={onShowSortClick}
-                className={getSuffixedClassNames(className, "-filter")}
+                className={getSuffixedClassNames(className, "-sort")}
             >
                 <Grid container sx={gridSx} gap={0.5}>
                     {sorts.map((sd, idx) => (

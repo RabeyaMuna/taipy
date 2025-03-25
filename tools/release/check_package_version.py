@@ -21,7 +21,7 @@ from common import Package, Version
 
 def usage() -> None:
     print(f"Usage: {sys.argv[0]} <package> <version>")  # noqa: T201
-    print("   Checks that the <package>'s version.json file <version>.")  # noqa: T201
+    print("   Checks that the version defined in the <package>'s version.json file is <version>.")  # noqa: T201
 
 
 if __name__ == "__main__":

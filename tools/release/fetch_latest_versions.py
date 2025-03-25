@@ -14,6 +14,11 @@
 # The target package's version is set to the target version.
 #
 # Invoked from the workflow in build-and-release-single-package.yml.
+#
+# Outputs a line for each package (including  'taipy"):
+#   <package_short_name>_VERSION=<package_version>
+# If a dev release is requested, a similar line is issued indicating the next dev version number:
+#   NEXT_<package_short_name>_VERSION=<package_version>
 # --------------------------------------------------------------------------------------------------
 
 import sys
@@ -65,8 +70,9 @@ def fetch_latest_github_releases(package: Package, version: Version, dev: bool, 
             url = None  # No more pages
 
     # For each package, pick the latest that *version* is compatible with
+    all_package_names = PACKAGES + ["taipy"]
     releases = {}
-    for pkg_name in PACKAGES:
+    for pkg_name in all_package_names:
         available = available_releases.get(pkg_name, None)
         if available:
             for pkg_ver in available:
@@ -79,7 +85,7 @@ def fetch_latest_github_releases(package: Package, version: Version, dev: bool, 
 
     # Fill in missing versions
     releases[package.short_name] = version
-    for p in PACKAGES:
+    for p in all_package_names:
         if p not in releases:
             releases[p] = Version.UNKNOWN
     return releases
