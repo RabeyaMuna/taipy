@@ -24,7 +24,7 @@ import json
 import sys
 from pathlib import Path
 
-from common import PACKAGES, Package, Version
+from common import PACKAGES, Package, Version, fetch_latest_github_taipy_releases
 
 
 def usage() -> None:
@@ -96,3 +96,6 @@ if __name__ == "__main__":
         else:
             usage()
             raise ValueError(f"Invalid <release_type> argument ({release_type}).")
+
+    # Print out the latest 'taipy' version that has no extension
+    print(f"LATEST_TAIPY_VERSION={fetch_latest_github_taipy_releases()}")  # noqa: T201

@@ -19,12 +19,16 @@
 #   <package_short_name>_VERSION=<package_version>
 # If a dev release is requested, a similar line is issued indicating the next dev version number:
 #   NEXT_<package_short_name>_VERSION=<package_version>
+# An additional line is added containing the latest release for 'taipy', no matter what the target
+# version is. This version is extracted so that it has no extension:
+#   LATEST_TAIPY_VERSION=<package_version>
 # --------------------------------------------------------------------------------------------------
 
 import sys
+import typing as t
 
 import requests
-from common import PACKAGES, Package, Version, retrieve_github_path
+from common import PACKAGES, Package, Version, fetch_github_releases, fetch_latest_github_taipy_releases
 
 
 def usage() -> None:
@@ -36,51 +40,37 @@ def usage() -> None:
     print("   <gh_path>: The path of GitHub repository (owner/repo), used if <deps> is 'GitHub'.")  # noqa: T201
 
 
-def fetch_latest_github_releases(package: Package, version: Version, dev: bool, gh_path: str) -> dict[Package, Version]:
+def fetch_latest_github_releases(
+    package: Package, version: Version, dev: bool, all_releases: dict[Package, list[Version]]
+) -> dict[Package, Version]:
     """Find the latest release version for each package, in the GitHub releases.
 
     All release versions are retrieved from GitHub, and we keep the ones that have a version that
     is compatible with *version*.
     "dev" releases are kept only if *dev* is True.
 
+    Arguments:
+        package: The package that we want to force *version* for.
+        version: The incoming version of package *package*.
+        dev: True if we're targeting a dev release, False for a production release.
+        gh_path: The "OWNER/REPO" string at the beginning of the working repository.
+          If not provided, it is computed at runtime from the current Git branch remote URL.
+
     Return:
         A dictionary make of [package, version] pairs where the *package* package's version is set
         to *version*.
     """
-    # Retrieve all available releases (potentially paginating results) for all packages
-    available_releases = {}
-    url = f"https://api.github.com/repos/{gh_path}/releases"
-    page = 1
-    while url:
-        response = requests.get(url, params={"per_page": 50, "page": page})
-        response.raise_for_status()  # Raise error for bad responses
-        for release in response.json():
-            tag_name = release["tag_name"]
-            pkg_ver, pkg = tag_name.split("-") if "-" in tag_name else (tag_name, "taipy")
-            versions: list[str] = available_releases.get(pkg, [])
-            versions.append(pkg_ver)
-            available_releases[pkg] = versions
-
-        # Check for pagination in the `Link` header
-        link_header = response.headers.get("Link", "")
-        if 'rel="next"' in link_header:
-            url = link_header.split(";")[0].strip("<>")  # Extract next page URL
-            page += 1
-        else:
-            url = None  # No more pages
-
     # For each package, pick the latest that *version* is compatible with
     all_package_names = PACKAGES + ["taipy"]
     releases = {}
     for pkg_name in all_package_names:
-        available = available_releases.get(pkg_name, None)
-        if available:
-            for pkg_ver in available:
-                pkg_version = Version.from_string(pkg_ver)
-                if pkg_version.ext and (not dev or not pkg_version.validate_extension("dev")):
+        a_package = Package(pkg_name)
+        if versions := all_releases.get(a_package):
+            for a_version in versions:
+                if a_version.ext and (not dev or not a_version.validate_extension("dev")):
                     continue
-                if version.is_compatible(pkg_version):
-                    releases[pkg_name] = pkg_version
+                if version.is_compatible(a_version):
+                    releases[pkg_name] = a_version
                     break
 
     # Fill in missing versions
@@ -88,10 +78,11 @@ def fetch_latest_github_releases(package: Package, version: Version, dev: bool, 
     for p in all_package_names:
         if p not in releases:
             releases[p] = Version.UNKNOWN
-    return releases
+
+    return {Package(p): v for p, v in releases.items()}
 
 
-def fetch_latest_pypi_releases(package: Package, version: Version, dev: bool, _gh_path: str) -> dict[Package, Version]:
+def fetch_latest_pypi_releases(package: Package, version: Version, dev: bool) -> dict[Package, Version]:
     """Find the latest release version for each package, in the Pypi releases.
 
     All release versions are retrieved from Pypi, and we keep the ones that have a version that
@@ -140,18 +131,19 @@ if __name__ == "__main__":
         raise ValueError("Version extension does not contain 'dev'.")
 
     pypi_deps = sys.argv[4] == "Pypi" or sys.argv[4] == "true"  # true to keep pre-4.0.3 compatibility
-    gh_path = ""
-    if not pypi_deps:
-        if len(sys.argv) < 6:
-            gh_path = retrieve_github_path()
-            if gh_path is None:
-                usage()
-                raise ValueError("Couldn't figure out GitHub branch path.")
-        else:
-            gh_path = sys.argv[5]
+    gh_path = sys.argv[5] if len(sys.argv) > 5 else None
 
-    fetch_latest_releases = fetch_latest_pypi_releases if pypi_deps else fetch_latest_github_releases
-    versions = fetch_latest_releases(package, version, is_dev_version, gh_path)
-
+    # Retrieve all available Github releases for all packages
+    all_releases = fetch_github_releases(gh_path)
+    # Compute the latest versions compatible with *version*
+    versions = (
+        fetch_latest_pypi_releases(package, version, is_dev_version)
+        if pypi_deps
+        else fetch_latest_github_releases(package, version, is_dev_version, all_releases)
+    )
+    # Print them out
     for p, v in versions.items():
-        print(f"{p}_VERSION={v}")  # noqa: T201
+        print(f"{p.short_name}_VERSION={v}")  # noqa: T201
+
+    # Print out the latest 'taipy' version that has no extension
+    print(f"LATEST_TAIPY_VERSION={fetch_latest_github_taipy_releases(all_releases)}")  # noqa: T201

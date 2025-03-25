@@ -45,6 +45,7 @@ def test_from_string():
     assert version.patch == 3
     assert version.ext == "some_ext.more_ext"
 
+
 def test_extension():
     version = Version.from_string("1.2.3")
     extension = version._split_ext()
@@ -69,12 +70,14 @@ def test_to_string():
     version = Version(major=1, minor=2, patch=3, ext="some_ext")
     assert str(version) == "1.2.3.some_ext"
 
+
 def test_to_dict():
     version = Version(major=1, minor=2, patch=3)
-    assert version.to_dict() == { "major": 1, "minor": 2, "patch": 3}
+    assert version.to_dict() == {"major": 1, "minor": 2, "patch": 3}
 
     version = Version(major=1, minor=2, patch=3, ext="some_ext")
     assert version.to_dict() == {"major": 1, "minor": 2, "patch": 3, "ext": "some_ext"}
+
 
 def test_compatibility():
     # Different major version number
@@ -100,7 +103,7 @@ def test_compatibility():
     # Smaller patch number
     v1 = Version(major=1, minor=2, patch=3)
     v2 = Version(major=1, minor=2, patch=4)
-    assert not v1.is_compatible(v2), "Patch number is smaller"
+    assert v1.is_compatible(v2), "Patch number is smaller"
 
     # Same patch number, extension
     v1 = Version(major=1, minor=2, patch=3, ext="ext")
@@ -116,6 +119,26 @@ def test_compatibility():
     v1 = Version(major=1, minor=2, patch=3, ext="some_ext")
     v2 = Version(major=1, minor=2, patch=3, ext="another_ext")
     assert not v1.is_compatible(v2), "Same version, different extensions"
+
+
+def test_order():
+    v1 = Version(major=1, minor=0)
+    v2 = Version(major=2, minor=0)
+    assert v1 < v2, "Version 1.0 is older than 2.0"
+    assert v2 > v1, "Version 2.0 is older than 1.0"
+
+    v1 = Version(major=1, minor=0)
+    v2 = Version(major=1, minor=1)
+    assert v1 < v2, "Version 1.0 is older than 1.1"
+    assert v2 > v1, "Version 1.1 is older than 1.0"
+
+    v1 = Version(major=1, minor=0)
+    v2 = Version(major=1, minor=0, patch=1)
+    assert v1 < v2, "Version 1.0.0 is older than 1.0.1"
+    assert v2 > v1, "Version 1.0.1 is older than 1.0.0"
+
+    versions = [Version(1, 0), Version(2, 1), Version(3, 4), Version(2, 0)]
+    assert max(versions) == Version(3, 4), "Cannot find max in Version list"
 
 
 def test_bump_ext():

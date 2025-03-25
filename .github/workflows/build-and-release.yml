@@ -39,6 +39,7 @@ jobs:
         rest_VERSION: ${{ steps.version-setup.outputs.rest_VERSION }}
         templates_VERSION: ${{ steps.version-setup.outputs.templates_VERSION }}
         taipy_VERSION: ${{ steps.version-setup.outputs.taipy_VERSION }}
+        LATEST_TAIPY_VERSION: ${{ steps.version-setup.outputs.LATEST_TAIPY_VERSION }}
     steps:
       - uses: actions/checkout@v4
       - name: Extract branch name
@@ -46,10 +47,17 @@ jobs:
         shell: bash
         run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
 
+      - name: Install mandatory Python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
       - name: Setup Version
         id: version-setup
         run: |
-          python tools/release/setup_version.py ALL ${{ github.event.inputs.release_type }} ${{ github.event.inputs.target_version }} ${{ steps.extract_branch.outputs.branch }} >> $GITHUB_OUTPUT
+          python tools/release/setup_version.py ALL ${{ github.event.inputs.release_type }} \
+          ${{ github.event.inputs.target_version }} \
+          ${{ steps.extract_branch.outputs.branch }} >> $GITHUB_OUTPUT
 
   build-and-release-taipy-packages:
     needs: [fetch-versions]
@@ -74,6 +82,11 @@ jobs:
         id: extract_hash
         shell: bash
         run: echo "HASH=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Install mandatory Python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
 
       - name: Set Build Variables
         id: set-variables
