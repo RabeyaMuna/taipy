@@ -25,7 +25,6 @@
 # --------------------------------------------------------------------------------------------------
 
 import sys
-import typing as t
 
 import requests
 from common import PACKAGES, Package, Version, fetch_github_releases, fetch_latest_github_taipy_releases
