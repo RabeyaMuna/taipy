@@ -259,6 +259,14 @@ jobs:
           find dist -type f -print0 | xargs -r0 gh release upload ${{ needs.fetch-versions.outputs.taipy_VERSION }} --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Ensure the latest 'taipy' production release is marked as *latest*
+        if: github.event.inputs.release_type == 'dev'
+        run: |
+          gh release edit ${{ needs.fetch-versions.outputs.LATEST_TAIPY_VERSION }} --latest
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         if: github.event.inputs.release_type == 'dev'
