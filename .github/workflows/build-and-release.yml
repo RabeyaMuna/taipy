@@ -285,10 +285,11 @@ jobs:
 
       - name: Create pull request
         if: github.event.inputs.release_type == 'dev'
-        run: gh pr create -B ${{ needs.fetch-versions.outputs.BRANCH_NAME }} \
-             -H "feature/update-dev-version-${{ github.run_id }}" \
-             --title 'Update Dev Version' \
-             --body 'Created by Github workflow build-and-release'
+        run: |
+          gh pr create -B ${{ needs.fetch-versions.outputs.BRANCH_NAME }} \
+            -H "feature/update-dev-version-${{ github.run_id }}" \
+            -t "Update Dev Version" \
+            -body "Created by GitHub workflow build-and-release"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
