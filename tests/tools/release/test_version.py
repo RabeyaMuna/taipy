@@ -125,17 +125,22 @@ def test_order():
     v1 = Version(major=1, minor=0)
     v2 = Version(major=2, minor=0)
     assert v1 < v2, "Version 1.0 is older than 2.0"
-    assert v2 > v1, "Version 2.0 is older than 1.0"
+    assert v2 > v1, "Version 2.0 is newer than 1.0"
 
     v1 = Version(major=1, minor=0)
     v2 = Version(major=1, minor=1)
     assert v1 < v2, "Version 1.0 is older than 1.1"
-    assert v2 > v1, "Version 1.1 is older than 1.0"
+    assert v2 > v1, "Version 1.1 is newer than 1.0"
+
+    v1 = Version(major=1, minor=2)
+    v2 = Version(major=2, minor=1)
+    assert v1 < v2, "Version 1.2 is older than 2.1"
+    assert v2 > v1, "Version 2.1 is newer than 1.2"
 
     v1 = Version(major=1, minor=0)
     v2 = Version(major=1, minor=0, patch=1)
     assert v1 < v2, "Version 1.0.0 is older than 1.0.1"
-    assert v2 > v1, "Version 1.0.1 is older than 1.0.0"
+    assert v2 > v1, "Version 1.0.1 is newer than 1.0.0"
 
     versions = [Version(1, 0), Version(2, 1), Version(3, 4), Version(2, 0)]
     assert max(versions) == Version(3, 4), "Cannot find max in Version list"

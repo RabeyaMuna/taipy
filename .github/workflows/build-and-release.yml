@@ -34,11 +34,17 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
         common_VERSION: ${{ steps.version-setup.outputs.common_VERSION }}
+        NEXT_common_VERSION: ${{ steps.version-setup.outputs.NEXT_common_VERSION }}
         core_VERSION: ${{ steps.version-setup.outputs.core_VERSION }}
+        NEXT_core_VERSION: ${{ steps.version-setup.outputs.NEXT_core_VERSION }}
         gui_VERSION: ${{ steps.version-setup.outputs.gui_VERSION }}
+        NEXT_gui_VERSION: ${{ steps.version-setup.outputs.NEXT_gui_VERSION }}
         rest_VERSION: ${{ steps.version-setup.outputs.rest_VERSION }}
+        NEXT_rest_VERSION: ${{ steps.version-setup.outputs.NEXT_rest_VERSION }}
         templates_VERSION: ${{ steps.version-setup.outputs.templates_VERSION }}
+        NEXT_templates_VERSION: ${{ steps.version-setup.outputs.NEXT_templates_VERSION }}
         taipy_VERSION: ${{ steps.version-setup.outputs.taipy_VERSION }}
+        NEXT_taipy_VERSION: ${{ steps.version-setup.outputs.NEXT_taipy_VERSION }}
         LATEST_TAIPY_VERSION: ${{ steps.version-setup.outputs.LATEST_TAIPY_VERSION }}
     steps:
       - uses: actions/checkout@v4
@@ -259,7 +265,7 @@ jobs:
           find dist -type f -print0 | xargs -r0 gh release upload ${{ needs.fetch-versions.outputs.taipy_VERSION }} --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Ensure the latest 'taipy' production release is marked as *latest*
         if: github.event.inputs.release_type == 'dev'
         run: |
@@ -274,7 +280,7 @@ jobs:
           branch: "feature/update-dev-version-${{ github.run_id }}"
           create_branch: 'true'
           file_pattern: '**/version.json'
-          commit_message: Update version to ${{ needs.fetch-versions.outputs.NEXT_taipy_VERSION }}
+          commit_message: Update taipy version to ${{ needs.fetch-versions.outputs.NEXT_taipy_VERSION }}
 
       - name: Create pull request
         if: github.event.inputs.release_type == 'dev'
