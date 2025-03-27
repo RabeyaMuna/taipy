@@ -1,15 +1,15 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=76", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "taipy-templates"
 description = "An open-source package holding Taipy application templates."
 readme = "package_desc.md"
-requires-python = ">=3.9"
-license = {text = "Apache License 2.0"}
+requires-python = ">=3.9,<3.13"
+license = {text = "Apache-2.0"}
 authors = [{name = "Avaiga", email = "dev@taipy.io"}]
-keywords = ["taipy-templates"]
+keywords = ["taipy", "taipy-templates"]
 classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
@@ -23,7 +23,7 @@ classifiers = [
 dynamic = ["version", "dependencies"]
 
 [tool.setuptools.packages]
-find = {include = ["taipy"]}
+find = {include = ["taipy", "taipy.templates", "taipy.templates.*"]}
 
 [project.urls]
-homepage = "https://github.com/avaiga/taipy"
+Homepage = "https://github.com/Avaiga/taipy"

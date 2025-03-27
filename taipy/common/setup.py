@@ -33,7 +33,7 @@ with open(version_path) as version_file:
 
 requirements = ["toml>=0.10,<0.11", "deepdiff>=6.2,<6.3"]
 
-test_requirements = ["pytest>=3.8"]
+test_requirements = ["pytest>=6.0"]
 
 setup(
     version=version_string,

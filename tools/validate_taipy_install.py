@@ -8,6 +8,16 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
+# --------------------------------------------------------------------------------------------------
+# Tests that Taipy is properly installed.
+# - Importing the taipy package exposes crucial attributes.
+# - The taipy-gui package is built
+# - The gui_core extension library is built
+#
+# Exits with error code on failure.
+#
+# Invoked from the workflows in workflows/packaging.yml and workflows/publish.yml.
+# --------------------------------------------------------------------------------------------------
 
 import logging
 import os
@@ -16,7 +26,7 @@ import sys
 
 def test_import_taipy_packages() -> bool:
     """
-    Import taipy package and call gui, Scenario and rest attributes.
+    Import taipy package and check some attributes.
     """
     import taipy as tp
 
@@ -35,6 +45,9 @@ def test_import_taipy_packages() -> bool:
 
 
 def is_taipy_gui_install_valid() -> bool:
+    """
+    Check crucial Taipy GUI build outcomes.
+    """
     from pathlib import Path
 
     import taipy

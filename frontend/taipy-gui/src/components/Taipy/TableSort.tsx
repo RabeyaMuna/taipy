@@ -136,7 +136,7 @@ const SortRow = (props: SortRowProps) => {
         <Grid container size={12} alignItems="center">
             <Grid size={6}>
                 <FormControl margin="dense">
-                    <InputLabel>Column</InputLabel>
+                    <InputLabel>{fieldHeader}</InputLabel>
                     <Tooltip title={fieldHeaderTooltip} placement="top">
                         <Select value={colId || ""} onChange={onColSelect} input={<OutlinedInput label={fieldHeader} />}>
                             {cols.map((col) => (
@@ -248,7 +248,7 @@ const TableSort = (props: TableSortProps) => {
                 anchorOrigin={anchorOrigin}
                 open={showSort}
                 onClose={onShowSortClick}
-                className={getSuffixedClassNames(className, "-filter")}
+                className={getSuffixedClassNames(className, "-sort")}
             >
                 <Grid container sx={gridSx} gap={0.5}>
                     {sorts.map((sd, idx) => (

@@ -8,117 +8,94 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
+# --------------------------------------------------------------------------------------------------
+# Checks that build version matches package version.
+# Updates version number for future 'dev' builds.
+#
+# Invoked from the workflow in build-and-release.yml.
+#
+# Outputs a line for each package (all packages if 'all'):
+#   <package_short_name>_VERSION=<package_version>
+# If a dev release is requested, a similar line is issued indicating the next dev version number:
+#   NEXT_<package_short_name>_VERSION=<package_version>
+# --------------------------------------------------------------------------------------------------
 
 import json
-import os
-import re
 import sys
-from dataclasses import asdict, dataclass
-from typing import Optional
+from pathlib import Path
+
+from common import PACKAGES, Package, Version, fetch_latest_github_taipy_releases
 
 
-@dataclass
-class Version:
-    major: str
-    minor: str
-    patch: str
-    ext: Optional[str] = None
-
-    def bump_ext_version(self) -> None:
-        if not self.ext:
-            return
-        reg = re.compile(r"[0-9]+$")
-        num = reg.findall(self.ext)[0]
-
-        self.ext = self.ext.replace(num, str(int(num) + 1))
-
-    def validate_suffix(self, suffix="dev"):
-        if suffix not in self.ext:
-            raise Exception(f"Version does not contain suffix {suffix}")
-
-    @property
-    def name(self) -> str:
-        """returns a string representation of a version"""
-        return f"{self.major}.{self.minor}.{self.patch}"
-
-    @property
-    def dev_name(self) -> str:
-        """returns a string representation of a version"""
-        return f"{self.name}.{self.ext}"
-
-    def __str__(self) -> str:
-        """returns a string representation of a version"""
-        version_str = f"{self.major}.{self.minor}.{self.patch}"
-        if self.ext:
-            version_str = f"{version_str}.{self.ext}"
-        return version_str
+def usage() -> None:
+    print(f"Usage: {sys.argv[0]} <package> <release_type> [<version> <branch>]")  # noqa: T201
+    print("   if <package> is 'ALL' then all packages including taipy are processed.")  # noqa: T201
+    print("   <release_type> must be 'dev' or 'production'")  # noqa: T201
+    print("     If <release_type> is 'production', <version> must be specified as the target")  # noqa: T201
+    print("     version and <branch> must be set to the name of the current branch.")  # noqa: T201
 
 
-def __load_version_from_path(base_path: str) -> Version:
-    """Load version.json file from base path."""
-    with open(os.path.join(base_path, "version.json")) as version_file:
+def extract_version(package: Package) -> Version:
+    """
+    Returns a Version from a package's version.json content.
+    """
+    with open(Path(package.package_dir) / "version.json") as version_file:
         data = json.load(version_file)
         return Version(**data)
 
 
-def __write_version_to_path(base_path: str, version: Version) -> None:
-    with open(os.path.join(base_path, "version.json"), "w") as version_file:
-        json.dump(asdict(version), version_file)
+def __setup_dev_version(package: Package, version: Version) -> None:
+    if not version.validate_extension("dev"):
+        raise ValueError(f"{version=} is not a 'dev' version in package {package}.")
+
+    var_name = f"{package.short_name}_VERSION"
+    print(f"{var_name}={version.full_name}")  # noqa: T201
+
+    # Increment dev version
+    version = version.bump_ext_version()
+    # Save in packages's version.json
+    with open(Path(package.package_dir) / "version.json", "w") as version_file:
+        json.dump(version.to_dict(), version_file)
+    # Return it to the GitHub step
+    print(f"NEXT_{var_name}={version.full_name}")  # noqa: T201
 
 
-def extract_version(base_path: str) -> Version:
-    """
-    Load version.json file from base path and return the version string.
-    """
-    return __load_version_from_path(base_path)
+def __setup_prod_version(
+    package: Package, version: Version, target_version: str, branch_name: str) -> None:
+    if version.full_name != target_version:
+        raise ValueError(f"Current {version=} does not match {target_version=} for package {package.name}")
 
-
-def __setup_dev_version(version: Version, _base_path: str, name: Optional[str] = None) -> None:
-    version.validate_suffix()
-
-    name = f"{name}_VERSION" if name else "VERSION"
-    print(f"{name}={version.dev_name}")  # noqa: T201
-
-    version.bump_ext_version()
-
-    __write_version_to_path(_base_path, version)
-    print(f"NEW_{name}={version.dev_name}")  # noqa: T201
-
-
-def __setup_prod_version(version: Version, target_version: str, branch_name: str, name: str = None) -> None:
-    if str(version) != target_version:
-        raise ValueError(f"Current version={version} does not match target version={target_version}")
-
+    # Production releases can only be performed from a release branch
     if target_branch_name := f"release/{version.major}.{version.minor}" != branch_name:
         raise ValueError(
             f"Branch name mismatch branch={branch_name} does not match target branch name={target_branch_name}"
         )
 
-    name = f"{name}_VERSION" if name else "VERSION"
-    print(f"{name}={version.name}")  # noqa: T201
+    print(f"{package.short_name}_VERSION={version.name}")  # noqa: T201
 
 
 if __name__ == "__main__":
-    paths = (
-        [sys.argv[1]]
-        if sys.argv[1] != "ALL"
-        else [
-            f"taipy{os.sep}common",
-            f"taipy{os.sep}core",
-            f"taipy{os.sep}rest",
-            f"taipy{os.sep}gui",
-            f"taipy{os.sep}templates",
-            "taipy",
-        ]
-    )
-    _environment = sys.argv[2]
+    if len(sys.argv) < 3:
+        usage()
+        raise ValueError("Missing arguments.")
 
-    for _path in paths:
-        _version = extract_version(_path)
-        _name = None if _path == "taipy" else _path.split(os.sep)[-1]
+    packages = [sys.argv[1]] if sys.argv[1].lower() != "all" else PACKAGES + ["taipy"]
+    release_type = sys.argv[2]
 
-        if _environment == "dev":
-            __setup_dev_version(_version, _path, _name)
+    for package_name in packages:
+        package = Package(package_name)
+        version = extract_version(package)
 
-        if _environment == "production":
-            __setup_prod_version(_version, sys.argv[3], sys.argv[4], _name)
+        if release_type == "dev":
+            __setup_dev_version(package, version)
+        elif release_type == "production":
+            if len(sys.argv) < 5:
+                usage()
+                raise ValueError("Missing arguments.")
+            __setup_prod_version(package, version, sys.argv[3], sys.argv[4])
+        else:
+            usage()
+            raise ValueError(f"Invalid <release_type> argument ({release_type}).")
+
+    # Print out the latest 'taipy' version that has no extension
+    print(f"LATEST_TAIPY_VERSION={fetch_latest_github_taipy_releases()}")  # noqa: T201
