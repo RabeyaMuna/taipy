@@ -184,8 +184,6 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-        with:
-          ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Extract commit hash
         id: extract_hash
@@ -274,26 +272,3 @@ jobs:
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        if: github.event.inputs.release_type == 'dev'
-        with:
-          branch: "feature/update-dev-version-${{ github.run_id }}"
-          create_branch: 'true'
-          file_pattern: '**/version.json'
-          commit_message: Update taipy version to ${{ needs.fetch-versions.outputs.NEXT_taipy_VERSION }}
-
-      - name: Create pull request
-        if: github.event.inputs.release_type == 'dev'
-        run: |
-          gh pr create --base "${{ needs.fetch-versions.outputs.BRANCH_NAME }}" \
-            --head "feature/update-dev-version-${{ github.run_id }}" \
-            --title "Update Dev Version" \
-            --body "Created by GitHub workflow build-and-release"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Reset changes
-        run: |
-          git reset --hard HEAD
-          git clean -fdx
