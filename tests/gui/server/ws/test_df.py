@@ -29,7 +29,7 @@ def test_download_file(gui: Gui, helpers):
 
     gui.run(run_server=False)
     # WS client and emit
-    ws_client = gui._server._ws.test_client(gui._server.get_flask())
+    ws_client = gui._server._ws.test_client(gui._server.get_server_instance())
     # Get the jsx once so that the page will be evaluated -> variable will be registered
     sid = helpers.create_scope_and_get_sid(gui)
     ws_client.emit("message", {"client_id": sid, "type": "A", "name": "my_button", "payload": "do_something"})

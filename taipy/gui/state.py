@@ -17,8 +17,6 @@ from operator import attrgetter
 from pathlib import Path
 from types import FrameType, SimpleNamespace
 
-from flask import has_app_context
-
 from .utils import _get_module_name_from_frame, _is_in_notebook
 from .utils._attributes import _attrsetter
 
@@ -150,8 +148,7 @@ class State(SimpleNamespace, metaclass=ABCMeta):
         self._gui.set_favicon(favicon_path, self)
 
     @abstractmethod
-    def __getitem__(self, key: str) -> "State":
-        ...
+    def __getitem__(self, key: str) -> "State": ...
 
 
 class _GuiState(State):
@@ -255,7 +252,11 @@ class _GuiState(State):
         return nullcontext()
 
     def _notebook_context(self, gui: "Gui"):
-        return gui.get_flask_app().app_context() if not has_app_context() and _is_in_notebook() else nullcontext()
+        from .servers import has_server_context
+
+        return (
+            gui.get_server_instance().app_context() if not has_server_context() and _is_in_notebook() else nullcontext()
+        )
 
     def _get_placeholder(self, name: str):
         if name in _GuiState.__placeholder_attrs:

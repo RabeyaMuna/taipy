@@ -103,7 +103,7 @@ def test_file_upload_multiple(gui: Gui, helpers):
     gui._set_frame(inspect.currentframe())
     gui.run(run_server=False, single_client=True)
     flask_client = gui._server.test_client()
-    with gui.get_flask_app().app_context():
+    with gui.get_server_instance().app_context():
         gui._bind_var_val(var_name, None)
     # Get the jsx once so that the page will be evaluated -> variable will be registered
     sid = _DataScopes._GLOBAL_ID
@@ -134,13 +134,13 @@ def test_file_upload_folder(gui: Gui, helpers):
 
     sid = _DataScopes._GLOBAL_ID
     files = [(io.BytesIO(b"(^~^)"), "cutey.txt"), (io.BytesIO(b"(^~^)"), "cute_nested.txt")]
-    folders = [ ["folder"], ["folder", "nested"] ]
+    folders = [["folder"], ["folder", "nested"]]
     for file, folder in zip(files, folders):
         path = os.path.join(*folder, file[1])
         response = flask_client.post(
             f"/taipy-uploads?client_id={sid}",
             data={"var_name": "cute_varname", "blob": file, "path": path},
-            content_type="multipart/form-data"
+            content_type="multipart/form-data",
         )
         assert response.status_code == 200
-        assert os.path.isfile( os.path.join( gui._get_config("upload_folder", tempfile.gettempdir()), path) )
+        assert os.path.isfile(os.path.join(gui._get_config("upload_folder", tempfile.gettempdir()), path))

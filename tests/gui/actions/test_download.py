@@ -29,10 +29,10 @@ def test_download(gui: Gui, helpers):
     gui.run(run_server=False)
     flask_client = gui._server.test_client()
     # WS client and emit
-    ws_client = gui._server._ws.test_client(t.cast(Flask, gui._server.get_flask()))
+    ws_client = gui._server._ws.test_client(t.cast(Flask, gui._server.get_server_instance()))
     cid = helpers.create_scope_and_get_sid(gui)
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
-    with gui.get_flask_app().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
+    with gui.get_server_instance().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
         g.client_id = cid
         download(gui._Gui__state, "some text", "filename.txt", "on_download_action")  # type: ignore[attr-defined]
 
@@ -53,10 +53,10 @@ def test_download_fn(gui: Gui, helpers):
     gui.run(run_server=False)
     flask_client = gui._server.test_client()
     # WS client and emit
-    ws_client = gui._server._ws.test_client(t.cast(Flask, gui._server.get_flask()))
+    ws_client = gui._server._ws.test_client(t.cast(Flask, gui._server.get_server_instance()))
     cid = helpers.create_scope_and_get_sid(gui)
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
-    with gui.get_flask_app().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
+    with gui.get_server_instance().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
         g.client_id = cid
         download(gui._Gui__state, "some text", "filename.txt", on_download_action)  # type: ignore[attr-defined]
 
@@ -66,7 +66,7 @@ def test_download_fn(gui: Gui, helpers):
         "DF",
         {"name": "filename.txt", "context": "test_download"},
     )
-    assert "onAction" in received_messages[0]["args"] # inner function is treated as lambda
+    assert "onAction" in received_messages[0]["args"]  # inner function is treated as lambda
 
 
 def test_bad_download(gui: Gui, helpers):

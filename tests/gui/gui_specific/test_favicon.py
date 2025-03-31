@@ -16,14 +16,13 @@ from taipy.gui import Gui, Markdown
 
 
 def test_favicon(gui: Gui, helpers):
-
     with warnings.catch_warnings(record=True):
         gui._set_frame(inspect.currentframe())
         gui.add_page("test", Markdown("#This is a page"))
         gui.run(run_server=False)
         client = gui._server.test_client()
         # WS client and emit
-        ws_client = gui._server._ws.test_client(gui._server.get_flask())
+        ws_client = gui._server._ws.test_client(gui._server.get_server_instance())
         # Get the jsx once so that the page will be evaluated -> variable will be registered
         sid = helpers.create_scope_and_get_sid(gui)
         client.get(f"/taipy-jsx/test/?client_id={sid}")

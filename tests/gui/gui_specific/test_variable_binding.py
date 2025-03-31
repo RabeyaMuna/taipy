@@ -34,7 +34,7 @@ def test_variable_binding(helpers):
     assert gui._bindings().x == x
     assert gui._bindings().y == y
     assert gui._bindings().z == z
-    with gui.get_flask_app().app_context():
+    with gui.get_server_instance().app_context():
         assert callable(gui._get_user_function("another_function"))
     helpers.test_cleanup()
 

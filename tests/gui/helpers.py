@@ -154,7 +154,7 @@ class Helpers:
                 client_url=gui._get_config("client_url", "http://localhost:{port}"),
                 debug=False,
                 use_reloader=False,
-                flask_log=False,
+                server_log=False,
                 run_in_thread=True,
                 allow_unsafe_werkzeug=False,
                 notebook_proxy=False,

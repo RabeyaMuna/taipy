@@ -15,7 +15,6 @@ import contextlib
 import logging
 import os
 import pathlib
-import re
 import sys
 import time
 import typing as t
@@ -43,23 +42,17 @@ from werkzeug.serving import is_running_from_reloader
 import __main__
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
-from ._renderers.json import _TaipyJsonProvider
-from .config import ServerConfig
-from .custom._page import _ExternalResourceHandlerManager
-from .utils import _is_in_notebook, _is_port_open, _RuntimeManager
-from .utils._css import get_style
+from ..._renderers.json import _TaipyJsonProvider
+from ...config import ServerConfig
+from ...custom._page import _ExternalResourceHandlerManager
+from ...utils import _is_in_notebook, _is_port_open, _RuntimeManager
+from ..server import _Server
 
 if t.TYPE_CHECKING:
-    from .gui import Gui
+    from ...gui import Gui
 
 
-class _Server:
-    __RE_OPENING_CURLY = re.compile(r"([^\"])(\{)")
-    __RE_CLOSING_CURLY = re.compile(r"(\})([^\"])")
-    __OPENING_CURLY = r"\1&#x7B;"
-    __CLOSING_CURLY = r"&#x7D;\2"
-    _RESOURCE_HANDLER_ARG = "tprh"
-
+class FlaskServer(_Server):
     def __init__(
         self,
         gui: Gui,
@@ -119,7 +112,7 @@ class _Server:
             if "status" in message:
                 _TaipyLogger._get_logger().info(message["status"])
             elif "type" in message:
-                gui._manage_message(message["type"], message)  # type: ignore[attr-defined]
+                gui._manage_ws_message(message["type"], message)  # type: ignore[attr-defined]
 
         @self._ws.on("connect")
         def handle_connect():
@@ -201,7 +194,7 @@ class _Server:
                     ) from None
 
             if path == "taipy.status.json":
-                return self._direct_render_json(self._gui._serve_status(pathlib.Path(template_folder) / path))  # type: ignore[attr-defined]
+                return self.direct_render_json(self._gui._serve_status(pathlib.Path(template_folder) / path))  # type: ignore[attr-defined]
             if (file_path := str(os.path.normpath((base_path := static_folder + os.path.sep) + path))).startswith(
                 base_path
             ) and os.path.isfile(file_path):
@@ -239,27 +232,10 @@ class _Server:
 
         return taipy_bp
 
-    # Update to render as JSX
-    def _render(self, html_fragment, script_paths, style, head, context):
-        template_str = _Server.__RE_OPENING_CURLY.sub(_Server.__OPENING_CURLY, html_fragment)
-        template_str = _Server.__RE_CLOSING_CURLY.sub(_Server.__CLOSING_CURLY, template_str)
-        template_str = template_str.replace('"{!', "{")
-        template_str = template_str.replace('!}"', "}")
-        style = get_style(style)
-        return self._direct_render_json(
-            {
-                "jsx": template_str,
-                "style": (style + os.linesep) if style else "",
-                "head": head or [],
-                "context": context or self._gui._get_default_module_name(),  # type: ignore[attr-defined]
-                "scriptPaths": script_paths,
-            }
-        )
-
-    def _direct_render_json(self, data):
+    def direct_render_json(self, data):
         return jsonify(data)
 
-    def get_flask(self):
+    def get_server_instance(self):
         return self._flask
 
     def get_port(self):
@@ -301,6 +277,9 @@ class _Server:
             if port not in _RuntimeManager().get_used_port() and not _is_port_open(self._host, port):
                 return port
 
+    def send_ws_message(self, *args, **kwargs):
+        self._ws.emit("message", *args, **kwargs)
+
     def run(
         self,
         host,
@@ -308,7 +287,7 @@ class _Server:
         client_url,
         debug,
         use_reloader,
-        flask_log,
+        server_log,
         run_in_thread,
         allow_unsafe_werkzeug,
         notebook_proxy,
@@ -321,7 +300,7 @@ class _Server:
         server_url = f"http://{host_value}:{port}"
         self._port = port
         if _is_in_notebook() and notebook_proxy:  # pragma: no cover
-            from .utils.proxy import NotebookProxy
+            from ...utils.proxy import NotebookProxy
 
             # Start proxy if not already started
             self._proxy = NotebookProxy(gui=self._gui, listening_port=port)
@@ -334,7 +313,7 @@ class _Server:
             raise ConnectionError(
                 f"Port {port} is already opened on {host} because another application is running on the same port.\nPlease pick another port number and rerun with the 'port=<new_port>' setting.\nYou can also let Taipy choose a port number for you by running with the 'port=\"auto\"' setting."  # noqa: E501
             )
-        if not flask_log:
+        if not server_log:
             log = logging.getLogger("werkzeug")
             log.disabled = True
             if not is_running_from_reloader():

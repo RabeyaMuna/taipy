@@ -25,10 +25,10 @@ def test_notify(gui: Gui, helpers):
     gui.run(run_server=False)
     flask_client = gui._server.test_client()
     # WS client and emit
-    ws_client = gui._server._ws.test_client(gui._server.get_flask())  # type: ignore[arg-type]
+    ws_client = gui._server._ws.test_client(gui._server.get_server_instance())  # type: ignore[arg-type]
     cid = helpers.create_scope_and_get_sid(gui)
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
-    with gui.get_flask_app().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
+    with gui.get_server_instance().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
         g.client_id = cid
         id = notify(gui._Gui__state, "Info", "Message", id="id")  # type: ignore[attr-defined]
         assert id == "id"
@@ -53,11 +53,11 @@ def test_close_notification(gui: Gui, helpers):
     gui.run(run_server=False)
     flask_client = gui._server.test_client()
     # WS client and emit
-    ws_client = gui._server._ws.test_client(gui._server.get_flask())  # type: ignore[arg-type]
+    ws_client = gui._server._ws.test_client(gui._server.get_server_instance())  # type: ignore[arg-type]
     cid = helpers.create_scope_and_get_sid(gui)
     # Get the jsx once so that the page will be evaluated -> variable will be registered
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
-    with gui.get_flask_app().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
+    with gui.get_server_instance().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
         g.client_id = cid
         id = notify(gui._Gui__state, "Info", "Message", id="id")  # type: ignore[attr-defined]
         close_notification(gui._Gui__state, id)  # type: ignore[attr-defined, arg-type]
