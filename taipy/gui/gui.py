@@ -369,6 +369,8 @@ class Gui:
         The returned HTML content can therefore use both the variables stored in the *state*
         and the parameters provided in the call to `get_user_content_url()^`.
         """
+        # Notificaion callbacks
+        self._notification_callbacks = {}
 
         # sid from client_id
         self.__client_id_2_sid: t.Dict[str, t.Set[str]] = {}
@@ -1457,7 +1459,7 @@ class Gui:
         )
 
     def __send_ws_notification(
-        self, type: str, message: str, system_notification: bool, duration: int, notification_id: t.Optional[str] = None
+        self, type: str, message: str, system_notification: bool, duration: int, notification_id: t.Optional[str] = None, reason: t.Optional[str] = None
     ) -> None:
         payload = {
             "type": _WsType.ALERT.value,
@@ -1465,6 +1467,7 @@ class Gui:
             "message": message,
             "system": system_notification,
             "duration": duration,
+            "reason": reason,
         }
 
         if notification_id:
@@ -2410,19 +2413,24 @@ class Gui:
         system_notification: t.Optional[bool] = None,
         duration: t.Optional[int] = None,
         notification_id: t.Optional[str] = None,
+        on_close: t.Optional[t.Callable[[State, str, str], None]] = None,
     ):
+        if notification_id and on_close:
+            self._notification_callbacks[notification_id] = on_close
+
         self.__send_ws_notification(
             notification_type,
             message,
             self._get_config("system_notification", False) if system_notification is None else system_notification,
             self._get_config("notification_duration", 3000) if duration is None else duration,
-            notification_id,
+            notification_id,  
         )
         return notification_id
 
     def _close_notification(
         self,
         notification_id: str,
+        reason: str = "forced", 
     ):
         if notification_id:
             self.__send_ws_notification(
@@ -2432,6 +2440,10 @@ class Gui:
                 duration=0,  # No duration since it's an immediate close
                 notification_id=notification_id,
             )
+
+            if notification_id in self._notification_callbacks:
+                callback = self._notification_callbacks.pop(notification_id)  
+                callback(self, notification_id, reason)
 
     def _hold_actions(
         self,

@@ -67,6 +67,7 @@ def notify(
     system_notification: t.Optional[bool] = None,
     duration: t.Optional[int] = None,
     id: str = "",
+    on_close: t.Optional[t.Callable[[State, str, str], None]] = None,
 ) -> t.Optional[str]:
     """Send a notification to the user interface.
 
@@ -86,6 +87,8 @@ def notify(
             close the notification. The user can always manually close the notification.
         id: An optional identifier for this notification, so the application can close it explicitly
             using `close_notification()^` before the *duration* delay has passed.
+        on_close: An optional callback function that is called when the notification is closed.
+            The signature of this function is: `on_close(state: State, id: str, reason: string) -> None`.
 
     Note that you can also call this function with *notification_type* set to the first letter
     or the notification type (i.e. setting *notification_type* to "i" is equivalent to setting it to
@@ -100,13 +103,12 @@ def notify(
     displayed, but the in-app notification will still function.
     """
     if state and isinstance(state._gui, Gui):
-        return state._gui._notify(notification_type, message, system_notification, duration, id)  # type: ignore[attr-defined]
+        return state._gui._notify(notification_type, message, system_notification, duration, id, on_close)  # type: ignore[attr-defined]
     else:
         _warn("'notify()' must be called in the context of a callback.")
         return None
 
-
-def close_notification(state: State, id: str) -> None:
+def close_notification(state: State, id: str, reason:str) -> None:
     """Close a specific notification.
 
     This function closes a persistent notification by using the same identifier that was provided to
@@ -122,7 +124,8 @@ def close_notification(state: State, id: str) -> None:
     """
     if state and isinstance(state._gui, Gui):
         # Send the close command with the notification_id
-        state._gui._close_notification(id)  # type: ignore[attr-defined]
+        state._gui._close_notification(id, reason)  
+        # state._gui._close_notification(id)  # type: ignore[attr-defined]
     else:
         _warn("'close_notification()' must be called in the context of a callback.")
 
