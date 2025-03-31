@@ -369,7 +369,7 @@ class Gui:
         The returned HTML content can therefore use both the variables stored in the *state*
         and the parameters provided in the call to `get_user_content_url()^`.
         """
-        # Notificaion callbacks
+        # Notification callbacks
         self._notification_callbacks = {}
 
         # sid from client_id
