@@ -96,7 +96,7 @@ class _Server(ABC):
         )
 
     @abstractmethod
-    def _get_default_blueprint(
+    def _get_default_handler(
         self,
         static_folder: str,
         template_folder: str,

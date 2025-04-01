@@ -2868,7 +2868,7 @@ class Gui:
         if server_type == "flask":
             self.__register_flask_blueprint(styles, scripts)
         if server_type == "fastapi":
-            self.__register_fastapi_blueprint(styles, scripts)
+            self.__register_fastapi_router(styles, scripts)
 
     def __register_flask_blueprint(self, styles: t.List[str], scripts: t.List[str]):
         flask_blueprint: t.List[Blueprint] = []
@@ -2876,7 +2876,6 @@ class Gui:
         pages_bp = Blueprint("taipy_pages", __name__)
         # Run parse markdown to force variables binding at runtime
         pages_bp.add_url_rule(f"/{Gui.__JSX_URL}/<path:page_name>", view_func=self.__render_page)
-
         # server URL Rule for flask rendered react-router
         pages_bp.add_url_rule(f"/{Gui.__INIT_URL}", view_func=self.__init_route)
         flask_blueprint.append(pages_bp)
@@ -2902,7 +2901,7 @@ class Gui:
         flask_blueprint.append(extension_bp)
 
         flask_blueprint.append(
-            self._server._get_default_blueprint(
+            self._server._get_default_handler(
                 static_folder=self._get_webapp_path(),
                 template_folder=self._get_webapp_path(),
                 title=self._get_config("title", "Taipy App"),
@@ -2918,17 +2917,17 @@ class Gui:
             )
         )
 
-        _Hooks()._add_external_blueprint(self, __name__)
+        _Hooks()._add_external_blueprint(self, __name__, blueprint=flask_blueprint)
 
         # Register Flask Blueprint if available
         for bp in flask_blueprint:
             t.cast(Flask, self._server.get_server_instance()).register_blueprint(bp)
 
-    def __register_fastapi_blueprint(self, styles: t.List[str], scripts: t.List[str]):
+    def __register_fastapi_router(self, styles: t.List[str], scripts: t.List[str]):
         fastapi_router: t.List[APIRouter] = []
 
         fastapi_router.append(
-            self._server._get_default_blueprint(
+            self._server._get_default_handler(
                 static_folder=self._get_webapp_path(),
                 template_folder=self._get_webapp_path(),
                 title=self._get_config("title", "Taipy App"),
@@ -2944,7 +2943,7 @@ class Gui:
             )
         )
 
-        _Hooks()._add_external_blueprint(self, __name__)
+        _Hooks()._add_external_router(self, __name__, router=fastapi_router)
 
         for router in fastapi_router:
             t.cast(FastAPI, self._server.get_server_instance()).include_router(router)

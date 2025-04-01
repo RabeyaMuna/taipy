@@ -144,7 +144,7 @@ class FastAPIServer(_Server):
             with get_request_meta_sync(), set_sid_sync(sid):
                 gui._handle_disconnect()
 
-    def _get_default_blueprint(
+    def _get_default_handler(
         self,
         static_folder: str,
         template_folder: str,

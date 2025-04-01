@@ -120,7 +120,7 @@ class FlaskServer(_Server):
         def handle_disconnect():
             gui._handle_disconnect()  # type: ignore[attr-defined]
 
-    def _get_default_blueprint(
+    def _get_default_handler(
         self,
         static_folder: str,
         template_folder: str,
