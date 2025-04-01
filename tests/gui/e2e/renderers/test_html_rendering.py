@@ -22,7 +22,7 @@ if util.find_spec("playwright"):
     from playwright._impl._page import Page
 
 from taipy.gui import Gui, Html
-from taipy.gui.server import _Server
+from taipy.gui.servers.flask import FlaskServer as _Server
 
 
 @pytest.mark.teste2e
@@ -102,7 +102,7 @@ def test_html_render_path_mapping(page: "Page", gui: Gui, helpers, e2e_base_url,
     gui._server = _Server(
         gui,
         path_mapping={"style": f"{Path(Path(__file__).parent.resolve())}{os.path.sep}test-assets{os.path.sep}style"},
-        flask=gui._flask,
+        flask=gui._server_instance,
         async_mode="gevent",
     )
     gui.add_page("page1", Html(f"{Path(Path(__file__).parent.resolve())}{os.path.sep}page1.html"))

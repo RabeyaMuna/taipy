@@ -25,7 +25,6 @@ from ._hook import _Hooks
 from ._page import _Page
 from ._warnings import _warn
 from .partial import Partial
-from .servers import is_running_from_reloader
 from .utils import _is_in_notebook
 
 ConfigParameter = t.Literal[
@@ -291,6 +290,8 @@ class _Config(object):
         self._handle_argparse()
 
     def __log_outside_reloader(self, logger, msg):
+        from .servers import is_running_from_reloader
+
         if not is_running_from_reloader():
             logger.info(msg)
 
