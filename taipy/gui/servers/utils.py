@@ -19,8 +19,9 @@ from flask import send_file as flask_send_file
 from flask import send_from_directory as flask_send_from_directory
 
 from .fastapi import FastAPIServer
+from .fastapi.request import request as fastapi_request
+from .fastapi.request import request_meta as fastapi_meta
 from .flask import FlaskServer
-from .request import request, request_meta
 from .server import ServerFrameworks, _Server, server, server_type
 
 
@@ -62,7 +63,7 @@ def get_request():
     if server_type.get() == "flask":
         return flask_request
     elif server_type.get() == "fastapi":
-        return request.get()
+        return fastapi_request.get()
     return None
 
 
@@ -70,7 +71,7 @@ def get_request_meta():
     if server_type.get() == "flask":
         return flask_meta
     elif server_type.get() == "fastapi":
-        return request_meta.get()
+        return fastapi_meta.get()
     return {}
 
 

@@ -234,6 +234,7 @@ class Gui:
                 Specifies the path(s) to the JavaScript files or external resources used by the application.
                 It can be a single URL or path, or a list containing multiple URLs and/or paths.
             server (Union[ServerFrameworks, Flask, FastAPI]): The server type to use for the application.<br/>
+                It can be `flask` or `fastapi`, or a Flask or FastAPI instance.<br/>
                 The default value is `flask`.<br/>
         """
         # store suspected local containing frame
