@@ -65,6 +65,7 @@ from .extension.library import Element, ElementLibrary
 from .page import Page
 from .partial import Partial
 from .servers import (
+    HttpResponse,
     RequestAccessor,
     ServerFrameworks,
     _Server,
@@ -924,7 +925,7 @@ class Gui:
             )
             if dir_path:
                 return send_from_directory(str(dir_path), file_name, as_attachment=as_attachment)
-        return ("", 404)
+        return HttpResponse("", 404)
 
     def _get_user_content_url(
         self, path: t.Optional[str] = None, query_args: t.Optional[t.Dict[str, str]] = None
@@ -977,11 +978,11 @@ class Gui:
                 if ret is None:
                     _warn(f"{cb_function_name}() callback function must return a value.")
                 else:
-                    return (ret, 200)
+                    return HttpResponse(ret, 200)
             except Exception as e:  # pragma: no cover
                 if not self._call_on_exception(cb_function_name, e):
                     _warn(f"{cb_function_name}() callback function raised an exception", e)
-        return ("", 404)
+        return HttpResponse("", 404)
 
     def __serve_extension(self, path: str) -> t.Any:
         parts = path.split("/")
@@ -997,7 +998,7 @@ class Gui:
                 except Exception as e:
                     last_error = f"\n{e}"  # Check if the resource is served by another library with the same name
         _warn(f"Resource '{resource_name or path}' not accessible for library '{parts[0]}'{last_error}")
-        return ("", 404)
+        return HttpResponse("", 404)
 
     def __get_version(self) -> str:
         return f"{self.__version.get('major', 0)}.{self.__version.get('minor', 0)}.{self.__version.get('patch', 0)}"
@@ -1049,7 +1050,7 @@ class Gui:
         var_name = t.cast(str, RequestAccessor.form().get("var_name", None))
         if not var_name and not on_upload_action:
             _warn("upload files: No var name")
-            return ("upload files: No var name", 400)
+            return HttpResponse("upload files: No var name", 400)
         context = RequestAccessor.form().get("context", None)
         upload_data = RequestAccessor.form().get("upload_data", None)
         multiple = "multiple" in RequestAccessor.form() and RequestAccessor.form()["multiple"] == "True"
@@ -1058,12 +1059,12 @@ class Gui:
         file = RequestAccessor.files().get("blob", None)
         if not file:
             _warn("upload files: No file part")
-            return ("upload files: No file part", 400)
+            return HttpResponse("upload files: No file part", 400)
         # If the user does not select a file, the browser submits an
         # empty file without a filename.
         if file.filename == "":
             _warn("upload files: No selected file")
-            return ("upload files: No selected file", 400)
+            return HttpResponse("upload files: No selected file", 400)
 
         # Path parsing and checks
         path = RequestAccessor.form().get("path", "")
@@ -1089,7 +1090,7 @@ class Gui:
             file.save(os.path.join(upload_path, (file_path.name + suffix)))
         else:
             _warn(f"upload files: Path {path} points outside of upload root.")
-            return ("upload files: Path part points outside of upload root.", 400)
+            return HttpResponse("upload files: Path part points outside of upload root.", 400)
 
         if complete:
             if part > 0:
@@ -1103,7 +1104,7 @@ class Gui:
                             part_file_path.unlink()
                 except EnvironmentError as ee:  # pragma: no cover
                     _warn(f"Cannot group file after chunk upload for {file.filename}", ee)
-                    return (f"Cannot group file after chunk upload for {file.filename}", 500)
+                    return HttpResponse(f"Cannot group file after chunk upload for {file.filename}", 500)
             # Notify when file is uploaded
             newvalue = str(file_path)
             if multiple and var_name:
@@ -1128,7 +1129,7 @@ class Gui:
                         self._call_function_with_state(t.cast(t.Callable, file_fn), ["file_upload", {"args": [data]}])
                 else:
                     setattr(self._bindings(), var_name, newvalue)
-        return ("", 200)
+        return HttpResponse("", 200)
 
     def __send_var_list_update(  # noqa C901
         self,
@@ -2585,7 +2586,7 @@ class Gui:
                 if nav_page != page_name:
                     if isinstance(nav_page, str):
                         if self._navigate(nav_page):
-                            return ("Root page cannot be re-routed by on_navigate().", 302)
+                            return HttpResponse("Root page cannot be re-routed by on_navigate().", 302)
                     else:
                         _warn(f"on_navigate() returned an invalid page name '{nav_page}'.")
                     nav_page = page_name
@@ -2635,7 +2636,7 @@ class Gui:
             page = self._get_partial(nav_page)
         # Make sure that there is a page instance found
         if page is None:
-            return (
+            return HttpResponse(
                 self._server.direct_render_json({"error": f"Page '{nav_page}' doesn't exist."}),
                 400,
                 {"Content-Type": "application/json; charset=utf-8"},
@@ -2650,8 +2651,8 @@ class Gui:
             ):
                 # Proactively handle the bindings of custom page variables
                 self._bind_custom_page_variables(pr, self._get_client_id())
-                return ("Successfully redirect to custom resource handler", 200)
-            return ("Failed to navigate to custom resource handler", 500)
+                return HttpResponse("Successfully redirect to custom resource handler", 200)
+            return HttpResponse("Failed to navigate to custom resource handler", 500)
         # Handle page rendering
         context = page.render(self)  # type: ignore[arg-type]
         if (
@@ -2672,7 +2673,7 @@ class Gui:
                 context,  # noqa: E501
             )
         else:
-            return ("No page template", 404)
+            return HttpResponse("No page template", 404)
 
     def _render_route(self) -> t.Any:
         return self._server.direct_render_json(
@@ -2925,6 +2926,25 @@ class Gui:
 
     def __register_fastapi_router(self, styles: t.List[str], scripts: t.List[str]):
         fastapi_router: t.List[APIRouter] = []
+
+        pages_router = APIRouter()
+        pages_router.add_api_route(f"/{Gui.__JSX_URL}/{{page_name:path}}", self.__render_page, methods=["GET"])
+        pages_router.add_api_route(f"/{Gui.__INIT_URL}", self.__init_route, methods=["GET"])
+        fastapi_router.append(pages_router)
+
+        images_router = APIRouter()
+        images_router.add_api_route(f"/{Gui.__CONTENT_ROOT}/{{path:path}}", self.__serve_content, methods=["GET"])
+        fastapi_router.append(images_router)
+
+        user_content_router = APIRouter()
+        user_content_router.add_api_route(
+            f"/{Gui.__USER_CONTENT_URL}/{{path:path}}", self.__serve_user_content, methods=["GET"]
+        )
+        fastapi_router.append(user_content_router)
+
+        extension_router = APIRouter()
+        extension_router.add_api_route(f"/{Gui._EXTENSION_ROOT}/{{path:path}}", self.__serve_extension, methods=["GET"])
+        fastapi_router.append(extension_router)
 
         fastapi_router.append(
             self._server._get_default_handler(

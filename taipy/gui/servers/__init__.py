@@ -10,6 +10,7 @@
 # specific language governing permissions and limitations under the License.
 
 from .request import RequestAccessor
+from .response import HttpResponse
 from .server import ServerFrameworks, _Server
 from .utils import (
     create_server,
@@ -25,6 +26,7 @@ from .utils import (
 )
 
 __all__ = [
+    "HttpResponse",
     "RequestAccessor",
     "ServerFrameworks",
     "_Server",
