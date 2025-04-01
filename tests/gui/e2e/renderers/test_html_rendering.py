@@ -102,7 +102,7 @@ def test_html_render_path_mapping(page: "Page", gui: Gui, helpers, e2e_base_url,
     gui._server = _Server(
         gui,
         path_mapping={"style": f"{Path(Path(__file__).parent.resolve())}{os.path.sep}test-assets{os.path.sep}style"},
-        flask=gui._server_instance,
+        server=gui._server_instance,
         async_mode="gevent",
     )
     gui.add_page("page1", Html(f"{Path(Path(__file__).parent.resolve())}{os.path.sep}page1.html"))

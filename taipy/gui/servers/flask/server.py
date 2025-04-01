@@ -20,7 +20,6 @@ import time
 import typing as t
 import webbrowser
 from importlib import util
-from random import choices, randint
 
 from flask import (
     Blueprint,
@@ -35,7 +34,6 @@ from flask import (
 )
 from flask_cors import CORS
 from flask_socketio import SocketIO
-from gitignore_parser import parse_gitignore
 from kthread import KThread
 from werkzeug.serving import is_running_from_reloader
 
@@ -56,7 +54,7 @@ class FlaskServer(_Server):
     def __init__(
         self,
         gui: Gui,
-        flask: t.Optional[Flask] = None,
+        server: t.Optional[Flask] = None,
         path_mapping: t.Optional[dict] = None,
         async_mode: t.Optional[str] = None,
         allow_upgrades: bool = True,
@@ -64,14 +62,14 @@ class FlaskServer(_Server):
     ):
         self._gui = gui
         server_config = server_config or {}
-        self._flask = flask
-        if self._flask is None:
+        self._server = server
+        if self._server is None:
             flask_config: t.Dict[str, t.Any] = {"import_name": "Taipy"}
             if "flask" in server_config and isinstance(server_config["flask"], dict):
                 flask_config.update(server_config["flask"])
-            self._flask = Flask(**flask_config)
-        if "SECRET_KEY" not in self._flask.config or not self._flask.config["SECRET_KEY"]:
-            self._flask.config["SECRET_KEY"] = "TaIpY"
+            self._server = Flask(**flask_config)
+        if "SECRET_KEY" not in self._server.config or not self._server.config["SECRET_KEY"]:
+            self._server.config["SECRET_KEY"] = "TaIpY"
 
         # setup cors
         if "cors" not in server_config or (
@@ -80,7 +78,7 @@ class FlaskServer(_Server):
             cors_config = (
                 server_config["cors"] if "cors" in server_config and isinstance(server_config["cors"], dict) else {}
             )
-            CORS(self._flask, **cors_config)
+            CORS(self._server, **cors_config)
 
         # setup socketio
         socketio_config: t.Dict[str, t.Any] = {
@@ -93,13 +91,13 @@ class FlaskServer(_Server):
         }
         if "socketio" in server_config and isinstance(server_config["socketio"], dict):
             socketio_config.update(server_config["socketio"])
-        self._ws = SocketIO(self._flask, **socketio_config)
+        self._ws = SocketIO(self._server, **socketio_config)
 
         self._apply_patch()
 
         # set json encoder (for Taipy specific types)
-        self._flask.json_provider_class = _TaipyJsonProvider
-        self._flask.json = self._flask.json_provider_class(self._flask)
+        self._server.json_provider_class = _TaipyJsonProvider
+        self._server.json = self._server.json_provider_class(self._server)
 
         self.__path_mapping = path_mapping or {}
         self.__ssl_context = server_config.get("ssl_context", None)
@@ -121,22 +119,6 @@ class FlaskServer(_Server):
         @self._ws.on("disconnect")
         def handle_disconnect():
             gui._handle_disconnect()  # type: ignore[attr-defined]
-
-    def __is_ignored(self, file_path: str) -> bool:
-        if not hasattr(self, "_ignore_matches"):
-            __IGNORE_FILE = ".taipyignore"
-            ignore_file = (
-                (pathlib.Path(__main__.__file__).parent / __IGNORE_FILE) if hasattr(__main__, "__file__") else None
-            )
-            if not ignore_file or not ignore_file.is_file():
-                ignore_file = pathlib.Path(self._gui._root_dir) / __IGNORE_FILE  # type: ignore[attr-defined]
-            self._ignore_matches = (
-                parse_gitignore(ignore_file) if ignore_file.is_file() and os.access(ignore_file, os.R_OK) else None
-            )
-
-        if callable(self._ignore_matches):
-            return self._ignore_matches(file_path)
-        return False
 
     def _get_default_blueprint(
         self,
@@ -217,7 +199,7 @@ class FlaskServer(_Server):
                     )
                 ).startswith(base_path)
                 and os.path.isfile(file_path)
-                and not self.__is_ignored(file_path)
+                and not self._is_ignored(file_path)
             ):
                 return send_from_directory(base_path, path)
             if (
@@ -225,7 +207,7 @@ class FlaskServer(_Server):
                     file_path := str(os.path.normpath((base_path := self._gui._root_dir + os.path.sep) + path))  # type: ignore[attr-defined]
                 ).startswith(base_path)
                 and os.path.isfile(file_path)
-                and not self.__is_ignored(file_path)
+                and not self._is_ignored(file_path)
             ):
                 return send_from_directory(base_path, path)
             return ("", 404)
@@ -236,17 +218,17 @@ class FlaskServer(_Server):
         return jsonify(data)
 
     def get_server_instance(self):
-        return self._flask
+        return self._server
 
     def get_port(self):
         return self._port
 
     def test_client(self):
-        return t.cast(Flask, self._flask).test_client()
+        return t.cast(Flask, self._server).test_client()
 
     def _run_notebook(self):
         self._is_running = True
-        self._ws.run(self._flask, host=self._host, port=self._port, debug=False, use_reloader=False)
+        self._ws.run(self._server, host=self._host, port=self._port, debug=False, use_reloader=False)
 
     def _get_async_mode(self) -> str:
         return self._ws.async_mode  # type: ignore[attr-defined]
@@ -263,19 +245,6 @@ class FlaskServer(_Server):
 
             if not patcher.is_monkey_patched("time"):
                 monkey_patch(time=True)
-
-    def _get_random_port(
-        self, port_auto_ranges: t.Optional[t.List[t.Union[int, t.Tuple[int, int]]]] = None
-    ):  # pragma: no cover
-        port_auto_ranges = port_auto_ranges or [(49152, 65535)]
-        random_weights = [1 if isinstance(r, int) else abs(r[1] - r[0]) + 1 for r in port_auto_ranges]
-        while True:
-            random_choices = [
-                r if isinstance(r, int) else randint(min(r[0], r[1]), max(r[0], r[1])) for r in port_auto_ranges
-            ]
-            port = choices(random_choices, weights=random_weights)[0]
-            if port not in _RuntimeManager().get_used_port() and not _is_port_open(self._host, port):
-                return port
 
     def send_ws_message(self, *args, **kwargs):
         self._ws.emit("message", *args, **kwargs)
@@ -331,7 +300,7 @@ class FlaskServer(_Server):
             return
         self._is_running = True
         run_config = {
-            "app": self._flask,
+            "app": self._server,
             "host": host,
             "port": port,
             "debug": debug,
@@ -346,6 +315,9 @@ class FlaskServer(_Server):
             self._ws.run(**run_config)
         except KeyboardInterrupt:
             pass
+
+    def is_running(self):
+        return self._is_running
 
     def stop_thread(self):
         if hasattr(self, "_thread") and self._thread.is_alive() and self._is_running:

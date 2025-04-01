@@ -22,6 +22,8 @@ from werkzeug.serving import is_running_from_reloader as flask_is_running_from_r
 from .fastapi import FastAPIServer
 from .fastapi.request import request as fastapi_request
 from .fastapi.request import request_meta as fastapi_meta
+from .fastapi.utils import send_file as fastapi_send_file
+from .fastapi.utils import send_from_directory as fastapi_send_from_directory
 from .flask import FlaskServer
 from .server import ServerFrameworks, _Server, server, server_type
 
@@ -50,14 +52,14 @@ def send_file(*args, **kwargs):
     if server_type.get() == "flask":
         return flask_send_file(*args, **kwargs)
     elif server_type.get() == "fastapi":
-        raise NotImplementedError("send_file is not supported in FastAPI server")
+        return fastapi_send_file(*args, **kwargs)
 
 
 def send_from_directory(*args, **kwargs):
     if server_type.get() == "flask":
         return flask_send_from_directory(*args, **kwargs)
     elif server_type.get() == "fastapi":
-        raise NotImplementedError("send_from_directory is not supported in FastAPI server")
+        return fastapi_send_from_directory(*args, **kwargs)
 
 
 def get_request():
@@ -80,7 +82,7 @@ def has_server_context():
     if server_type.get() == "flask":
         return has_app_context()
     elif server_type.get() == "fastapi":
-        return True
+        return fastapi_request.get() is not None
     return False
 
 
@@ -88,7 +90,7 @@ def has_request_context():
     if server_type.get() == "flask":
         return flask_has_request_context()
     elif server_type.get() == "fastapi":
-        return True
+        return fastapi_request.get() is not None
     return False
 
 
@@ -96,5 +98,5 @@ def is_running_from_reloader():
     if server_type.get() == "flask":
         flask_is_running_from_reloader()
     elif server_type.get() == "fastapi":
-        return False
+        return server.get().get_server_instance().state.is_reloader
     return False

@@ -2772,7 +2772,7 @@ class Gui:
             self._server = create_server(
                 self,  # type: ignore[arg-type]
                 path_mapping=self._path_mapping,
-                flask=self._server_instance,
+                server=self._server_instance,
                 async_mode=app_config.get("async_mode"),
                 allow_upgrades=not app_config.get("notebook_proxy"),
                 server_config=app_config.get("server_config"),
@@ -2784,7 +2784,7 @@ class Gui:
             self._server = create_server(
                 self,  # type: ignore[arg-type]
                 path_mapping=self._path_mapping,
-                flask=self._server_instance,
+                server=self._server_instance,
                 async_mode=app_config.get("async_mode"),
                 allow_upgrades=not app_config.get("notebook_proxy"),
                 server_config=app_config.get("server_config"),
@@ -3109,7 +3109,7 @@ class Gui:
         `(Gui.)run^` method was set to True, or you are running in an IPython notebook
         context.
         """
-        if hasattr(self, "_server") and hasattr(self._server, "_thread") and self._server._is_running:
+        if hasattr(self, "_server") and hasattr(self._server, "_thread") and self._server.is_running():
             self._server.stop_thread()
             self.run(**self.__run_kwargs, _reload=True)
             _TaipyLogger._get_logger().info("Gui server has been reloaded.")
@@ -3122,7 +3122,7 @@ class Gui:
         `(Gui.)run()^` method was set to True, or you are running in an IPython notebook
         context.
         """
-        if hasattr(self, "_server") and hasattr(self._server, "_thread") and self._server._is_running:
+        if hasattr(self, "_server") and hasattr(self._server, "_thread") and self._server.is_running():
             self._server.stop_thread()
             _TaipyLogger._get_logger().info("Gui server has been stopped.")
 
