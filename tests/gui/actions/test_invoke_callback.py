@@ -19,7 +19,7 @@ from taipy.gui import Gui, Markdown, State
 
 @contextlib.contextmanager
 def get_state(gui: Gui, state_id: str):
-    with gui.get_server_instance().app_context():
+    with gui.get_app_context():
         client_id = gui._bindings()._get_or_create_scope(state_id)[0]
         gui._Gui__set_client_id_in_context(client_id)  # type: ignore[attr-defined]
         yield gui._Gui__state  # type: ignore[attr-defined]
@@ -65,7 +65,7 @@ def test_invoke_callback_sid(gui: Gui, helpers):
 
     # Get the jsx once so that the page will be evaluated -> variable will be registered
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
-    with gui.get_server_instance().app_context():
+    with gui.get_app_context():
         g.client_id = base_sid
         gui.invoke_callback(cid, user_callback, [])
         assert g.client_id == base_sid

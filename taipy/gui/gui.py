@@ -32,8 +32,9 @@ from urllib.parse import unquote, urlencode, urlparse
 
 import markdown as md_lib
 import tzlocal
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from flask import Blueprint, Flask
+from flask.ctx import AppContext
 from werkzeug.utils import secure_filename
 
 import __main__  # noqa: F401
@@ -64,6 +65,7 @@ from .extension.library import Element, ElementLibrary
 from .page import Page
 from .partial import Partial
 from .servers import (
+    RequestAccessor,
     ServerFrameworks,
     _Server,
     create_server,
@@ -645,14 +647,14 @@ class Gui:
 
     def __set_client_id_in_context(self, client_id: t.Optional[str] = None, force=False):
         if not client_id and get_request():
-            client_id = get_request().args.get(Gui.__ARG_CLIENT_ID, "")
+            client_id = RequestAccessor.arg(Gui.__ARG_CLIENT_ID, "")
         if not client_id and (ws_client_id := getattr(get_request_meta(), "ws_client_id", None)):
             client_id = ws_client_id
         if not client_id and force:
             res = self._bindings()._get_or_create_scope("")
             client_id = res[0] if res[1] else None
-        if client_id and get_request():
-            if sid := getattr(get_request(), "sid", None):
+        if client_id:
+            if sid := RequestAccessor.sid():
                 sids = self.__client_id_2_sid.get(client_id, None)
                 if sids is None:
                     sids = set()
@@ -693,9 +695,7 @@ class Gui:
 
     def _handle_disconnect(self):
         _Hooks()._handle_disconnect(self)
-        if (sid := getattr(get_request(), "sid", None)) and (
-            st_to := self._get_config("state_retention_period", 0)
-        ) > 0:
+        if (sid := RequestAccessor.sid()) and (st_to := self._get_config("state_retention_period", 0)) > 0:
             for cl_id, sids in self.__client_id_2_sid.items():
                 if sid in sids:
                     if len(sids) == 1:
@@ -920,7 +920,7 @@ class Gui:
         if len(parts) > 1:
             file_name = parts[-1]
             (dir_path, as_attachment) = self.__get_content_accessor().get_content_path(
-                path[: -len(file_name) - 1], file_name, get_request().args.get("bypass")
+                path[: -len(file_name) - 1], file_name, RequestAccessor.arg("bypass")
             )
             if dir_path:
                 return send_from_directory(str(dir_path), file_name, as_attachment=as_attachment)
@@ -936,7 +936,7 @@ class Gui:
     def __serve_user_content(self, path: str) -> t.Any:
         self.__set_client_id_in_context()
         q_args: t.Dict[str, str] = {}
-        q_args.update(get_request().args)
+        q_args.update(RequestAccessor.args(True))
         q_args.pop(Gui.__ARG_CLIENT_ID, None)
         cb_function: t.Union[t.Callable, str, None] = None
         cb_function_name = None
@@ -1045,17 +1045,17 @@ class Gui:
 
     def __upload_files(self):
         self.__set_client_id_in_context()
-        on_upload_action = get_request().form.get("on_action", None)
-        var_name = t.cast(str, get_request().form.get("var_name", None))
+        on_upload_action = RequestAccessor.form().get("on_action", None)
+        var_name = t.cast(str, RequestAccessor.form().get("var_name", None))
         if not var_name and not on_upload_action:
             _warn("upload files: No var name")
             return ("upload files: No var name", 400)
-        context = get_request().form.get("context", None)
-        upload_data = get_request().form.get("upload_data", None)
-        multiple = "multiple" in get_request().form and get_request().form["multiple"] == "True"
+        context = RequestAccessor.form().get("context", None)
+        upload_data = RequestAccessor.form().get("upload_data", None)
+        multiple = "multiple" in RequestAccessor.form() and RequestAccessor.form()["multiple"] == "True"
 
         # File parsing and checks
-        file = get_request().files.get("blob", None)
+        file = RequestAccessor.files().get("blob", None)
         if not file:
             _warn("upload files: No file part")
             return ("upload files: No file part", 400)
@@ -1066,15 +1066,15 @@ class Gui:
             return ("upload files: No selected file", 400)
 
         # Path parsing and checks
-        path = get_request().form.get("path", "")
+        path = RequestAccessor.form().get("path", "")
         suffix = ""
         complete = True
         part = 0
 
-        if "total" in get_request().form:
-            total = int(get_request().form["total"])
-            if total > 1 and "part" in get_request().form:
-                part = int(get_request().form["part"])
+        if "total" in RequestAccessor.form():
+            total = int(RequestAccessor.form()["total"])
+            if total > 1 and "part" in RequestAccessor.form():
+                part = int(RequestAccessor.form()["part"])
                 suffix = f".part.{part}"
                 complete = part == total - 1
 
@@ -1554,7 +1554,7 @@ class Gui:
     def __get_ws_receiver(self, send_back_only=False) -> t.Union[t.List[str], t.Any, None]:
         if self._bindings()._is_single_client():
             return None
-        sid = getattr(get_request(), "sid", None) if get_request() else None
+        sid = RequestAccessor.sid()
         sids = self.__get_sids(self._get_client_id())
         if sid:
             sids.add(sid)
@@ -1719,13 +1719,12 @@ class Gui:
             args (Optional[Sequence]): The remaining arguments, as a List or a Tuple.
             module_context (Optional[str]): The name of the module that will be used.
         """  # noqa: E501
-        this_sid = None
-        if get_request():
+        this_sid = RequestAccessor.sid()
+        if this_sid:
             # avoid messing with the client_id => Set(ws id)
-            this_sid = getattr(get_request(), "sid", None)
-            get_request().sid = None  # type: ignore[attr-defined]
+            RequestAccessor.set_sid(None)
         try:
-            with self.get_server_instance().app_context():
+            with self.get_app_context():
                 setattr(get_request_meta(), Gui.__ARG_CLIENT_ID, state_id)
                 with self._set_module_context(module_context):
                     if not _is_function(callback):
@@ -1742,7 +1741,7 @@ class Gui:
                 )
         finally:
             if this_sid:
-                get_request().sid = this_sid  # type: ignore[attr-defined]
+                RequestAccessor.set_sid(this_sid)  # type: ignore[attr-defined]
         return None
 
     def broadcast_callback(
@@ -2570,7 +2569,11 @@ class Gui:
         nav_page = page_name
         if hasattr(self, "on_navigate") and _is_function(self.on_navigate):
             try:
-                params = get_request().args.to_dict() if hasattr(get_request(), "args") else {}
+                params = (
+                    RequestAccessor.args(True)
+                    if (hasattr(get_request(), "args") or hasattr(get_request(), "query_params"))
+                    else {}
+                )
                 params.pop("client_id", None)
                 params.pop("v", None)
                 nav_page = self._call_function_with_state(
@@ -2610,7 +2613,7 @@ class Gui:
         """Handle the bindings of custom page variables"""
         if not isinstance(page, CustomPage):
             return
-        with self.get_server_instance().app_context() if has_server_context() else contextlib.nullcontext():  # type: ignore[attr-defined]
+        with self.get_app_context() if has_server_context() else contextlib.nullcontext():  # type: ignore[attr-defined]
             self.__set_client_id_in_context(client_id)
             with self._set_locals_context(page._get_module_name()):
                 for k, v in self._get_locals_bind().items():
@@ -2693,8 +2696,13 @@ class Gui:
             The server instance used.
         """
         if hasattr(self, "_server"):
-            return t.cast(Flask, self._server.get_server_instance())
+            return self._server.get_server_instance()
         raise RuntimeError("get_server_instance() cannot be invoked before run() has been called.")
+
+    def get_app_context(self) -> t.Union[AppContext, contextlib.nullcontext]:
+        if get_server_type() == "flask":
+            return self.get_server_instance().app_context()
+        return contextlib.nullcontext()
 
     def _get_port(self) -> int:
         return self._server.get_port()
@@ -2808,7 +2816,7 @@ class Gui:
             _TaipyLogger._get_logger().info(f" * NGROK Public Url: {self._ngrok[0].public_url}")
 
     def __bind_default_function(self):
-        with self.get_server_instance().app_context():
+        with self.get_app_context():
             if additional_pages := _Hooks()._get_additional_pages():
                 # add page context for additional pages so that they can be managed by the variable directory
                 for page in additional_pages:
@@ -2826,14 +2834,6 @@ class Gui:
             self.__bind_local_func("on_user_content")
 
     def __register_blueprint(self):
-        server_type = get_server_type()
-        if server_type == "flask":
-            self.__register_flask_blueprint()
-        if server_type == "fastapi":
-            self.__register_fastapi_blueprint()
-
-    def __register_flask_blueprint(self):
-        flask_blueprint: t.List[Blueprint] = []
         # add en empty main page if it is not defined
         if Gui.__root_page_name not in self._config.routes:
             new_page = _Page()
@@ -2842,27 +2842,6 @@ class Gui:
             self._config.pages.append(new_page)
             self._config.routes.append(Gui.__root_page_name)
 
-        pages_bp = Blueprint("taipy_pages", __name__)
-        flask_blueprint.append(pages_bp)
-
-        # server URL Rule for taipy images
-        images_bp = Blueprint("taipy_images", __name__)
-        images_bp.add_url_rule(f"/{Gui.__CONTENT_ROOT}/<path:path>", view_func=self.__serve_content)
-        flask_blueprint.append(images_bp)
-
-        # server URL for uploaded files
-        upload_bp = Blueprint("taipy_upload", __name__)
-        upload_bp.add_url_rule(f"/{Gui.__UPLOAD_URL}", view_func=self.__upload_files, methods=["POST"])
-        flask_blueprint.append(upload_bp)
-
-        # server URL for user content
-        user_content_bp = Blueprint("taipy_user_content", __name__)
-        user_content_bp.add_url_rule(f"/{Gui.__USER_CONTENT_URL}/<path:path>", view_func=self.__serve_user_content)
-        flask_blueprint.append(user_content_bp)
-
-        # server URL for extension resources
-        extension_bp = Blueprint("taipy_extensions", __name__)
-        extension_bp.add_url_rule(f"/{Gui._EXTENSION_ROOT}/<path:path>", view_func=self.__serve_extension)
         scripts = [
             s if bool(urlparse(s).netloc) else f"{Gui._EXTENSION_ROOT}/{name}/{s}{lib.get_query(s)}"
             for name, libs in Gui.__extensions.items()
@@ -2885,14 +2864,47 @@ class Gui:
         if self.__script_files:
             scripts.extend(self.__script_files)
 
-        flask_blueprint.append(extension_bp)
+        server_type = get_server_type()
+        if server_type == "flask":
+            self.__register_flask_blueprint(styles, scripts)
+        if server_type == "fastapi":
+            self.__register_fastapi_blueprint(styles, scripts)
 
-        _webapp_path = self._get_webapp_path()
+    def __register_flask_blueprint(self, styles: t.List[str], scripts: t.List[str]):
+        flask_blueprint: t.List[Blueprint] = []
+
+        pages_bp = Blueprint("taipy_pages", __name__)
+        # Run parse markdown to force variables binding at runtime
+        pages_bp.add_url_rule(f"/{Gui.__JSX_URL}/<path:page_name>", view_func=self.__render_page)
+
+        # server URL Rule for flask rendered react-router
+        pages_bp.add_url_rule(f"/{Gui.__INIT_URL}", view_func=self.__init_route)
+        flask_blueprint.append(pages_bp)
+
+        # server URL Rule for taipy images
+        images_bp = Blueprint("taipy_images", __name__)
+        images_bp.add_url_rule(f"/{Gui.__CONTENT_ROOT}/<path:path>", view_func=self.__serve_content)
+        flask_blueprint.append(images_bp)
+
+        # server URL for uploaded files
+        upload_bp = Blueprint("taipy_upload", __name__)
+        upload_bp.add_url_rule(f"/{Gui.__UPLOAD_URL}", view_func=self.__upload_files, methods=["POST"])
+        flask_blueprint.append(upload_bp)
+
+        # server URL for user content
+        user_content_bp = Blueprint("taipy_user_content", __name__)
+        user_content_bp.add_url_rule(f"/{Gui.__USER_CONTENT_URL}/<path:path>", view_func=self.__serve_user_content)
+        flask_blueprint.append(user_content_bp)
+
+        # server URL for extension resources
+        extension_bp = Blueprint("taipy_extensions", __name__)
+        extension_bp.add_url_rule(f"/{Gui._EXTENSION_ROOT}/<path:path>", view_func=self.__serve_extension)
+        flask_blueprint.append(extension_bp)
 
         flask_blueprint.append(
             self._server._get_default_blueprint(
-                static_folder=_webapp_path,
-                template_folder=_webapp_path,
+                static_folder=self._get_webapp_path(),
+                template_folder=self._get_webapp_path(),
                 title=self._get_config("title", "Taipy App"),
                 favicon=self._get_config("favicon", Gui.__DEFAULT_FAVICON_URL),
                 root_margin=self._get_config("margin", None),
@@ -2906,20 +2918,36 @@ class Gui:
             )
         )
 
-        # Run parse markdown to force variables binding at runtime
-        pages_bp.add_url_rule(f"/{Gui.__JSX_URL}/<path:page_name>", view_func=self.__render_page)
-
-        # server URL Rule for flask rendered react-router
-        pages_bp.add_url_rule(f"/{Gui.__INIT_URL}", view_func=self.__init_route)
-
         _Hooks()._add_external_blueprint(self, __name__)
 
         # Register Flask Blueprint if available
         for bp in flask_blueprint:
             t.cast(Flask, self._server.get_server_instance()).register_blueprint(bp)
 
-    def __register_fastapi_blueprint(self):
-        pass
+    def __register_fastapi_blueprint(self, styles: t.List[str], scripts: t.List[str]):
+        fastapi_router: t.List[APIRouter] = []
+
+        fastapi_router.append(
+            self._server._get_default_blueprint(
+                static_folder=self._get_webapp_path(),
+                template_folder=self._get_webapp_path(),
+                title=self._get_config("title", "Taipy App"),
+                favicon=self._get_config("favicon", Gui.__DEFAULT_FAVICON_URL),
+                root_margin=self._get_config("margin", None),
+                scripts=scripts,
+                styles=styles,
+                version=self.__get_version(),
+                client_config=self.__get_client_config(),
+                watermark=self._get_config("watermark", None),
+                css_vars=self.__get_css_vars(),
+                base_url=self._get_config("base_url", "/"),
+            )
+        )
+
+        _Hooks()._add_external_blueprint(self, __name__)
+
+        for router in fastapi_router:
+            t.cast(FastAPI, self._server.get_server_instance()).include_router(router)
 
     def _get_accessor(self):
         if self.__accessors is None:
@@ -3180,17 +3208,16 @@ class Gui:
     def __do_fire_event(
         self, event_name: str, client_id: t.Optional[str] = None, payload: t.Optional[t.Dict[str, t.Any]] = None
     ):
-        this_sid = None
-        if get_request():
+        this_sid = RequestAccessor.sid()
+        if this_sid:
             # avoid messing with the client_id => Set(ws id)
-            this_sid = getattr(get_request(), "sid", None)
-            get_request().sid = None  # type: ignore[attr-defined]
+            RequestAccessor.set_sid(None)
 
         try:
-            with self.get_server_instance().app_context(), self.__event_manager:
+            with self.get_app_context(), self.__event_manager:
                 if client_id:
                     setattr(get_request_meta(), Gui.__ARG_CLIENT_ID, client_id)
                 _Hooks()._fire_event(event_name, client_id, payload)
         finally:
             if this_sid:
-                get_request().sid = this_sid  # type: ignore[attr-defined]
+                RequestAccessor.set_sid(this_sid)

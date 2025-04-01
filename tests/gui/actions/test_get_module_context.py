@@ -26,7 +26,7 @@ def test_get_module_context(gui: Gui, helpers):
     flask_client = gui._server.test_client()
     cid = helpers.create_scope_and_get_sid(gui)
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
-    with gui.get_server_instance().app_context():
+    with gui.get_app_context():
         g.client_id = cid
         module = get_module_context(gui._Gui__state)  # type: ignore[attr-defined]
         assert module == "test_get_module_context"
@@ -47,7 +47,7 @@ def test_get_module_name_from_state(gui: Gui, helpers):
     flask_client = gui._server.test_client()
     cid = helpers.create_scope_and_get_sid(gui)
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
-    with gui.get_server_instance().app_context():
+    with gui.get_app_context():
         g.client_id = cid
         module = get_module_name_from_state(gui._Gui__state)  # type: ignore[attr-defined]
         assert module == "test_get_module_context"

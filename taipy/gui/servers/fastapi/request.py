@@ -15,5 +15,6 @@ from typing import Optional
 from fastapi import Request
 from flask.ctx import _AppCtxGlobals
 
-request: ContextVar[Optional[Request]] = ContextVar("request")
-request_meta: ContextVar[Optional[_AppCtxGlobals]] = ContextVar("request_meta")
+request: ContextVar[Optional[Request]] = ContextVar("request", default=None)
+request_meta: ContextVar[Optional[_AppCtxGlobals]] = ContextVar("request_meta", default=None)
+sid: ContextVar[Optional[str]] = ContextVar("sid", default=None)

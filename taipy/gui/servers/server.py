@@ -96,6 +96,24 @@ class _Server(ABC):
         )
 
     @abstractmethod
+    def _get_default_blueprint(
+        self,
+        static_folder: str,
+        template_folder: str,
+        title: str,
+        favicon: str,
+        root_margin: str,
+        scripts: t.List[str],
+        styles: t.List[str],
+        version: str,
+        client_config: t.Dict[str, t.Any],
+        watermark: t.Optional[str],
+        css_vars: str,
+        base_url: str,
+    ):
+        raise NotImplementedError
+
+    @abstractmethod
     def run(
         self,
         host,

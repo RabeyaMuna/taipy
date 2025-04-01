@@ -9,6 +9,7 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+import os
 import typing as t
 
 from flask import g as flask_meta
@@ -98,5 +99,5 @@ def is_running_from_reloader():
     if server_type.get() == "flask":
         flask_is_running_from_reloader()
     elif server_type.get() == "fastapi":
-        return server.get().get_server_instance().state.is_reloader
+        return os.getpid() == os.getppid()
     return False

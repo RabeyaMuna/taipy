@@ -254,9 +254,7 @@ class _GuiState(State):
     def _notebook_context(self, gui: "Gui"):
         from .servers import has_server_context
 
-        return (
-            gui.get_server_instance().app_context() if not has_server_context() and _is_in_notebook() else nullcontext()
-        )
+        return gui.get_app_context() if not has_server_context() and _is_in_notebook() else nullcontext()
 
     def _get_placeholder(self, name: str):
         if name in _GuiState.__placeholder_attrs:

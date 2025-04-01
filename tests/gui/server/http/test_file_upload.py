@@ -103,7 +103,7 @@ def test_file_upload_multiple(gui: Gui, helpers):
     gui._set_frame(inspect.currentframe())
     gui.run(run_server=False, single_client=True)
     flask_client = gui._server.test_client()
-    with gui.get_server_instance().app_context():
+    with gui.get_app_context():
         gui._bind_var_val(var_name, None)
     # Get the jsx once so that the page will be evaluated -> variable will be registered
     sid = _DataScopes._GLOBAL_ID

@@ -19,7 +19,7 @@ from taipy.gui import Gui
 
 @contextlib.contextmanager
 def get_state(gui: Gui, state_id: str):
-    with gui.get_server_instance().app_context():
+    with gui.get_app_context():
         client_id = gui._bindings()._get_or_create_scope(state_id)[0]
         gui._Gui__set_client_id_in_context(client_id)  # type: ignore[attr-defined]
         yield gui._Gui__state  # type: ignore[attr-defined]

@@ -9,6 +9,7 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+from .request import RequestAccessor
 from .server import ServerFrameworks, _Server
 from .utils import (
     create_server,
@@ -24,6 +25,8 @@ from .utils import (
 )
 
 __all__ = [
+    "RequestAccessor",
+    "ServerFrameworks",
     "_Server",
     "create_server",
     "get_request",
@@ -35,5 +38,4 @@ __all__ = [
     "send_file",
     "send_from_directory",
     "set_server_type",
-    "ServerFrameworks",
 ]

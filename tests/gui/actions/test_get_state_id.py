@@ -26,7 +26,7 @@ def test_get_state_id(gui: Gui, helpers):
     flask_client = gui._server.test_client()
     cid = helpers.create_scope_and_get_sid(gui)
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
-    with gui.get_server_instance().app_context():
+    with gui.get_app_context():
         g.client_id = cid
         assert cid == get_state_id(gui._Gui__state)  # type: ignore[attr-defined]
 

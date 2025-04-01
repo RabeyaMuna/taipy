@@ -10,6 +10,7 @@
 # specific language governing permissions and limitations under the License.
 
 import asyncio
+import json
 import os
 import pathlib
 import typing as t
@@ -28,12 +29,13 @@ from starlette.middleware.base import BaseHTTPMiddleware
 import __main__
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
-from ..._renderers.json import _TaipyJsonAdapter
+from ..._renderers.json import _TaipyJsonAdapter, _TaipyJsonEncoder
 from ...config import ServerConfig
 from ...custom._page import _ExternalResourceHandlerManager
 from ..server import _Server
 from .request import request as request_context
 from .request import request_meta
+from .request import sid as sid_context
 from .utils import send_from_directory
 
 if t.TYPE_CHECKING:
@@ -54,6 +56,29 @@ def get_request_meta_sync():
     request_meta.set(new_request_meta)
     yield new_request_meta
     request_meta.set(None)
+
+
+@contextmanager
+def set_request_sync(request: Request):
+    request_context.set(request)
+    yield
+    request_context.set(None)
+
+
+@contextmanager
+def set_sid_sync(sid: str):
+    sid_context.set(sid)
+    yield
+    sid_context.set(None)
+
+
+# json dumps + loads for socketio
+def custom_json_dumps(obj):
+    return _TaipyJsonAdapter().parse(obj)
+
+
+def custom_json_loads(s):
+    return json.loads(s)
 
 
 class CleanupMiddleware(BaseHTTPMiddleware):
@@ -83,8 +108,10 @@ class FastAPIServer(_Server):
         self._port: t.Optional[int] = None
 
         # server setup
-        self._server = server or FastAPI()
-        self._ws = socketio.AsyncServer()
+        self._server = server or FastAPI(json_encoder=_TaipyJsonEncoder)
+        self._ws = socketio.AsyncServer(
+            json={"dumps": custom_json_dumps, "loads": custom_json_loads}, async_mode="asgi"
+        )
         self._server.mount("/", socketio.ASGIApp(self._ws, other_asgi_app=self._server))
 
         # registering middleware
@@ -92,7 +119,7 @@ class FastAPIServer(_Server):
 
         self._server.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],  # Change this to your frontend domain for security
+            allow_origins=["*"],
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
@@ -101,12 +128,12 @@ class FastAPIServer(_Server):
         # Define your event handlers and routes
         @self._ws.event
         def connect(sid, environ):
-            with get_request_meta_sync():
+            with get_request_meta_sync(), set_sid_sync(sid):
                 gui._handle_connect()
 
         @self._ws.on("message")  # type: ignore
         def handle_message(sid, message):
-            with get_request_meta_sync():
+            with get_request_meta_sync(), set_sid_sync(sid):
                 if "status" in message:
                     _TaipyLogger._get_logger().info(message["status"])
                 elif "type" in message:
@@ -114,10 +141,10 @@ class FastAPIServer(_Server):
 
         @self._ws.event
         def disconnect(sid):
-            with get_request_meta_sync():
+            with get_request_meta_sync(), set_sid_sync(sid):
                 gui._handle_disconnect()
 
-    def _get_default_router(
+    def _get_default_blueprint(
         self,
         static_folder: str,
         template_folder: str,
@@ -139,95 +166,96 @@ class FastAPIServer(_Server):
         @taipy_router.get("/", response_class=HTMLResponse)
         @taipy_router.get("/{path:path}", response_class=HTMLResponse)
         def my_index(request: Request, path: str = "", request_meta: _AppCtxGlobals = Depends(get_request_meta)):  # noqa: B008
-            resource_handler_id = request.cookies.get("_RESOURCE_HANDLER_ARG", None)
-            if resource_handler_id is not None:
-                resource_handler = _ExternalResourceHandlerManager().get(resource_handler_id)
-                if resource_handler is None:
-                    reload_html = """
-                        <html>
-                            <head><style>body {background-color: black; margin: 0;}</style></head>
-                            <body><script>location.reload();</script></body>
-                        </html>
-                    """
-                    response = HTMLResponse(content=reload_html, status_code=400)
-                    response.set_cookie(
-                        "_RESOURCE_HANDLER_ARG",
-                        "",
-                        secure=request.url.scheme == "https",
-                        httponly=True,
-                        expires=0,
-                        path="/",
-                    )
-                    return response
-                try:
-                    return resource_handler.get_resources(path, static_folder, base_url)
-                except Exception as e:
-                    raise HTTPException(
-                        status_code=500, detail="Can't get resources from custom resource handler"
-                    ) from e
+            with set_request_sync(request), get_request_meta_sync():
+                resource_handler_id = request.cookies.get("_RESOURCE_HANDLER_ARG", None)
+                if resource_handler_id is not None:
+                    resource_handler = _ExternalResourceHandlerManager().get(resource_handler_id)
+                    if resource_handler is None:
+                        reload_html = """
+                            <html>
+                                <head><style>body {background-color: black; margin: 0;}</style></head>
+                                <body><script>location.reload();</script></body>
+                            </html>
+                        """
+                        response = HTMLResponse(content=reload_html, status_code=400)
+                        response.set_cookie(
+                            "_RESOURCE_HANDLER_ARG",
+                            "",
+                            secure=request.url.scheme == "https",
+                            httponly=True,
+                            expires=0,
+                            path="/",
+                        )
+                        return response
+                    try:
+                        return resource_handler.get_resources(path, static_folder, base_url)
+                    except Exception as e:
+                        raise HTTPException(
+                            status_code=500, detail="Can't get resources from custom resource handler"
+                        ) from e
 
-            if not path or path == "index.html" or "." not in path:
-                try:
-                    return templates.TemplateResponse(
-                        "index.html",
-                        {
-                            "title": title,
-                            "favicon": f"{favicon}?version={version}",
-                            "root_margin": root_margin,
-                            "watermark": watermark,
-                            "config": client_config,
-                            "scripts": scripts,
-                            "styles": styles,
-                            "version": version,
-                            "css_vars": css_vars,
-                            "base_url": base_url,
-                        },
-                    )
-                except Exception:
-                    raise HTTPException(  # noqa: B904
-                        status_code=500,
-                        detail="Something is wrong with the taipy-gui front-end installation. Check that the js bundle has been properly built.",  # noqa: E501
-                    )
+                if not path or path == "index.html" or "." not in path:
+                    try:
+                        return templates.TemplateResponse(
+                            "index.html",
+                            {
+                                "title": title,
+                                "favicon": f"{favicon}?version={version}",
+                                "root_margin": root_margin,
+                                "watermark": watermark,
+                                "config": client_config,
+                                "scripts": scripts,
+                                "styles": styles,
+                                "version": version,
+                                "css_vars": css_vars,
+                                "base_url": base_url,
+                            },
+                        )
+                    except Exception:
+                        raise HTTPException(  # noqa: B904
+                            status_code=500,
+                            detail="Something is wrong with the taipy-gui front-end installation. Check that the js bundle has been properly built.",  # noqa: E501
+                        )
 
-            if path == "taipy.status.json":
-                return JSONResponse(content=self._gui._serve_status(pathlib.Path(template_folder) / path))
+                if path == "taipy.status.json":
+                    return JSONResponse(content=self._gui._serve_status(pathlib.Path(template_folder) / path))
 
-            if (file_path := str(os.path.normpath((base_path := static_folder + os.path.sep) + path))).startswith(
-                base_path
-            ) and os.path.isfile(file_path):
-                return send_from_directory(base_path, path)
-            # use the path mapping to detect and find resources
-            for k, v in self._path_mapping.items():
+                if (file_path := str(os.path.normpath((base_path := static_folder + os.path.sep) + path))).startswith(
+                    base_path
+                ) and os.path.isfile(file_path):
+                    return send_from_directory(base_path, path)
+                # use the path mapping to detect and find resources
+                for k, v in self._path_mapping.items():
+                    if (
+                        path.startswith(f"{k}/")
+                        and (
+                            file_path := str(os.path.normpath((base_path := v + os.path.sep) + path[len(k) + 1 :]))
+                        ).startswith(base_path)
+                        and os.path.isfile(file_path)
+                    ):
+                        return send_from_directory(base_path, path[len(k) + 1 :])
                 if (
-                    path.startswith(f"{k}/")
+                    hasattr(__main__, "__file__")
                     and (
-                        file_path := str(os.path.normpath((base_path := v + os.path.sep) + path[len(k) + 1 :]))
+                        file_path := str(
+                            os.path.normpath((base_path := os.path.dirname(__main__.__file__) + os.path.sep) + path)
+                        )
                     ).startswith(base_path)
                     and os.path.isfile(file_path)
+                    and not self._is_ignored(file_path)
                 ):
-                    return send_from_directory(base_path, path[len(k) + 1 :])
-            if (
-                hasattr(__main__, "__file__")
-                and (
-                    file_path := str(
-                        os.path.normpath((base_path := os.path.dirname(__main__.__file__) + os.path.sep) + path)
-                    )
-                ).startswith(base_path)
-                and os.path.isfile(file_path)
-                and not self._is_ignored(file_path)
-            ):
-                return send_from_directory(base_path, path)
-            if (
-                (
-                    file_path := str(os.path.normpath((base_path := self._gui._root_dir + os.path.sep) + path))  # type: ignore[attr-defined]
-                ).startswith(base_path)
-                and os.path.isfile(file_path)
-                and not self._is_ignored(file_path)
-            ):
-                return send_from_directory(base_path, path)
+                    return send_from_directory(base_path, path)
+                if (
+                    (
+                        file_path := str(os.path.normpath((base_path := self._gui._root_dir + os.path.sep) + path))  # type: ignore[attr-defined]
+                    ).startswith(base_path)
+                    and os.path.isfile(file_path)
+                    and not self._is_ignored(file_path)
+                ):
+                    return send_from_directory(base_path, path)
 
-            # Default error return for unmatched paths
-            raise HTTPException(status_code=404, detail="")
+                # Default error return for unmatched paths
+                raise HTTPException(status_code=404, detail="")
 
         return taipy_router
 

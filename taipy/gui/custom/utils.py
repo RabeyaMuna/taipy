@@ -12,7 +12,7 @@
 import contextlib
 import typing as t
 
-from ..servers import _Server, get_request, has_request_context
+from ..servers import RequestAccessor, _Server, has_request_context
 from ._page import ResourceHandler, _ExternalResourceHandlerManager
 
 
@@ -21,7 +21,7 @@ def is_in_custom_page_context() -> bool:
     resource_handler_id = None
     with contextlib.suppress(Exception):
         if has_request_context():
-            resource_handler_id = get_request().cookies.get(_Server._RESOURCE_HANDLER_ARG, None)
+            resource_handler_id = RequestAccessor.cookies().get(_Server._RESOURCE_HANDLER_ARG, None)
     return resource_handler_id is not None
 
 
@@ -30,5 +30,5 @@ def get_current_resource_handler() -> t.Optional[ResourceHandler]:
     resource_handler_id = None
     with contextlib.suppress(Exception):
         if has_request_context():
-            resource_handler_id = get_request().cookies.get(_Server._RESOURCE_HANDLER_ARG, None)
+            resource_handler_id = RequestAccessor.cookies().get(_Server._RESOURCE_HANDLER_ARG, None)
     return _ExternalResourceHandlerManager().get(resource_handler_id) if resource_handler_id else None

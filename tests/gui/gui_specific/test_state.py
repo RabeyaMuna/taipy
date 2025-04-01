@@ -24,7 +24,7 @@ def test_state(gui: Gui):
     gui.add_page("page1", md_page1)
     gui.run(run_server=False, single_client=True)
     state = gui._Gui__state  # type: ignore[attr-defined]
-    with gui.get_server_instance().app_context():
+    with gui.get_app_context():
         assert state.a == 10
         assert state["page1"].a == 20
         assert state["tests.gui.gui_specific.state_asset.page1"].a == 20
