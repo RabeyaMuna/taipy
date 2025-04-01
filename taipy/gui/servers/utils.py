@@ -17,6 +17,7 @@ from flask import has_request_context as flask_has_request_context
 from flask import request as flask_request
 from flask import send_file as flask_send_file
 from flask import send_from_directory as flask_send_from_directory
+from werkzeug.serving import is_running_from_reloader as flask_is_running_from_reloader
 
 from .fastapi import FastAPIServer
 from .fastapi.request import request as fastapi_request
@@ -88,4 +89,12 @@ def has_request_context():
         return flask_has_request_context()
     elif server_type.get() == "fastapi":
         return True
+    return False
+
+
+def is_running_from_reloader():
+    if server_type.get() == "flask":
+        flask_is_running_from_reloader()
+    elif server_type.get() == "fastapi":
+        return False
     return False

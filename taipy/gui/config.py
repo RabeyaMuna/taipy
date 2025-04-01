@@ -17,7 +17,6 @@ from importlib.util import find_spec
 import pytz
 import tzlocal
 from dotenv import dotenv_values
-from werkzeug.serving import is_running_from_reloader
 
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
@@ -26,6 +25,7 @@ from ._hook import _Hooks
 from ._page import _Page
 from ._warnings import _warn
 from .partial import Partial
+from .servers import is_running_from_reloader
 from .utils import _is_in_notebook
 
 ConfigParameter = t.Literal[
