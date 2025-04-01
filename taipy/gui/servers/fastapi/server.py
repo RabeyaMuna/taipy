@@ -43,15 +43,20 @@ if t.TYPE_CHECKING:
 
 
 # this is for fastapi routes
-def get_request_meta(_: Request):
+def request_meta_dependency(_: Request):
     new_request_meta = _AppCtxGlobals()
     request_meta.set(new_request_meta)
     return new_request_meta
 
 
+def request_dependency(request: Request):
+    request_context.set(request)
+    return request  # Still return it if needed in the route
+
+
 # this is for ws calls as contextmanager
 @contextmanager
-def get_request_meta_sync():
+def get_request_meta_ctx():
     new_request_meta = _AppCtxGlobals()
     request_meta.set(new_request_meta)
     yield new_request_meta
@@ -59,14 +64,14 @@ def get_request_meta_sync():
 
 
 @contextmanager
-def set_request_sync(request: Request):
+def set_request_ctx(request: Request):
     request_context.set(request)
     yield
     request_context.set(None)
 
 
 @contextmanager
-def set_sid_sync(sid: str):
+def set_sid_ctx(sid: str):
     sid_context.set(sid)
     yield
     sid_context.set(None)
@@ -128,12 +133,12 @@ class FastAPIServer(_Server):
         # Define your event handlers and routes
         @self._ws.event
         def connect(sid, environ):
-            with get_request_meta_sync(), set_sid_sync(sid):
+            with get_request_meta_ctx(), set_sid_ctx(sid):
                 gui._handle_connect()
 
         @self._ws.on("message")  # type: ignore
         def handle_message(sid, message):
-            with get_request_meta_sync(), set_sid_sync(sid):
+            with get_request_meta_ctx(), set_sid_ctx(sid):
                 if "status" in message:
                     _TaipyLogger._get_logger().info(message["status"])
                 elif "type" in message:
@@ -141,7 +146,7 @@ class FastAPIServer(_Server):
 
         @self._ws.event
         def disconnect(sid):
-            with get_request_meta_sync(), set_sid_sync(sid):
+            with get_request_meta_ctx(), set_sid_ctx(sid):
                 gui._handle_disconnect()
 
     def _get_default_handler(
@@ -165,8 +170,8 @@ class FastAPIServer(_Server):
 
         @taipy_router.get("/", response_class=HTMLResponse)
         @taipy_router.get("/{path:path}", response_class=HTMLResponse)
-        def my_index(request: Request, path: str = "", request_meta: _AppCtxGlobals = Depends(get_request_meta)):  # noqa: B008
-            with set_request_sync(request), get_request_meta_sync():
+        def my_index(request: Request, path: str = "", request_meta: _AppCtxGlobals = Depends(request_meta_dependency)):  # noqa: B008
+            with set_request_ctx(request), get_request_meta_ctx():
                 resource_handler_id = request.cookies.get("_RESOURCE_HANDLER_ARG", None)
                 if resource_handler_id is not None:
                     resource_handler = _ExternalResourceHandlerManager().get(resource_handler_id)

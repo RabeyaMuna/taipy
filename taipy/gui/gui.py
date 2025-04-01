@@ -32,9 +32,8 @@ from urllib.parse import unquote, urlencode, urlparse
 
 import markdown as md_lib
 import tzlocal
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, Depends, FastAPI
 from flask import Blueprint, Flask
-from flask.ctx import AppContext
 from werkzeug.utils import secure_filename
 
 import __main__  # noqa: F401
@@ -72,8 +71,11 @@ from .servers import (
     create_server,
     get_request,
     get_request_meta,
+    get_request_meta_ctx,
     get_server_type,
     has_server_context,
+    request_dependency,
+    request_meta_dependency,
     send_file,
     send_from_directory,
     set_server_type,
@@ -2700,9 +2702,11 @@ class Gui:
             return self._server.get_server_instance()
         raise RuntimeError("get_server_instance() cannot be invoked before run() has been called.")
 
-    def get_app_context(self) -> t.Union[AppContext, contextlib.nullcontext]:
+    def get_app_context(self):
         if get_server_type() == "flask":
             return self.get_server_instance().app_context()
+        if get_server_type() == "fastapi":
+            return get_request_meta_ctx()
         return contextlib.nullcontext()
 
     def _get_port(self) -> int:
@@ -2928,22 +2932,45 @@ class Gui:
         fastapi_router: t.List[APIRouter] = []
 
         pages_router = APIRouter()
-        pages_router.add_api_route(f"/{Gui.__JSX_URL}/{{page_name:path}}", self.__render_page, methods=["GET"])
-        pages_router.add_api_route(f"/{Gui.__INIT_URL}", self.__init_route, methods=["GET"])
+        pages_router.add_api_route(
+            f"/{Gui.__JSX_URL}/{{page_name:path}}",
+            self.__render_page,
+            methods=["GET"],
+            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
+        )
+        pages_router.add_api_route(
+            f"/{Gui.__INIT_URL}",
+            self.__init_route,
+            methods=["GET"],
+            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
+        )
         fastapi_router.append(pages_router)
 
         images_router = APIRouter()
-        images_router.add_api_route(f"/{Gui.__CONTENT_ROOT}/{{path:path}}", self.__serve_content, methods=["GET"])
+        images_router.add_api_route(
+            f"/{Gui.__CONTENT_ROOT}/{{path:path}}",
+            self.__serve_content,
+            methods=["GET"],
+            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
+        )
         fastapi_router.append(images_router)
 
         user_content_router = APIRouter()
         user_content_router.add_api_route(
-            f"/{Gui.__USER_CONTENT_URL}/{{path:path}}", self.__serve_user_content, methods=["GET"]
+            f"/{Gui.__USER_CONTENT_URL}/{{path:path}}",
+            self.__serve_user_content,
+            methods=["GET"],
+            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
         )
         fastapi_router.append(user_content_router)
 
         extension_router = APIRouter()
-        extension_router.add_api_route(f"/{Gui._EXTENSION_ROOT}/{{path:path}}", self.__serve_extension, methods=["GET"])
+        extension_router.add_api_route(
+            f"/{Gui._EXTENSION_ROOT}/{{path:path}}",
+            self.__serve_extension,
+            methods=["GET"],
+            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
+        )
         fastapi_router.append(extension_router)
 
         fastapi_router.append(
