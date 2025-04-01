@@ -11,8 +11,7 @@
 
 import typing as t
 
-from fastapi.responses import Response as FastAPIResponse
-from flask import Response as FlaskResponse
+from fastapi.responses import Response
 
 from .server import server_type
 
@@ -20,8 +19,6 @@ from .server import server_type
 def HttpResponse(message: str, status_code: int = 200, headers: t.Optional[t.Dict[str, t.Any]] = None):
     if headers is None:
         headers = {}
-    if server_type.get() == "flask":
-        return FlaskResponse(message, status_code, headers)
     if server_type.get() == "fastapi":
-        return FastAPIResponse(content=message, status_code=status_code, headers=headers)
+        return Response(content=message, status_code=status_code, headers=headers)
     return (message, status_code, headers)
