@@ -9,8 +9,6 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-import asyncio
-import json
 import os
 import pathlib
 import typing as t
@@ -20,6 +18,7 @@ from contextlib import contextmanager
 import socketio
 import uvicorn
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -29,27 +28,27 @@ from starlette.middleware.base import BaseHTTPMiddleware
 import __main__
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
-from ..._renderers.json import _TaipyJsonAdapter, _TaipyJsonEncoder
+from ..._renderers.json import _TaipyJsonEncoder
 from ...config import ServerConfig
 from ...custom._page import _ExternalResourceHandlerManager
 from ..server import _Server
 from .request import request as request_context
 from .request import request_meta
 from .request import sid as sid_context
-from .utils import send_from_directory
+from .utils import exec_async, send_from_directory
 
 if t.TYPE_CHECKING:
     from ...gui import Gui
 
 
 # this is for fastapi routes
-def request_meta_dependency(_: Request):
+async def request_meta_dependency(_: Request):
     new_request_meta = _AppCtxGlobals()
     request_meta.set(new_request_meta)
     return new_request_meta
 
 
-def request_dependency(request: Request):
+async def request_dependency(request: Request):
     request_context.set(request)
     return request  # Still return it if needed in the route
 
@@ -75,15 +74,6 @@ def set_sid_ctx(sid: str):
     sid_context.set(sid)
     yield
     sid_context.set(None)
-
-
-# json dumps + loads for socketio
-def custom_json_dumps(obj):
-    return _TaipyJsonAdapter().parse(obj)
-
-
-def custom_json_loads(s):
-    return json.loads(s)
 
 
 class CleanupMiddleware(BaseHTTPMiddleware):
@@ -114,10 +104,8 @@ class FastAPIServer(_Server):
 
         # server setup
         self._server = server or FastAPI(json_encoder=_TaipyJsonEncoder)
-        self._ws = socketio.AsyncServer(
-            json={"dumps": custom_json_dumps, "loads": custom_json_loads}, async_mode="asgi"
-        )
-        self._server.mount("/", socketio.ASGIApp(self._ws, other_asgi_app=self._server))
+        self._ws = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
+        self._server.mount("/socket.io", socketio.ASGIApp(self._ws, other_asgi_app=self._server, socketio_path="/"))
 
         # registering middleware
         self._server.add_middleware(CleanupMiddleware)
@@ -132,12 +120,12 @@ class FastAPIServer(_Server):
 
         # Define your event handlers and routes
         @self._ws.event
-        def connect(sid, environ):
+        async def connect(sid, environ):
             with get_request_meta_ctx(), set_sid_ctx(sid):
                 gui._handle_connect()
 
-        @self._ws.on("message")  # type: ignore
-        def handle_message(sid, message):
+        @self._ws.event
+        async def message(sid, message, *args):
             with get_request_meta_ctx(), set_sid_ctx(sid):
                 if "status" in message:
                     _TaipyLogger._get_logger().info(message["status"])
@@ -145,7 +133,7 @@ class FastAPIServer(_Server):
                     gui._manage_ws_message(message["type"], message)
 
         @self._ws.event
-        def disconnect(sid):
+        async def disconnect(sid):
             with get_request_meta_ctx(), set_sid_ctx(sid):
                 gui._handle_disconnect()
 
@@ -204,6 +192,7 @@ class FastAPIServer(_Server):
                         return templates.TemplateResponse(
                             "index.html",
                             {
+                                "request": request,
                                 "title": title,
                                 "favicon": f"{favicon}?version={version}",
                                 "root_margin": root_margin,
@@ -265,7 +254,8 @@ class FastAPIServer(_Server):
         return taipy_router
 
     def direct_render_json(self, data):
-        return _TaipyJsonAdapter().parse(data)
+        return jsonable_encoder(data)
+        # return _TaipyJsonAdapter().parse(data)
 
     def get_server_instance(self):
         return self._server
@@ -274,7 +264,7 @@ class FastAPIServer(_Server):
         return self._port or -1
 
     def send_ws_message(self, *args, **kwargs):
-        asyncio.run(self._ws.emit("message", *args, **kwargs))
+        exec_async(self._ws.emit, "message", *args, **kwargs)
 
     def run(
         self,

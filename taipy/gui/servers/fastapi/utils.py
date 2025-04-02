@@ -9,6 +9,7 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+import asyncio
 import os
 import typing as t
 
@@ -34,3 +35,19 @@ def send_from_directory(
     if not os.path.exists(joined_path) or not os.path.isfile(joined_path):
         return Response("File not found", status_code=404)
     return FileResponse(joined_path, **kwargs)
+
+
+def exec_async(async_func: t.Callable, *args, **kwargs):
+    loop = asyncio.get_event_loop()
+    if loop is not None:
+        asyncio.run_coroutine_threadsafe(async_func(*args, **kwargs), loop)
+    else:
+        asyncio.run(async_func(*args, **kwargs))
+
+
+def run_async(async_func: t.Callable, *args, **kwargs):
+    loop = asyncio.get_event_loop()
+    if loop is not None:
+        return loop.run_until_complete(async_func(*args, **kwargs))
+    else:
+        return asyncio.run(async_func(*args, **kwargs))

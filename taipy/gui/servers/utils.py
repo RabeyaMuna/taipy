@@ -26,78 +26,78 @@ from .fastapi.request import request_meta as fastapi_meta
 from .fastapi.utils import send_file as fastapi_send_file
 from .fastapi.utils import send_from_directory as fastapi_send_from_directory
 from .flask import FlaskServer
-from .server import ServerFrameworks, _Server, server, server_type
+from .server import ServerFrameworks, ServerManager, _Server
 
 
 def set_server_type(framework: ServerFrameworks) -> None:
-    server_type.set(framework)
+    ServerManager().set_server_type(framework)
 
 
 def get_server_type() -> ServerFrameworks:
-    return server_type.get()
+    return ServerManager().get_server_type()
 
 
 def create_server(*args, **kwargs) -> _Server:
     new_server: t.Union[FlaskServer, FastAPIServer, None] = None
-    if server_type.get() == "flask":
+    if get_server_type() == "flask":
         new_server = FlaskServer(*args, **kwargs)
-    elif server_type.get() == "fastapi":
+    elif get_server_type() == "fastapi":
         new_server = FastAPIServer(*args, **kwargs)
     if new_server is None:
         raise ValueError(f"Invalid server type: {type}")
-    server.set(new_server)
+    ServerManager().set_server(new_server)
     return new_server
 
 
 def send_file(*args, **kwargs):
-    if server_type.get() == "flask":
+    if get_server_type() == "flask":
         return flask_send_file(*args, **kwargs)
-    elif server_type.get() == "fastapi":
+    elif get_server_type() == "fastapi":
         return fastapi_send_file(*args, **kwargs)
 
 
 def send_from_directory(*args, **kwargs):
-    if server_type.get() == "flask":
+    if get_server_type() == "flask":
         return flask_send_from_directory(*args, **kwargs)
-    elif server_type.get() == "fastapi":
+    elif get_server_type() == "fastapi":
         return fastapi_send_from_directory(*args, **kwargs)
 
 
 def get_request():
-    if server_type.get() == "flask":
+    if get_server_type() == "flask":
         return flask_request
-    elif server_type.get() == "fastapi":
+    elif get_server_type() == "fastapi":
         return fastapi_request.get()
     return None
 
 
 def get_request_meta():
-    if server_type.get() == "flask":
+    if get_server_type() == "flask":
         return flask_meta
-    elif server_type.get() == "fastapi":
+    elif get_server_type() == "fastapi":
         return fastapi_meta.get()
     return {}
 
 
 def has_server_context():
-    if server_type.get() == "flask":
+    if get_server_type() == "flask":
         return has_app_context()
-    elif server_type.get() == "fastapi":
+    elif get_server_type() == "fastapi":
         return fastapi_request.get() is not None
     return False
 
 
 def has_request_context():
-    if server_type.get() == "flask":
+    if get_server_type() == "flask":
         return flask_has_request_context()
-    elif server_type.get() == "fastapi":
+    elif get_server_type() == "fastapi":
         return fastapi_request.get() is not None
     return False
 
 
 def is_running_from_reloader():
-    if server_type.get() == "flask":
+    if get_server_type() == "flask":
         flask_is_running_from_reloader()
-    elif server_type.get() == "fastapi":
+    elif get_server_type() == "fastapi":
         return os.getpid() == os.getppid()
     return False

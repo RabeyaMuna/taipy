@@ -14,7 +14,6 @@ import pathlib
 import re
 import typing as t
 from abc import ABC, abstractmethod
-from contextvars import ContextVar
 from random import choices, randint
 
 from gitignore_parser import parse_gitignore
@@ -23,6 +22,7 @@ import __main__
 
 from ..utils import _is_port_open, _RuntimeManager
 from ..utils._css import get_style
+from ..utils.singleton import _Singleton
 
 
 class _Server(ABC):
@@ -139,5 +139,25 @@ class _Server(ABC):
 
 
 ServerFrameworks = t.Literal["flask", "fastapi"]
-server_type: ContextVar[ServerFrameworks] = ContextVar("server_type", default="flask")
-server: ContextVar[_Server] = ContextVar("server")
+
+
+class ServerManager(object, metaclass=_Singleton):
+    def __init__(self):
+        self._server: t.Optional[_Server] = None
+        self._framework: t.Optional[ServerFrameworks] = None
+
+    def set_server(self, server: _Server):
+        self._server = server
+
+    def get_server(self) -> _Server:
+        if self._server is None:
+            raise RuntimeError("Server is not set")
+        return self._server
+
+    def set_server_type(self, framework: ServerFrameworks):
+        self._framework = framework
+
+    def get_server_type(self) -> ServerFrameworks:
+        if self._framework is None:
+            raise RuntimeError("Server type is not set")
+        return self._framework

@@ -1426,7 +1426,7 @@ class Gui:
         if grouping_message is None:
             try:
                 self._server.send_ws_message(
-                    payload,
+                    data=payload,
                     to=t.cast(str, self.__get_ws_receiver(send_back_only)),
                 )
                 time.sleep(0.001)
@@ -1438,7 +1438,7 @@ class Gui:
     def __broadcast_ws(self, payload: dict, client_id: t.Optional[str] = None):
         try:
             to = list(self.__get_sids(client_id)) if client_id else []
-            self._server.send_ws_message(payload, to=t.cast(str, to) if to else None, include_self=True)
+            self._server.send_ws_message(data=payload, to=t.cast(str, to) if to else None, include_self=True)
             time.sleep(0.001)
         except Exception as e:  # pragma: no cover
             _warn(f"Exception raised in WebSocket communication in '{self.__frame.f_code.co_name}'", e)
@@ -1447,7 +1447,7 @@ class Gui:
         if ack_id:
             try:
                 self._server.send_ws_message(
-                    {"type": _WsType.ACKNOWLEDGEMENT.value, "id": ack_id},
+                    data={"type": _WsType.ACKNOWLEDGEMENT.value, "id": ack_id},
                     to=t.cast(str, self.__get_ws_receiver(True)),
                 )
                 time.sleep(0.001)
@@ -2704,7 +2704,7 @@ class Gui:
 
     def get_app_context(self):
         if get_server_type() == "flask":
-            return self.get_server_instance().app_context()
+            return t.cast(Flask, self.get_server_instance()).app_context()
         if get_server_type() == "fastapi":
             return get_request_meta_ctx()
         return contextlib.nullcontext()
