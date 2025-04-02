@@ -264,7 +264,12 @@ class FastAPIServer(_Server):
         return self._port or -1
 
     def send_ws_message(self, *args, **kwargs):
-        exec_async(self._ws.emit, "message", *args, **kwargs)
+        if isinstance(kwargs["to"], str):
+            kwargs["to"] = [kwargs["to"]]
+        for sid in kwargs["to"]:
+            temp_kwargs = kwargs.copy()
+            temp_kwargs["to"] = sid
+            exec_async(self._ws.emit, "message", *args, **temp_kwargs)
 
     def run(
         self,
