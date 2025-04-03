@@ -32,6 +32,8 @@ def send_from_directory(
     path = os.path.normpath(path)
     directory = os.path.normpath(directory)
     joined_path = os.path.join(directory, path)
+    if not joined_path.startswith(directory):
+        return Response("File not found", status_code=404)
     if not os.path.exists(joined_path) or not os.path.isfile(joined_path):
         return Response("File not found", status_code=404)
     return FileResponse(joined_path, **kwargs)
