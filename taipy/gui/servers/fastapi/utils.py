@@ -18,15 +18,15 @@ from fastapi.responses import FileResponse
 
 
 def send_file(
-    path_or_file: os.PathLike[str] | str,
+    path_or_file: t.Union[os.PathLike[str], str],
     **kwargs: t.Any,
 ) -> Response:
     return FileResponse(path_or_file, **kwargs)
 
 
 def send_from_directory(
-    directory: os.PathLike[str] | str,
-    path: os.PathLike[str] | str,
+    directory: t.Union[os.PathLike[str], str],
+    path: t.Union[os.PathLike[str], str],
     **kwargs: t.Any,
 ) -> Response:
     path = os.path.normpath(path)
