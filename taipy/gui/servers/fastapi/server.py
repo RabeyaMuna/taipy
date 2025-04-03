@@ -25,6 +25,7 @@ from fastapi.templating import Jinja2Templates
 from flask.ctx import _AppCtxGlobals
 from starlette.middleware.base import BaseHTTPMiddleware
 from werkzeug.utils import secure_filename
+
 import __main__
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
@@ -242,7 +243,9 @@ class FastAPIServer(_Server):
                 sanitized_path = secure_filename(path)
                 if (
                     (
-                        file_path := str(os.path.normpath((base_path := self._gui._root_dir + os.path.sep) + sanitized_path))  # type: ignore[attr-defined]
+                        file_path := str(
+                            os.path.normpath((base_path := self._gui._root_dir + os.path.sep) + sanitized_path)
+                        )  # type: ignore[attr-defined]
                     ).startswith(base_path)
                     and os.path.isfile(file_path)
                     and not self._is_ignored(file_path)
