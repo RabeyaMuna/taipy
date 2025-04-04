@@ -11,6 +11,8 @@
 
 import os
 import pathlib
+import threading
+import time
 import typing as t
 import webbrowser
 from contextlib import contextmanager
@@ -31,6 +33,7 @@ from taipy.common.logger._taipy_logger import _TaipyLogger
 from ..._renderers.json import _TaipyJsonEncoder
 from ...config import ServerConfig
 from ...custom._page import _ExternalResourceHandlerManager
+from ...utils import _is_in_notebook, _is_port_open, _RuntimeManager
 from ..server import _Server
 from .request import request as request_context
 from .request import request_meta
@@ -264,7 +267,7 @@ class FastAPIServer(_Server):
         return self._port or -1
 
     def send_ws_message(self, *args, **kwargs):
-        if isinstance(kwargs["to"], str):
+        if isinstance(kwargs["to"], str) or kwargs["to"] is None:
             kwargs["to"] = [kwargs["to"]]
         for sid in kwargs["to"]:
             temp_kwargs = kwargs.copy()
@@ -292,8 +295,17 @@ class FastAPIServer(_Server):
             port = self._get_random_port(port_auto_ranges)
         server_url = f"http://{host_value}:{port}"
         self._port = port
+        if _is_in_notebook() or run_in_thread:
+            runtime_manager = _RuntimeManager()
+            runtime_manager.add_gui(self._gui, port)
+        if debug and not is_running_from_reloader() and _is_port_open(host_value, port):
+            raise ConnectionError(
+                f"Port {port} is already opened on {host} because another application is running on the same port.\nPlease pick another port number and rerun with the 'port=<new_port>' setting.\nYou can also let Taipy choose a port number for you by running with the 'port=\"auto\"' setting."  # noqa: E501
+            )
         if not is_running_from_reloader() and self._gui._get_config("run_browser", False):  # type: ignore[attr-defined]
             webbrowser.open(client_url or server_url, new=2)
+        if _is_in_notebook() or run_in_thread:
+            return self._run_notebook()
         self._is_running = True
         run_config = {
             "app": self._server,
@@ -301,13 +313,25 @@ class FastAPIServer(_Server):
             "port": port,
             "reload": use_reloader,
         }
-        try:
-            uvicorn.run(**run_config)
-        except KeyboardInterrupt:
-            pass
+        uvicorn.run(**run_config)
+
+    def _run_notebook(self):
+        if not self._port or not self._host:
+            raise RuntimeError("Port and host must be set before running the server in notebook mode.")
+        self._is_running = True
+        config = uvicorn.Config(app=self._server, host=self._host, port=self._port, reload=False, log_level="info")
+        self._thread_server = uvicorn.Server(config)
+        self._thread = threading.Thread(target=self._thread_server.run, daemon=True)
+        self._thread.start()
+        return
 
     def is_running(self):
         return self._is_running
 
     def stop_thread(self):
-        raise NotImplementedError
+        if hasattr(self, "_thread") and self._thread.is_alive() and self._is_running:
+            self._thread_server.should_exit = True
+            self._thread.join()
+            while _is_port_open(self._host, self._port):
+                time.sleep(0.1)
+            self._is_running = False
