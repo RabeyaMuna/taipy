@@ -66,6 +66,7 @@ const Input = (props: TaipyInputProps) => {
         multiline = false,
         actionOnBlur = false,
         linesShown = 5,
+        size = "medium",
     } = props;
 
     const [value, setValue] = useState(defaultValue);
@@ -374,6 +375,7 @@ const Input = (props: TaipyInputProps) => {
                     onKeyDown={handleAction}
                     multiline={multiline}
                     minRows={linesShown}
+                    size={size}
                 />
                 {props.children}
             </>

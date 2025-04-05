@@ -70,6 +70,7 @@ export interface TaipyInputProps extends TaipyActiveProps, TaipyChangeProps, Tai
     multiline?: boolean;
     linesShown?: number;
     width?: string | number;
+    size?: "small" | "medium";
 }
 
 export interface DateProps {
