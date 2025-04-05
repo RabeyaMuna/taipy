@@ -12,3 +12,6 @@ runs:
     - name: run pytest with prefix configuration
       shell: bash
       run: pipenv run pytest -m "teste2e" tests/gui/e2e --e2e-base-url="/prefix/" --e2e-port="4000"
+    - name: run pytest with prefix configuration with fastapi
+      shell: bash
+      run: pipenv run pytest -m "teste2e" tests/gui/e2e --e2e-base-url="/prefix/" --e2e-port="4000" --gui-server="fastapi"

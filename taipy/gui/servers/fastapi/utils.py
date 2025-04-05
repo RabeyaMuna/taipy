@@ -39,17 +39,22 @@ def send_from_directory(
     return FileResponse(joined_path, **kwargs)
 
 
-def exec_async(async_func: t.Callable, *args, **kwargs):
-    loop = asyncio.get_event_loop()
-    if loop is not None:
-        asyncio.run_coroutine_threadsafe(async_func(*args, **kwargs), loop)
-    else:
-        asyncio.run(async_func(*args, **kwargs))
+def exec_async(async_func: t.Callable, *args, **kwargs) -> None:
+    try:
+        # future = asyncio.run_coroutine_threadsafe(async_func(*args, **kwargs), asyncio.get_event_loop())
+        # return future.result()
+        asyncio.get_event_loop().create_task(async_func(*args, **kwargs))
+    except RuntimeError as ex:
+        if "There is no current event loop in thread" in str(ex):
+            asyncio.run(async_func(*args, **kwargs))
+            return
+        raise ex
 
 
 def run_async(async_func: t.Callable, *args, **kwargs):
-    loop = asyncio.get_event_loop()
-    if loop is not None:
-        return loop.run_until_complete(async_func(*args, **kwargs))
-    else:
-        return asyncio.run(async_func(*args, **kwargs))
+    try:
+        return asyncio.get_event_loop().run_until_complete(async_func(*args, **kwargs))
+    except RuntimeError as ex:
+        if "There is no current event loop in thread" in str(ex):
+            return asyncio.run(async_func(*args, **kwargs))
+        raise ex

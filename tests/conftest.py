@@ -30,6 +30,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     """Add custom command line options for pytest."""
     parser.addoption("--e2e-base-url", action="store", default="/", help="base url for e2e testing")
     parser.addoption("--e2e-port", action="store", default="5000", help="port for e2e testing")
+    parser.addoption("--gui-server", action="store", default="flask", help="server for e2e testing")
 
 
 @pytest.fixture(scope="session")
@@ -42,6 +43,12 @@ def e2e_base_url(request: pytest.FixtureRequest) -> str:
 def e2e_port(request: pytest.FixtureRequest) -> str:
     """Fixture to get the port for e2e testing."""
     return request.config.getoption("--e2e-port")
+
+
+@pytest.fixture(scope="session")
+def gui_server(request: pytest.FixtureRequest) -> str:
+    """Fixture to get the server for e2e testing."""
+    return request.config.getoption("--gui-server")
 
 
 def remove_subparser(name: str) -> None:
@@ -161,6 +168,7 @@ def inject_core_sections() -> t.Callable:
         )
 
     return _inject_core_sections
+
 
 @pytest.fixture
 def inject_rest_sections() -> t.Callable:

@@ -123,12 +123,13 @@ class FastAPIServer(_Server):
 
         # Define your event handlers and routes
         @self._ws.event
-        async def connect(sid, environ):
+        async def connect(sid, *args):
             with get_request_meta_ctx(), set_sid_ctx(sid):
                 gui._handle_connect()
 
         @self._ws.event
-        async def message(sid, message, *args):
+        async def message(sid, *args):
+            message = args[0]
             with get_request_meta_ctx(), set_sid_ctx(sid):
                 if "status" in message:
                     _TaipyLogger._get_logger().info(message["status"])
@@ -193,9 +194,9 @@ class FastAPIServer(_Server):
                 if not path or path == "index.html" or "." not in path:
                     try:
                         return templates.TemplateResponse(
+                            request,
                             "index.html",
                             {
-                                "request": request,
                                 "title": title,
                                 "favicon": f"{favicon}?version={version}",
                                 "root_margin": root_margin,
@@ -216,7 +217,6 @@ class FastAPIServer(_Server):
 
                 if path == "taipy.status.json":
                     return JSONResponse(content=self._gui._serve_status(pathlib.Path(template_folder) / path))
-
                 if (file_path := str(os.path.normpath((base_path := static_folder + os.path.sep) + path))).startswith(
                     base_path
                 ) and os.path.isfile(file_path):
