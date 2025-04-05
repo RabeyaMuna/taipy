@@ -3158,10 +3158,11 @@ class Gui:
         # Use multi user or not
         self._bindings()._set_single_client(bool(app_config.get("single_client")))
 
-        # Start Flask Server
+        # Return server instance if run_server is False
         if not run_server:
             return self.get_server_instance()
 
+        # Run server
         return self._server.run(
             host=app_config.get("host"),
             port=app_config.get("port"),
