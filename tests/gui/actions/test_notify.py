@@ -12,9 +12,8 @@
 import inspect
 import warnings
 
-from flask import g
-
 from taipy.gui import Gui, Markdown, close_notification, notify
+from taipy.gui.servers import get_request_meta
 
 
 def test_notify(gui: Gui, helpers):
@@ -29,7 +28,7 @@ def test_notify(gui: Gui, helpers):
     cid = helpers.create_scope_and_get_sid(gui)
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
     with gui.get_server_instance().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
-        g.client_id = cid
+        get_request_meta().client_id = cid
         id = notify(gui._Gui__state, "Info", "Message", id="id")  # type: ignore[attr-defined]
         assert id == "id"
     received_messages = ws_client.get_received()
@@ -58,7 +57,7 @@ def test_close_notification(gui: Gui, helpers):
     # Get the jsx once so that the page will be evaluated -> variable will be registered
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
     with gui.get_server_instance().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
-        g.client_id = cid
+        get_request_meta().client_id = cid
         id = notify(gui._Gui__state, "Info", "Message", id="id")  # type: ignore[attr-defined]
         close_notification(gui._Gui__state, id)  # type: ignore[attr-defined, arg-type]
     received_messages = ws_client.get_received()

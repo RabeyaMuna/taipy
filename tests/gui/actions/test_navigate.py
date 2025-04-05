@@ -12,9 +12,8 @@
 import inspect
 import warnings
 
-from flask import g
-
 from taipy.gui import Gui, Markdown, navigate
+from taipy.gui.servers import get_request_meta
 
 
 def test_navigate(gui: Gui, helpers):
@@ -29,7 +28,7 @@ def test_navigate(gui: Gui, helpers):
     cid = helpers.create_scope_and_get_sid(gui)
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
     with gui.get_server_instance().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
-        g.client_id = cid
+        get_request_meta().client_id = cid
         navigate(gui._Gui__state, "test")  # type: ignore[attr-defined]
 
     received_messages = ws_client.get_received()

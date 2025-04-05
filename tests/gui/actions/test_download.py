@@ -13,9 +13,10 @@ import inspect
 import typing as t
 import warnings
 
-from flask import Flask, g
+from flask import Flask
 
 from taipy.gui import Gui, Markdown, State, download
+from taipy.gui.servers import get_request_meta
 
 
 def test_download(gui: Gui, helpers):
@@ -33,7 +34,7 @@ def test_download(gui: Gui, helpers):
     cid = helpers.create_scope_and_get_sid(gui)
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
     with gui.get_server_instance().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
-        g.client_id = cid
+        get_request_meta().client_id = cid
         download(gui._Gui__state, "some text", "filename.txt", "on_download_action")  # type: ignore[attr-defined]
 
     received_messages = ws_client.get_received()
@@ -57,7 +58,7 @@ def test_download_fn(gui: Gui, helpers):
     cid = helpers.create_scope_and_get_sid(gui)
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
     with gui.get_server_instance().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
-        g.client_id = cid
+        get_request_meta().client_id = cid
         download(gui._Gui__state, "some text", "filename.txt", on_download_action)  # type: ignore[attr-defined]
 
     received_messages = ws_client.get_received()

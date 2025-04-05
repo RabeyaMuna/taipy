@@ -15,7 +15,9 @@ from unittest.mock import patch
 
 import pandas as pd  # type: ignore
 import pytest
-from flask import Flask, g
+from flask import Flask
+
+from taipy.gui.servers import get_request_meta, get_server_type
 
 csv = pd.read_csv(
     f"{Path(Path(__file__).parent.resolve())}{os.path.sep}current-covid-patients-hospital.csv", parse_dates=["Day"]
@@ -53,14 +55,17 @@ def helpers():
 
 @pytest.fixture
 def test_client():
-    flask_app = Flask("Test App")
+    if get_server_type() == "flask":
+        flask_app = Flask("Test App")
 
-    # Create a test client using the Flask application configured for testing
-    with flask_app.test_client() as testing_client:
-        # Establish an application context
-        with flask_app.app_context():
-            g.client_id = "test client id"
-            yield testing_client  # this is where the testing happens!
+        # Create a test client using the Flask application configured for testing
+        with flask_app.test_client() as testing_client:
+            # Establish an application context
+            with flask_app.app_context():
+                get_request_meta().client_id = "test client id"
+                yield testing_client  # this is where the testing happens!
+    else:
+        yield None
 
 
 @pytest.fixture(scope="function", autouse=True)

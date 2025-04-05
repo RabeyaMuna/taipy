@@ -12,9 +12,8 @@
 import contextlib
 import inspect
 
-from flask import g
-
 from taipy.gui import Gui, Markdown, State
+from taipy.gui.servers import get_request_meta
 
 
 @contextlib.contextmanager
@@ -66,9 +65,9 @@ def test_invoke_callback_sid(gui: Gui, helpers):
     # Get the jsx once so that the page will be evaluated -> variable will be registered
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
     with gui.get_app_context():
-        g.client_id = base_sid
+        get_request_meta().client_id = base_sid
         gui.invoke_callback(cid, user_callback, [])
-        assert g.client_id == base_sid
+        assert get_request_meta().client_id == base_sid
 
     with get_state(gui, base_sid) as base_state:
         assert base_state.val == 1

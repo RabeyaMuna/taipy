@@ -12,9 +12,8 @@
 import inspect
 import warnings
 
-from flask import g
-
 from taipy.gui import Gui
+from taipy.gui.servers import get_request_meta
 from taipy.gui.utils.types import _TaipyNumber
 
 
@@ -82,8 +81,8 @@ def test_evaluate_expression_2_clients(gui: Gui):
     with gui.get_app_context():
         gui._bindings()._get_or_create_scope("A")
         gui._bindings()._get_or_create_scope("B")
-        g.client_id = "A"
+        get_request_meta().client_id = "A"
         gui._evaluate_expr("x + y = {x + y}")
-        g.client_id = "B"
+        get_request_meta().client_id = "B"
         gui._evaluate_expr("x")
         gui._re_evaluate_expr("x")
