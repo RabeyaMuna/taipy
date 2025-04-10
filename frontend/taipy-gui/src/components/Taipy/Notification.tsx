@@ -38,7 +38,6 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
 
     const notificationAction = useCallback(
         (key: SnackbarKey) => (
-            console.log("ENTROU AQUI"),
             <IconButton
                 size="small"
                 aria-label="close"
@@ -55,7 +54,6 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
         (event: SyntheticEvent | null, reason: CloseReason, key?: SnackbarKey) => {
             const final_reason = reason === "timeout" ? "timeout" : "forced";
             if (key) {
-                console.log(`Dispatching delete action for key: ${key}, reason: ${final_reason}`);
                 dispatch(createDeleteNotificationAction(key.toString(), final_reason));
             }
             snackbarIds.current = Object.fromEntries(
