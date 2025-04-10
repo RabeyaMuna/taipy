@@ -114,6 +114,7 @@ interface TaipyNotificationAction extends TaipyBaseAction, NotificationMessage {
 
 interface TaipyDeleteNotificationAction extends TaipyBaseAction {
     snackbarId: string;
+    reason: string;
 }
 
 export const BLOCK_CLOSE = { action: "", message: "", close: true, noCancel: false } as BlockMessage;
@@ -867,10 +868,11 @@ export const createNotificationAction = (notification: NotificationMessage): Tai
     snackbarId: notification.snackbarId
 });
 
-export const createDeleteNotificationAction = (snackbarId: string): TaipyDeleteNotificationAction => {
+export const createDeleteNotificationAction = (snackbarId: string, reason:string): TaipyDeleteNotificationAction => {
     return {
         type: Types.DeleteNotification,
         snackbarId,
+        reason,
     }
 }
 

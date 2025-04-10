@@ -38,6 +38,7 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
 
     const notificationAction = useCallback(
         (key: SnackbarKey) => (
+            console.log("ENTROU AQUI"),
             <IconButton
                 size="small"
                 aria-label="close"
@@ -50,9 +51,19 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
         [closeNotifications]
     );
 
-    const notificationClosed = (event: SyntheticEvent | null, reason: CloseReason, key?: SnackbarKey) => {
-        snackbarIds.current = Object.fromEntries(Object.entries(snackbarIds.current).filter(([id]) => id !== key));
-    };
+    const notificationClosed = useCallback(
+        (event: SyntheticEvent | null, reason: CloseReason, key?: SnackbarKey) => {
+            const final_reason = reason === "timeout" ? "timeout" : "forced";
+            if (key) {
+                console.log(`Dispatching delete action for key: ${key}, reason: ${final_reason}`);
+                dispatch(createDeleteNotificationAction(key.toString(), final_reason));
+            }
+            snackbarIds.current = Object.fromEntries(
+                Object.entries(snackbarIds.current).filter(([id]) => id !== key)
+            );
+        },
+        [dispatch] 
+    );
 
     const faviconUrl = useMemo(() => {
         const nodeList = document.getElementsByTagName("link");
@@ -92,9 +103,10 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
                 notification.system &&
                     new Notification(document.title || "Taipy", { body: notification.message, icon: faviconUrl });
             }
-            dispatch(createDeleteNotificationAction(notification.snackbarId));
+
+            dispatch(createDeleteNotificationAction(notification.snackbarId,"timeout"));
         }
-    }, [notification, enqueueSnackbar, closeNotifications, notificationAction, faviconUrl, dispatch]);
+    }, [notification, enqueueSnackbar, closeNotifications, notificationAction, faviconUrl, dispatch, notificationClosed]);
 
     useEffect(() => {
         notification?.system && window.Notification && Notification.requestPermission();
