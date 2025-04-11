@@ -14,10 +14,10 @@ import logging
 import socket
 import time
 import typing as t
+import urllib.request
 import warnings
 
 import socketio
-import urllib3
 
 from taipy.gui import Gui, Html, Markdown
 from taipy.gui._renderers.builder import _Builder
@@ -60,7 +60,8 @@ class WebSocketTestClient:
         return wrapped_messages
 
     def get(self, url):
-        return urllib3.request("GET", self.url + url)
+        with urllib.request.urlopen(self.url + url) as response:
+            return response
 
     def get_sid(self) -> t.Optional[str]:
         return self.sio.get_sid()
