@@ -38,6 +38,7 @@ types-python-dateutil = "*"
 types-pytz = "*"
 types-toml = ">=0.10.0"
 types-tzlocal = "*"
+websocket-client = "*"
 
 [requires]
 python_version = "3"
