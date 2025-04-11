@@ -29,7 +29,6 @@ from .utils import _is_in_notebook
 
 ConfigParameter = t.Literal[
     "allow_unsafe_werkzeug",
-    "app_id",
     "async_mode",
     "change_delay",
     "chart_dark_template",
@@ -104,7 +103,6 @@ Config = t.TypedDict(
     "Config",
     {
         "allow_unsafe_werkzeug": bool,
-        "app_id": t.Optional[bool],
         "async_mode": str,
         "change_delay": t.Optional[int],
         "chart_dark_template": t.Optional[t.Dict[str, t.Any]],
