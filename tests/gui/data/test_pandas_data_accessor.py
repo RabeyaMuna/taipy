@@ -104,7 +104,7 @@ def test_style(gui: Gui, helpers, small_dataframe):
     pd = pandas.DataFrame(data=small_dataframe)
     gui.run(run_server=False)
     cid = helpers.create_scope_and_get_sid(gui)
-    with gui.get_server_instance().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
+    with gui._server.test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
         get_request_meta().client_id = cid
         value = accessor.get_data("x", pd, {"start": 0, "end": 1, "styles": {"st": "test_style"}}, _DataFormat.JSON)[
             "value"
@@ -123,7 +123,7 @@ def test_tooltip(gui: Gui, helpers, small_dataframe):
     pd = pandas.DataFrame(data=small_dataframe)
     gui.run(run_server=False)
     cid = helpers.create_scope_and_get_sid(gui)
-    with gui.get_server_instance().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
+    with gui._server.test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
         gui._bind_var_val("tt", tt)
         gui._get_locals_bind_from_context(None)["tt"] = tt
         get_request_meta().client_id = cid
@@ -142,7 +142,7 @@ def test_format_fn(gui: Gui, helpers, small_dataframe):
     pd = pandas.DataFrame(data=small_dataframe)
     gui.run(run_server=False)
     cid = helpers.create_scope_and_get_sid(gui)
-    with gui.get_server_instance().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
+    with gui._server.test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
         gui._bind_var_val("ff", ff)
         gui._get_locals_bind_from_context(None)["ff"] = ff
         get_request_meta().client_id = cid
@@ -342,12 +342,12 @@ def test_decimator(gui: Gui, helpers, small_dataframe):
 
     gui.add_page("test", "<|Hello {a_decimator}|button|>")
     gui.run(run_server=False)
-    flask_client = gui._server.test_client()
+    server_client = gui._server.test_client()
 
     cid = helpers.create_scope_and_get_sid(gui)
     # Get the jsx once so that the page will be evaluated -> variable will be registered
-    flask_client.get(f"/taipy-jsx/test?client_id={cid}")
-    with gui.get_server_instance().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
+    server_client.get(f"/taipy-jsx/test?client_id={cid}")
+    with gui._server.test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
         get_request_meta().client_id = cid
 
         ret_data = accessor.get_data(

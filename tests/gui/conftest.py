@@ -36,10 +36,10 @@ def small_dataframe():
 
 
 @pytest.fixture(scope="function")
-def gui(helpers):
+def gui(helpers, gui_server):
     from taipy.gui import Gui
 
-    gui = Gui()
+    gui = Gui(server=gui_server)
     yield gui
     # Delete Gui instance and state of some classes after each test
     gui.stop()
@@ -72,3 +72,10 @@ def test_client():
 def patch_cli_args():
     with patch("sys.argv", ["prog"]):
         yield
+
+
+@pytest.fixture(autouse=True)
+def skip_if_gui_server_is_not(request, gui_server):
+    skip_marker = request.node.get_closest_marker("skip_if_not_server")
+    if skip_marker and skip_marker.args[0] != gui_server:
+        pytest.skip(f"Skipped because gui_server is not {gui_server}")

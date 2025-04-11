@@ -11,6 +11,3 @@ runs:
     - name: run tests
       shell: bash
       run: pipenv run pytest -m "teste2e" tests/gui
-    - name: run tests for fastapi
-      shell: bash
-      run: pipenv run pytest -m "teste2e" tests/gui --gui-server="fastapi"

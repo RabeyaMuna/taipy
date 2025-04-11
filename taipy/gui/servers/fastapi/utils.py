@@ -36,6 +36,12 @@ def send_from_directory(
         return Response("File not found", status_code=404)
     if not os.path.exists(joined_path) or not os.path.isfile(joined_path):
         return Response("File not found", status_code=404)
+    if "as_attachment" in kwargs:
+        if kwargs["as_attachment"]:
+            kwargs["filename"] = os.path.basename(path)
+            kwargs["media_type"] = "application/octet-stream"
+            kwargs["headers"] = {"Content-Disposition": f"attachment; filename={os.path.basename(path)}"}
+        del kwargs["as_attachment"]
     return FileResponse(joined_path, **kwargs)
 
 

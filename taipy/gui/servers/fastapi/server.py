@@ -15,7 +15,8 @@ import threading
 import time
 import typing as t
 import webbrowser
-from contextlib import contextmanager
+from asyncio import Queue
+from contextlib import asynccontextmanager, contextmanager
 
 import socketio
 import uvicorn
@@ -24,6 +25,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.testclient import TestClient
 from flask.ctx import _AppCtxGlobals
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -38,7 +40,7 @@ from ..server import _Server
 from .request import request as request_context
 from .request import request_meta
 from .request import sid as sid_context
-from .utils import exec_async, send_from_directory
+from .utils import run_async, send_from_directory
 
 if t.TYPE_CHECKING:
     from ...gui import Gui
@@ -59,24 +61,27 @@ async def request_dependency(request: Request):
 # this is for ws calls as contextmanager
 @contextmanager
 def get_request_meta_ctx():
+    prev_meta = request_meta.get()
     new_request_meta = _AppCtxGlobals()
     request_meta.set(new_request_meta)
     yield new_request_meta
-    request_meta.set(None)
-
-
-@contextmanager
-def set_request_ctx(request: Request):
-    request_context.set(request)
-    yield
-    request_context.set(None)
+    request_meta.set(prev_meta)
 
 
 @contextmanager
 def set_sid_ctx(sid: str):
+    prev_sid = sid_context.get()
     sid_context.set(sid)
     yield
-    sid_context.set(None)
+    sid_context.set(prev_sid)
+
+
+@contextmanager
+def set_request_ctx(request: Request):
+    prev_request = request_context.get()
+    request_context.set(request)
+    yield
+    request_context.set(prev_request)
 
 
 class CleanupMiddleware(BaseHTTPMiddleware):
@@ -106,6 +111,7 @@ class FastAPIServer(_Server):
         self._port: t.Optional[int] = None
 
         # server setup
+        self._emit_queue: Queue[t.Tuple[t.Tuple[t.Any, ...], t.Dict[str, t.Any]]] = Queue()
         self._server = server or FastAPI(json_encoder=_TaipyJsonEncoder)
         self._ws = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
         self._server.mount("/socket.io", socketio.ASGIApp(self._ws, other_asgi_app=self._server, socketio_path="/"))
@@ -159,6 +165,21 @@ class FastAPIServer(_Server):
         templates = Jinja2Templates(directory=template_folder)
 
         taipy_router = APIRouter()
+
+        async def emit_dispatcher():
+            while True:
+                emit_args, emit_kwargs = await self._emit_queue.get()
+                try:
+                    await self._ws.emit(*emit_args, **emit_kwargs)
+                except Exception as e:
+                    _TaipyLogger._get_logger().info("Error sending ws message: ", e)
+
+        @asynccontextmanager
+        async def lifespan(app: FastAPI):
+            self._ws.start_background_task(emit_dispatcher)
+            yield
+
+        taipy_router.lifespan_context = lifespan
 
         @taipy_router.get("/", response_class=HTMLResponse)
         @taipy_router.get("/{path:path}", response_class=HTMLResponse)
@@ -266,13 +287,32 @@ class FastAPIServer(_Server):
     def get_port(self) -> int:
         return self._port or -1
 
+    def test_client(self):
+        return TestClient(self._server)
+
+    def test_request_context(self, path, data):
+        return get_request_meta_ctx()
+
     def send_ws_message(self, *args, **kwargs):
+        if kwargs.get("to") is None:
+            kwargs["to"] = [sid_context.get()]
         if isinstance(kwargs["to"], str) or kwargs["to"] is None:
             kwargs["to"] = [kwargs["to"]]
+        if "include_self" in kwargs and kwargs["include_self"]:
+            del kwargs["include_self"]
+            sid = sid_context.get()
+            if sid is not None and None not in kwargs["to"] and sid not in kwargs["to"]:
+                kwargs["to"].append(sid)
         for sid in kwargs["to"]:
             temp_kwargs = kwargs.copy()
             temp_kwargs["to"] = sid
-            exec_async(self._ws.emit, "message", *args, **temp_kwargs)
+            self._emit_queue.put_nowait((("message", *args), temp_kwargs))
+
+    def save_uploaded_file(self, file, path):
+        if not file or not path:
+            raise ValueError("File and path must be provided.")
+        with open(path, "wb") as f_buffer:
+            f_buffer.write(run_async(file.read))
 
     def run(
         self,

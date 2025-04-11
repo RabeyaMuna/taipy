@@ -14,6 +14,7 @@ import pathlib
 import re
 import typing as t
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from random import choices, randint
 
 from gitignore_parser import parse_gitignore
@@ -79,6 +80,10 @@ class _Server(ABC):
     def direct_render_json(self, data):
         raise NotImplementedError
 
+    @abstractmethod
+    def save_uploaded_file(self, file, path):
+        raise NotImplementedError
+
     def render(self, html_fragment, script_paths, style, head, context):
         template_str = _Server._RE_OPENING_CURLY.sub(_Server._OPENING_CURLY, html_fragment)
         template_str = _Server._RE_CLOSING_CURLY.sub(_Server._CLOSING_CURLY, template_str)
@@ -111,6 +116,15 @@ class _Server(ABC):
         css_vars: str,
         base_url: str,
     ):
+        raise NotImplementedError
+
+    @abstractmethod
+    def test_client(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    @contextmanager
+    def test_request_context(self, path, data):
         raise NotImplementedError
 
     @abstractmethod

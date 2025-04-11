@@ -13,7 +13,7 @@
 from taipy.gui import Gui, Markdown
 
 
-def test_variable_binding(helpers):
+def test_variable_binding(helpers, gui_server):
     """
     Tests the binding of a few variables and a function
     """
@@ -24,11 +24,12 @@ def test_variable_binding(helpers):
     x = 10
     y = 20
     z = "button label"
-    gui = Gui()
+    gui = Gui(server=gui_server)
     gui.add_page("test", Markdown("<|{x}|> | <|{y}|> | <|{z}|button|on_action=another_function|>"))
     gui.run(run_server=False, single_client=True)
     client = gui._server.test_client()
-    jsx = client.get("/taipy-jsx/test").json["jsx"]
+    response = client.get("/taipy-jsx/test")
+    jsx = helpers.get_response_data(response)["jsx"]
     for expected in ["<Button", 'defaultLabel="button label"', "label={tpec_TpExPr_z_TPMDL_0}"]:
         assert expected in jsx
     assert gui._bindings().x == x
@@ -39,28 +40,30 @@ def test_variable_binding(helpers):
     helpers.test_cleanup()
 
 
-def test_properties_binding(helpers):
-    gui = Gui()
+def test_properties_binding(helpers, gui_server):
+    gui = Gui(server=gui_server)
     modifier = "nice "  # noqa: F841
     button_properties = {"label": "A {modifier}button"}  # noqa: F841
     gui.add_page("test", Markdown("<|button|properties=button_properties|>"))
     gui.run(run_server=False)
     client = gui._server.test_client()
-    jsx = client.get("/taipy-jsx/test").json["jsx"]
+    response = client.get("/taipy-jsx/test")
+    jsx = helpers.get_response_data(response)["jsx"]
     for expected in ["<Button", 'defaultLabel="A nice button"']:
         assert expected in jsx
     helpers.test_cleanup()
 
 
-def test_dict_binding(helpers):
+def test_dict_binding(helpers, gui_server):
     """
     Tests the binding of a dictionary property
     """
     d = {"k": "test"}  # noqa: F841
-    gui = Gui("<|{d.k}|>")
+    gui = Gui("<|{d.k}|>", server=gui_server)
     gui.run(run_server=False)
     client = gui._server.test_client()
-    jsx = client.get("/taipy-jsx/TaiPy_root_page").json["jsx"]
+    response = client.get("/taipy-jsx/TaiPy_root_page")
+    jsx = helpers.get_response_data(response)["jsx"]
     for expected in ["<Field", 'defaultValue="test"']:
         assert expected in jsx
     helpers.test_cleanup()

@@ -1089,7 +1089,7 @@ class Gui:
             os.makedirs(upload_path, exist_ok=True)
             # Save file into upload_path directory
             file_path = _get_non_existent_file_path(upload_path, secure_filename(file.filename))
-            file.save(os.path.join(upload_path, (file_path.name + suffix)))
+            self._server.save_uploaded_file(file, os.path.join(upload_path, (file_path.name + suffix)))
         else:
             _warn(f"upload files: Path {path} points outside of upload root.")
             return HttpResponse("upload files: Path part points outside of upload root.", 400)
@@ -2954,6 +2954,15 @@ class Gui:
             dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
         )
         fastapi_router.append(images_router)
+
+        upload_router = APIRouter()
+        upload_router.add_api_route(
+            f"/{Gui.__UPLOAD_URL}",
+            self.__upload_files,
+            methods=["POST"],
+            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
+        )
+        fastapi_router.append(upload_router)
 
         user_content_router = APIRouter()
         user_content_router.add_api_route(

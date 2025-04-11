@@ -16,11 +16,54 @@ import time
 import typing as t
 import warnings
 
+import socketio
+import urllib3
+
 from taipy.gui import Gui, Html, Markdown
 from taipy.gui._renderers.builder import _Builder
 from taipy.gui._warnings import TaipyGuiWarning
+from taipy.gui.servers.utils import get_server_type
 from taipy.gui.utils._variable_directory import _reset_name_map
 from taipy.gui.utils.expr_var_name import _reset_expr_var_name
+
+
+class WebSocketTestClient:
+    def __init__(self, url: str = "http://localhost:5000", auto_connect=True):
+        self.url = url
+        self.sio = socketio.Client()
+        self.messages: t.List = []
+        # Register event handlers
+        self.sio.on("message", self._on_message)
+        # Auto connect if specified
+        if auto_connect:
+            self.connect()
+
+    def _on_message(self, data):
+        self.messages.append(data)
+
+    def connect(self):
+        self.sio.connect(f"{self.url}/socket.io")
+
+    def disconnect(self):
+        self.sio.disconnect()
+
+    def emit(self, *args, **kwargs):
+        self.sio.emit(*args, **kwargs)
+        self.sio.sleep(1)
+
+    def get_received(self, timeout=1):
+        self.sio.sleep(timeout)
+        # wrap the messages in a dict to match the expected format
+        wrapped_messages = []
+        wrapped_messages.extend({"name": "message", "args": message} for message in self.messages)
+        self.messages = []
+        return wrapped_messages
+
+    def get(self, url):
+        return urllib3.request("GET", self.url + url)
+
+    def get_sid(self) -> t.Optional[str]:
+        return self.sio.get_sid()
 
 
 class Helpers:
@@ -29,6 +72,9 @@ class Helpers:
         _Builder._reset_key()
         _reset_name_map()
         _reset_expr_var_name()
+        Gui._Gui__extensions.clear()
+        Gui._Gui__shared_variables.clear()
+        Gui._Gui__content_providers.clear()
 
     @staticmethod
     def test_control_md(gui: Gui, md_string: str, expected_values: t.Union[str, t.List]):
@@ -51,7 +97,7 @@ class Helpers:
         client = gui._server.test_client()
         response = client.get("/taipy-jsx/test")
         assert response.status_code == 200, f"response.status_code {response.status_code} != 200"
-        response_data = json.loads(response.get_data().decode("utf-8", "ignore"))
+        response_data = Helpers.get_response_data(response)
         assert isinstance(response_data, t.Dict), "response_data is not Dict"
         assert "jsx" in response_data, "jsx not in response_data"
         jsx = response_data["jsx"]
@@ -166,3 +212,23 @@ class Helpers:
     @staticmethod
     def get_taipy_warnings(warns: t.List[warnings.WarningMessage]) -> t.List[warnings.WarningMessage]:
         return [w for w in warns if issubclass(w.category, TaipyGuiWarning)]
+
+    @staticmethod
+    def get_response_data(response):
+        if get_server_type() == "flask":
+            return json.loads(response.get_data().decode("utf-8", "ignore"))
+        elif get_server_type() == "fastapi":
+            return response.json()
+        return None
+
+    @staticmethod
+    def get_response_raw_data(response):
+        if get_server_type() == "flask":
+            return response.get_data().decode("utf-8", "ignore")
+        elif get_server_type() == "fastapi":
+            return response.text
+        return None
+
+    @staticmethod
+    def get_socketio_test_client():
+        return WebSocketTestClient()

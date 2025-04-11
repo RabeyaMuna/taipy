@@ -22,9 +22,9 @@ def test_get_state_id(gui: Gui, helpers):
 
     gui.add_page("test", Markdown("<|Hello|button|>"))
     gui.run(run_server=False)
-    flask_client = gui._server.test_client()
+    server_client = gui._server.test_client()
     cid = helpers.create_scope_and_get_sid(gui)
-    flask_client.get(f"/taipy-jsx/test?client_id={cid}")
+    server_client.get(f"/taipy-jsx/test?client_id={cid}")
     with gui.get_app_context():
         get_request_meta().client_id = cid
         assert cid == get_state_id(gui._Gui__state)  # type: ignore[attr-defined]

@@ -61,7 +61,11 @@ class RequestAccessor:
         if get_server_type() == "flask":
             return flask_request.files
         elif get_server_type() == "fastapi":
-            raise NotImplementedError("FastAPI does not support files handling yet")
+            fastapi_r = fastapi_request.get()
+            if fastapi_r is None:
+                return {}
+            form_data = dict(run_async(fastapi_r._get_form))
+            return {k: v for k, v in form_data.items() if hasattr(v, "filename")}
         return {}
 
     @staticmethod

@@ -19,6 +19,7 @@ import sys
 import time
 import typing as t
 import webbrowser
+from contextlib import contextmanager
 from importlib import util
 
 from flask import (
@@ -226,6 +227,13 @@ class FlaskServer(_Server):
     def test_client(self):
         return t.cast(Flask, self._server).test_client()
 
+    @contextmanager
+    def test_request_context(self, path, data=None):
+        if not isinstance(self._server, Flask):
+            raise RuntimeError("Flask server is not initialized")
+        with self._server.test_request_context(path, data=data):
+            yield
+
     def _run_notebook(self):
         self._is_running = True
         self._ws.run(self._server, host=self._host, port=self._port, debug=False, use_reloader=False)
@@ -248,6 +256,9 @@ class FlaskServer(_Server):
 
     def send_ws_message(self, *args, **kwargs):
         self._ws.emit("message", *args, **kwargs)
+
+    def save_uploaded_file(self, file, path):
+        file.save(path)
 
     def run(
         self,
