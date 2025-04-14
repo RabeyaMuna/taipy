@@ -16,7 +16,7 @@ import { SnackbarKey, useSnackbar, VariantType, CloseReason } from "notistack";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 
-import { NotificationMessage, createDeleteNotificationAction } from "../../context/taipyReducers";
+import { NotificationMessage, createDeleteNotificationAction, createSendAction } from "../../context/taipyReducers";
 import { useDispatch } from "../../utils/hooks";
 
 interface NotificationProps {
@@ -51,10 +51,15 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
     );
 
     const notificationClosed = useCallback(
-        (event: SyntheticEvent | null, reason: CloseReason, key?: SnackbarKey) => {
+        (event: SyntheticEvent | null, reason: CloseReason, key?: SnackbarKey, callback?: string) => {
             const final_reason = reason === "timeout" ? "timeout" : "forced";
             if (key) {
-                dispatch(createDeleteNotificationAction(key.toString(), final_reason));
+
+                if (callback) {
+                    dispatch(createSendAction(callback));
+                } else {
+                    dispatch(createDeleteNotificationAction(key.toString(), final_reason));
+                }
             }
             snackbarIds.current = Object.fromEntries(
                 Object.entries(snackbarIds.current).filter(([id]) => id !== key)
@@ -102,7 +107,7 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
                     new Notification(document.title || "Taipy", { body: notification.message, icon: faviconUrl });
             }
 
-            dispatch(createDeleteNotificationAction(notification.snackbarId,"timeout"));
+            dispatch(createDeleteNotificationAction(notification.snackbarId, "timeout"));
         }
     }, [notification, enqueueSnackbar, closeNotifications, notificationAction, faviconUrl, dispatch, notificationClosed]);
 

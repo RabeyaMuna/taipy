@@ -2405,7 +2405,7 @@ class Gui:
         self.__send_ws_download(
             content_str, str(name), str(on_action) if on_action is not None else "", self._get_locals_context()
         )
-
+  
     def _notify(
         self,
         notification_type: str = "I",
@@ -2413,24 +2413,31 @@ class Gui:
         system_notification: t.Optional[bool] = None,
         duration: t.Optional[int] = None,
         notification_id: t.Optional[str] = None,
-        on_close: t.Optional[t.Callable[[State, str, str], None]] = None,
+        on_close: t.Optional[t.Union[str, t.Callable[[State, str, str], None]]] = "",
     ):
+        on_close_str = ""
+        
         if notification_id and on_close:
-            self._notification_callbacks[notification_id] = on_close
+            if callable(on_close):
+                on_close_str = f"on_close_{abs(hash(on_close))}"
+                self._notification_callbacks[notification_id] = on_close
+            else:
+                on_close_str = str(on_close)
 
         self.__send_ws_notification(
             notification_type,
             message,
             self._get_config("system_notification", False) if system_notification is None else system_notification,
             self._get_config("notification_duration", 3000) if duration is None else duration,
-            notification_id,  
+            notification_id,
+            on_close_str if on_close_str else None
         )
         return notification_id
 
     def _close_notification(
         self,
         notification_id: str,
-        reason: str = "forced", 
+        reason: t.Optional[str] = "forced", 
     ):
         if notification_id:
             self.__send_ws_notification(

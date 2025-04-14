@@ -108,7 +108,7 @@ def notify(
         _warn("'notify()' must be called in the context of a callback.")
         return None
 
-def close_notification(state: State, id: str, reason:str) -> None:
+def close_notification(state: State, id: str) -> None:
     """Close a specific notification.
 
     This function closes a persistent notification by using the same identifier that was provided to
@@ -124,7 +124,7 @@ def close_notification(state: State, id: str, reason:str) -> None:
     """
     if state and isinstance(state._gui, Gui):
         # Send the close command with the notification_id
-        state._gui._close_notification(id, reason)  
+        state._gui._close_notification(id)  
         # state._gui._close_notification(id)  # type: ignore[attr-defined]
     else:
         _warn("'close_notification()' must be called in the context of a callback.")
