@@ -27,7 +27,7 @@ def test_notebook_simple_gui(tb, helpers):
     tb.execute_cell("gui_init")
     tb.execute_cell("gui_run")
     while not helpers.port_check():
-        time.sleep(0.1)
+        time.sleep(1)
     assert ">Hello</h1>" in urlopen("http://127.0.0.1:5000/taipy-jsx/page1").read().decode("utf-8")
     assert 'defaultValue=\\"10\\"' in urlopen("http://127.0.0.1:5000/taipy-jsx/page1").read().decode("utf-8")
     # Test state manipulation within notebook
@@ -71,7 +71,7 @@ def test_notebook_simple_gui_fastapi(tb, helpers):
     tb.execute_cell("gui_init")
     tb.execute_cell("gui_run")
     while not helpers.port_check():
-        time.sleep(0.1)
+        time.sleep(1)
     assert ">Hello</h1>" in urlopen("http://127.0.0.1:5000/taipy-jsx/page1").read().decode("utf-8")
     assert 'defaultValue=\\"10\\"' in urlopen("http://127.0.0.1:5000/taipy-jsx/page1").read().decode("utf-8")
     # Test state manipulation within notebook
