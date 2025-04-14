@@ -111,7 +111,7 @@ class FastAPIServer(_Server):
         self._port: t.Optional[int] = None
 
         # server setup
-        self._emit_queue: Queue[t.Tuple[t.Tuple[t.Any, ...], t.Dict[str, t.Any]]] = Queue()
+        self._emit_queue: t.Optional[Queue[t.Tuple[t.Tuple[t.Any, ...], t.Dict[str, t.Any]]]] = None
         self._server = server or FastAPI(json_encoder=_TaipyJsonEncoder)
         self._ws = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
         self._server.mount("/socket.io", socketio.ASGIApp(self._ws, other_asgi_app=self._server, socketio_path="/"))
@@ -176,6 +176,7 @@ class FastAPIServer(_Server):
 
         @asynccontextmanager
         async def lifespan(app: FastAPI):
+            self._emit_queue = Queue()
             self._ws.start_background_task(emit_dispatcher)
             yield
 

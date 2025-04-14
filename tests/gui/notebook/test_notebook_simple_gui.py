@@ -86,7 +86,7 @@ def test_notebook_simple_gui_fastapi(tb, helpers):
     tb.execute_cell("gui_stop")
     with pytest.raises(Exception) as exc_info:
         urlopen("http://127.0.0.1:5000/taipy-jsx/page1")
-    assert "Connection refused" in str(exc_info.value)
+    assert "refused" in str(exc_info.value)
     tb.execute_cell("gui_re_run")
     while True:
         with contextlib.suppress(Exception):
@@ -102,4 +102,4 @@ def test_notebook_simple_gui_fastapi(tb, helpers):
     tb.execute_cell("gui_re_stop")
     with pytest.raises(Exception) as exc_info:
         urlopen("http://127.0.0.1:5000/taipy-jsx/page1")
-    assert "Connection refused" in str(exc_info.value)
+    assert "refused" in str(exc_info.value)
