@@ -11,6 +11,7 @@
 
 from queue import SimpleQueue
 
+from taipy import Frequency
 from taipy.common.config import Config
 from taipy.core import taipy as tp
 from taipy.core._version._version_manager_factory import _VersionManagerFactory
