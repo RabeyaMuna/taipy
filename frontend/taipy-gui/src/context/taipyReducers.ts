@@ -95,6 +95,7 @@ export interface NotificationMessage {
     duration: number;
     notificationId?: string;
     snackbarId: string;
+    on_close?: string;
 }
 
 interface TaipyAction extends NamePayload, TaipyBaseAction {
@@ -114,7 +115,6 @@ interface TaipyNotificationAction extends TaipyBaseAction, NotificationMessage {
 
 interface TaipyDeleteNotificationAction extends TaipyBaseAction {
     snackbarId: string;
-    reason: string;
     callback?: string;
 }
 
@@ -620,20 +620,45 @@ export const getPayload = (value: unknown, onChange?: string, relName?: string) 
  * @param args - Additional information associated to the action.
  * @returns The action fed to the reducer.
  */
+// export const createSendActionNameAction = (
+//     name: string | undefined,
+//     context: string | undefined,
+//     value: unknown,
+//     ...args: unknown[]
+// ): TaipyAction => ({
+//     type: Types.Action,
+//     name: name || "",
+//     context: context,
+//     payload:
+//         typeof value === "object" && !Array.isArray(value) && value !== null
+//             ? { ...(value as object), args: args }
+//             : { action: value, args: args },
+// });
+
 export const createSendActionNameAction = (
     name: string | undefined,
     context: string | undefined,
     value: unknown,
     ...args: unknown[]
-): TaipyAction => ({
-    type: Types.Action,
-    name: name || "",
-    context: context,
-    payload:
+): TaipyAction => {
+    const payload =
         typeof value === "object" && !Array.isArray(value) && value !== null
             ? { ...(value as object), args: args }
-            : { action: value, args: args },
-});
+            : { action: value, args: args };
+
+    console.log("Payload:", payload); 
+    console.log("Name:", name); 
+    console.log("Context:", context); 
+    console.log("Args:", args); 
+    console.log("Type:", value); 
+
+    return {
+        type: Types.Action,
+        name: name || "",
+        context: context,
+        payload: payload,
+    };
+};
 
 export const createRequestChartUpdateAction = (
     name: string | undefined,
@@ -873,11 +898,10 @@ export const createNotificationAction = (notification: NotificationMessage): Tai
     snackbarId: notification.snackbarId
 });
 
-export const createDeleteNotificationAction = (snackbarId: string, reason: string, callback?: string): TaipyDeleteNotificationAction => {
+export const createDeleteNotificationAction = (snackbarId: string, callback?: string): TaipyDeleteNotificationAction => {
     return {
         type: Types.DeleteNotification,
         snackbarId,
-        reason,
         callback,
     }
 }

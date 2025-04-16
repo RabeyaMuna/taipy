@@ -16,8 +16,8 @@ import { SnackbarKey, useSnackbar, VariantType, CloseReason } from "notistack";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 
-import { NotificationMessage, createDeleteNotificationAction, createSendAction } from "../../context/taipyReducers";
-import { useDispatch } from "../../utils/hooks";
+import { NotificationMessage, createDeleteNotificationAction, createSendActionNameAction } from "../../context/taipyReducers";
+import { useDispatch, useModule } from "../../utils/hooks";
 
 interface NotificationProps {
     notifications: NotificationMessage[];
@@ -28,6 +28,7 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     const snackbarIds = useRef<Record<string, string>>({});
     const dispatch = useDispatch();
+    const module = useModule();
 
     const closeNotifications = useCallback(
         (ids: string[]) => {
@@ -53,19 +54,18 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
     const notificationClosed = useCallback(
         (event: SyntheticEvent | null, reason: CloseReason, key?: SnackbarKey, callback?: string) => {
             const final_reason = reason === "timeout" ? "timeout" : "forced";
+            console.log(callback)
             if (key) {
-
-                if (callback) {
-                    dispatch(createSendAction(callback));
-                } else {
-                    dispatch(createDeleteNotificationAction(key.toString(), final_reason));
+                if (true) { //Should be if(callback) but callback is always undefined
+                    createSendActionNameAction(notification?.notificationId, module, "on_notification_closed", final_reason);               
                 }
+                dispatch(createDeleteNotificationAction(key.toString()));
             }
             snackbarIds.current = Object.fromEntries(
                 Object.entries(snackbarIds.current).filter(([id]) => id !== key)
             );
         },
-        [dispatch] 
+        [dispatch, module, notification?.notificationId] 
     );
 
     const faviconUrl = useMemo(() => {
@@ -99,7 +99,7 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
                 enqueueSnackbar(notification.message, {
                     variant: notification.nType as VariantType,
                     action: notificationAction,
-                    onClose: notificationClosed,
+                    onClose: (event, reason, key) => notificationClosed(event, reason, key, notification.on_close),
                     key: notification.snackbarId,
                     autoHideDuration: notification.duration || null,
                 });

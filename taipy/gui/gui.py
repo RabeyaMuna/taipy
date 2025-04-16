@@ -2414,15 +2414,21 @@ class Gui:
         duration: t.Optional[int] = None,
         notification_id: t.Optional[str] = None,
         on_close: t.Optional[t.Union[str, t.Callable[[State, str, str], None]]] = "",
-    ):
-        on_close_str = ""
-        
+        ):
+        on_close_str = None
+
         if notification_id and on_close:
-            if callable(on_close):
-                on_close_str = f"on_close_{abs(hash(on_close))}"
+            if isinstance(on_close, str):
+                func = self._get_user_function(on_close)
+                if callable(func):
+                    self._notification_callbacks[notification_id] = func
+                    on_close_str = on_close
+                else:
+                    _warn(f"Notification on_close callback '{on_close}' is not a valid function.")
+            elif callable(on_close):
                 self._notification_callbacks[notification_id] = on_close
             else:
-                on_close_str = str(on_close)
+                _warn(f"Invalid on_close value for notification {notification_id}: {on_close}")
 
         self.__send_ws_notification(
             notification_type,
@@ -2430,14 +2436,14 @@ class Gui:
             self._get_config("system_notification", False) if system_notification is None else system_notification,
             self._get_config("notification_duration", 3000) if duration is None else duration,
             notification_id,
-            on_close_str if on_close_str else None
+            on_close_str,  
         )
         return notification_id
 
     def _close_notification(
         self,
         notification_id: str,
-        reason: t.Optional[str] = "forced", 
+        reason: t.Optional[str] = "timeout", 
     ):
         if notification_id:
             self.__send_ws_notification(
