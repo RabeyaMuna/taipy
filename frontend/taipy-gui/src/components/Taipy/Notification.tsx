@@ -57,7 +57,7 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
             console.log(callback)
             if (key) {
                 if (true) { //Should be if(callback) but callback is always undefined
-                    createSendActionNameAction(notification?.notificationId, module, "on_notification_closed", final_reason);               
+                    dispatch(createSendActionNameAction(notification?.notificationId, module, "on_notification_closed", final_reason));               
                 }
                 dispatch(createDeleteNotificationAction(key.toString()));
             }
@@ -107,7 +107,7 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
                     new Notification(document.title || "Taipy", { body: notification.message, icon: faviconUrl });
             }
 
-            dispatch(createDeleteNotificationAction(notification.snackbarId, "timeout"));
+            dispatch(createDeleteNotificationAction(notification.snackbarId));
         }
     }, [notification, enqueueSnackbar, closeNotifications, notificationAction, faviconUrl, dispatch, notificationClosed]);
 

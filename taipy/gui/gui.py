@@ -369,8 +369,6 @@ class Gui:
         The returned HTML content can therefore use both the variables stored in the *state*
         and the parameters provided in the call to `get_user_content_url()^`.
         """
-        # Notification callbacks
-        self._notification_callbacks = {}
 
         # sid from client_id
         self.__client_id_2_sid: t.Dict[str, t.Set[str]] = {}
@@ -2421,12 +2419,9 @@ class Gui:
             if isinstance(on_close, str):
                 func = self._get_user_function(on_close)
                 if callable(func):
-                    self._notification_callbacks[notification_id] = func
                     on_close_str = on_close
                 else:
                     _warn(f"Notification on_close callback '{on_close}' is not a valid function.")
-            elif callable(on_close):
-                self._notification_callbacks[notification_id] = on_close
             else:
                 _warn(f"Invalid on_close value for notification {notification_id}: {on_close}")
 
