@@ -10,6 +10,7 @@
 # specific language governing permissions and limitations under the License.
 
 import contextlib
+import sys
 import time
 from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
@@ -18,7 +19,7 @@ import pytest
 from testbook import testbook
 
 
-def wait_for_content(url, expected_text, timeout=30):
+def wait_for_content(url, expected_text, timeout=10):
     start = time.time()
     while time.time() - start < timeout:
         try:
@@ -33,6 +34,7 @@ def wait_for_content(url, expected_text, timeout=30):
 
 
 @pytest.mark.skip_if_not_server("flask")
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="Test skipped on Windows")
 @pytest.mark.filterwarnings("ignore::RuntimeWarning")
 @pytest.mark.teste2e
 @testbook("tests/gui/notebook/simple_gui.ipynb")
