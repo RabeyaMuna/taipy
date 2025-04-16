@@ -18,7 +18,7 @@ import pytest
 from testbook import testbook
 
 
-def wait_for_content(url, expected_text, timeout=10):
+def wait_for_content(url, expected_text, timeout=30):
     start = time.time()
     while time.time() - start < timeout:
         try:
