@@ -17,13 +17,13 @@ class _AbstractEventProcessor:
     """Abstract base class for implementing an event processor."""
 
     @classmethod
+    @abstractmethod
     def process_event(cls, event_consumer, event: Event):
         raise NotImplementedError("Subclasses must implement this method.")
 
 class _EventProcessor(_AbstractEventProcessor):
 
     @classmethod
-    @abstractmethod
     def process_event(cls, event_consumer, event: Event):
         event_consumer._process_event(event)
 
