@@ -420,7 +420,8 @@ export const taipyReducer = (state: TaipyState, baseAction: TaipyBaseAction): Ta
                         system: notificationAction.system,
                         duration: notificationAction.duration,
                         notificationId: notificationAction.notificationId,
-                        snackbarId: notificationAction.nType ? nanoid() : notificationAction.nType
+                        snackbarId: notificationAction.nType ? nanoid() : notificationAction.nType,
+                        on_close: notificationAction?.on_close,
                     },
                 ],
             };
@@ -867,7 +868,8 @@ export const createNotificationAction = (notification: NotificationMessage): Tai
     system: notification.system,
     duration: notification.duration,
     notificationId: notification.notificationId,
-    snackbarId: notification.snackbarId
+    snackbarId: notification.snackbarId,
+    on_close: notification?.on_close,
 });
 
 export const createDeleteNotificationAction = (snackbarId: string): TaipyDeleteNotificationAction => {
