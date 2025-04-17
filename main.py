@@ -2,7 +2,7 @@ from taipy.gui import Gui, notify
 
 # Function to trigger a notification
 def send_notification(state):
-    notify(state, "warning", "This is a test notification!", None, None, "3", "on_notification_closed")
+    notify(state, "warning", "This is a test notification!", None, None, "3", on_notification_closed)
 
 # Function triggered when a notification is closed (from frontend)
 def on_notification_closed(state, notification_id, reason=None):

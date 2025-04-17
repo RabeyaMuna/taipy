@@ -55,6 +55,7 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
         (event: SyntheticEvent | null, reason: CloseReason, key?: SnackbarKey, callback?: string) => {
             const final_reason = reason === "timeout" ? "timeout" : "forced";
             console.log(callback)
+            console.log("maybe not ",notification?.on_close)
             if (key) {
                 if (true) { //Should be if(callback) but callback is always undefined
                     dispatch(createSendActionNameAction(notification?.notificationId, module, "on_notification_closed", final_reason));               
@@ -65,7 +66,7 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
                 Object.entries(snackbarIds.current).filter(([id]) => id !== key)
             );
         },
-        [dispatch, module, notification?.notificationId] 
+        [dispatch, module, notification?.notificationId, notification?.on_close] 
     );
 
     const faviconUrl = useMemo(() => {
@@ -96,6 +97,7 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
                         [notification.snackbarId]: notificationId,
                     };
                 }
+                console.log(notification.on_close); //The value is always undefined, and it should be the callback
                 enqueueSnackbar(notification.message, {
                     variant: notification.nType as VariantType,
                     action: notificationAction,

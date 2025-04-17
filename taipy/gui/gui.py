@@ -1457,7 +1457,7 @@ class Gui:
         )
 
     def __send_ws_notification(
-        self, type: str, message: str, system_notification: bool, duration: int, notification_id: t.Optional[str] = None, reason: t.Optional[str] = None
+        self, type: str, message: str, system_notification: bool, duration: int, notification_id: t.Optional[str] = None, reason: t.Optional[str] = None, on_close_str: t.Optional[str] = None
     ) -> None:
         payload = {
             "type": _WsType.ALERT.value,
@@ -1466,6 +1466,7 @@ class Gui:
             "system": system_notification,
             "duration": duration,
             "reason": reason,
+            "on_close": on_close_str,
         }
 
         if notification_id:
@@ -2422,8 +2423,14 @@ class Gui:
                     on_close_str = on_close
                 else:
                     _warn(f"Notification on_close callback '{on_close}' is not a valid function.")
-            else:
-                _warn(f"Invalid on_close value for notification {notification_id}: {on_close}")
+                    
+            elif callable(on_close):
+                on_close_str = on_close.__name__
+                func = self._get_user_function(on_close_str)
+                if not callable(func):
+                    _warn(f"Function '{on_close_str}' from on_close callable is not valid.")
+        else:
+            _warn(f"Invalid on_close value for notification {notification_id}: {on_close}")
 
         self.__send_ws_notification(
             notification_type,
@@ -2431,14 +2438,15 @@ class Gui:
             self._get_config("system_notification", False) if system_notification is None else system_notification,
             self._get_config("notification_duration", 3000) if duration is None else duration,
             notification_id,
-            on_close_str,  
+            reason= None,
+            on_close_str= on_close_str,  
         )
         return notification_id
 
     def _close_notification(
         self,
         notification_id: str,
-        reason: t.Optional[str] = "timeout", 
+        reason: t.Optional[str] = "user_action", 
     ):
         if notification_id:
             self.__send_ws_notification(
@@ -2447,11 +2455,9 @@ class Gui:
                 system_notification=False,  # System notification not needed for closing
                 duration=0,  # No duration since it's an immediate close
                 notification_id=notification_id,
+                reason=reason,
+                on_close_str=None,  # No need for on_close callback when closing
             )
-
-            if notification_id in self._notification_callbacks:
-                callback = self._notification_callbacks.pop(notification_id)  
-                callback(self, notification_id, reason)
 
     def _hold_actions(
         self,
