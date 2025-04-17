@@ -9,9 +9,9 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union, cast
 
-from taipy import Gui, SubmissionStatus
+from taipy import Gui, Scenario, Submission, SubmissionStatus
 from taipy.common.logger._taipy_logger import _TaipyLogger
 from taipy.core.common._check_dependencies import EnterpriseEditionUtils
 from taipy.core.common._utils import _load_fct
@@ -26,7 +26,7 @@ from taipy.core.notification import (
 )
 from taipy.core.notification._core_event_consumer import _CoreEventConsumerBase
 from taipy.event._event_callback import _Callback
-from taipy.event._event_processor import _AbstractEventProcessor, _EventProcessor
+from taipy.event._event_processor import _EventProcessor
 from taipy.exceptions import NoGuiDefinedInEventConsumer
 
 
@@ -162,7 +162,7 @@ class EventConsumer(_CoreEventConsumerBase):
         self._registration = _Registration()
         self._topic_callbacks_map: Dict[_Topic, List[_Callback]] = {}
         self._gui = gui
-        self.event_processor: _AbstractEventProcessor = _EventProcessor()
+        self.event_processor = _EventProcessor()
         if EnterpriseEditionUtils._using_enterprise():
             self.event_processor = _load_fct(
                 EnterpriseEditionUtils._TAIPY_ENTERPRISE_EVENT_PACKAGE + "._event_processor",
@@ -299,8 +299,12 @@ class EventConsumer(_CoreEventConsumerBase):
 
         def _filter(event: Event) -> bool:
             import taipy as tp
-
+            if not event.entity_id:
+                return False
             sc = tp.get(event.entity_id)
+            if not isinstance(sc, Scenario):
+                # It is not a scenario
+                return False
             if scenario_config and sc.config_id not in scenario_config:
                 return False
             event.metadata["predefined_args"] = [sc]
@@ -373,6 +377,8 @@ class EventConsumer(_CoreEventConsumerBase):
         scenario_config = self.__format_configs_parameter(ScenarioConfig, scenario_config)
 
         def _filter(event: Event) -> bool:
+            if not event.entity_id:
+                return False
             if not scenario_config:
                 event.metadata["predefined_args"] = [event.entity_id]
                 return True
@@ -451,8 +457,13 @@ class EventConsumer(_CoreEventConsumerBase):
 
         def _filter(event: Event) -> bool:
             import taipy as tp
-
+            if not event.entity_id:
+                return False
             dn = tp.get(event.entity_id)
+            if not isinstance(dn, DataNodeConfig):
+                # It is not a datanode
+                return False
+            dn = cast(DataNodeConfig, dn)
             if datanode_config and dn.config_id not in datanode_config:
                 return False
             event.metadata["predefined_args"] = [dn, dn.read()]
@@ -524,6 +535,8 @@ class EventConsumer(_CoreEventConsumerBase):
         datanode_config = self.__format_configs_parameter(DataNodeConfig, datanode_config)
 
         def _filter(event: Event) -> bool:
+            if not event.entity_id:
+                return False
             if not datanode_config:
                 event.metadata["predefined_args"] = [event.entity_id]
                 return True
@@ -599,9 +612,15 @@ class EventConsumer(_CoreEventConsumerBase):
         datanode_config = self.__format_configs_parameter(DataNodeConfig, datanode_config)
 
         def _filter(event: Event) -> bool:
+            if not event.entity_id:
+                return False
             import taipy as tp
 
             dn = tp.get(event.entity_id)
+            if not isinstance(dn, DataNodeConfig):
+                # It is not a datanode
+                return False
+            dn = cast(DataNodeConfig, dn)
             if datanode_config and dn.config_id not in datanode_config:
                 return False
             event.metadata["predefined_args"] = [dn]
@@ -692,12 +711,18 @@ class EventConsumer(_CoreEventConsumerBase):
             config_ids = res
 
         def _filter(event: Event) -> bool:
+            if not event.entity_id:
+                return False
             finished_statuses = {SubmissionStatus.COMPLETED, SubmissionStatus.FAILED, SubmissionStatus.CANCELED}
             if not event.attribute_value or event.attribute_value not in finished_statuses:
                 return False
             import taipy as tp
 
             submission = tp.get(event.entity_id)
+            if not isinstance(submission, Submission):
+                # It is not a submission
+                return False
+            submission = cast(Submission, submission)
             if config_ids:
                 # We are filtering on a specific config
                 if not submission.entity_config_id:
