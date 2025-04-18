@@ -11,7 +11,7 @@
 
 from typing import Callable, Dict, List, Optional, Union, cast
 
-from taipy import Gui, Scenario, Submission, SubmissionStatus
+from taipy import Gui, Scenario, Submission, SubmissionStatus, DataNode
 from taipy.common.logger._taipy_logger import _TaipyLogger
 from taipy.core.common._check_dependencies import EnterpriseEditionUtils
 from taipy.core.common._utils import _load_fct
@@ -460,7 +460,7 @@ class EventConsumer(_CoreEventConsumerBase):
             if not event.entity_id:
                 return False
             dn = tp.get(event.entity_id)
-            if not isinstance(dn, DataNodeConfig):
+            if not isinstance(dn, DataNode):
                 # It is not a datanode
                 return False
             dn = cast(DataNodeConfig, dn)
@@ -617,7 +617,7 @@ class EventConsumer(_CoreEventConsumerBase):
             import taipy as tp
 
             dn = tp.get(event.entity_id)
-            if not isinstance(dn, DataNodeConfig):
+            if not isinstance(dn, DataNode):
                 # It is not a datanode
                 return False
             dn = cast(DataNodeConfig, dn)
