@@ -95,7 +95,7 @@ export interface NotificationMessage {
     duration: number;
     notificationId?: string;
     snackbarId: string;
-    on_close?: string;
+    onClose?: string;
     reason?: string;
 }
 
@@ -116,7 +116,6 @@ interface TaipyNotificationAction extends TaipyBaseAction, NotificationMessage {
 
 interface TaipyDeleteNotificationAction extends TaipyBaseAction {
     snackbarId: string;
-    callback?: string;
 }
 
 export const BLOCK_CLOSE = { action: "", message: "", close: true, noCancel: false } as BlockMessage;
@@ -421,7 +420,7 @@ export const taipyReducer = (state: TaipyState, baseAction: TaipyBaseAction): Ta
                         duration: notificationAction.duration,
                         notificationId: notificationAction.notificationId,
                         snackbarId: notificationAction.nType ? nanoid() : notificationAction.nType,
-                        on_close: notificationAction?.on_close,
+                        onClose: notificationAction?.onClose,
                     },
                 ],
             };
@@ -869,7 +868,7 @@ export const createNotificationAction = (notification: NotificationMessage): Tai
     duration: notification.duration,
     notificationId: notification.notificationId,
     snackbarId: notification.snackbarId,
-    on_close: notification?.on_close,
+    onClose: notification?.onClose,
 });
 
 export const createDeleteNotificationAction = (snackbarId: string): TaipyDeleteNotificationAction => {

@@ -1466,7 +1466,7 @@ class Gui:
             "system": system_notification,
             "duration": duration,
             "reason": reason,
-            "on_close": on_close_str,
+            "onClose": on_close_str,
         }
 
         if notification_id:
@@ -2424,7 +2424,7 @@ class Gui:
                 else:
                     _warn(f"Notification on_close callback '{on_close}' is not a valid function.")
                     
-            elif callable(on_close):
+            elif _is_function(on_close):
                 on_close_str = on_close.__name__
                 func = self._get_user_function(on_close_str)
                 if not callable(func):

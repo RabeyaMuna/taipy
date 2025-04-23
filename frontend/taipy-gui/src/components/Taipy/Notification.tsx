@@ -54,11 +54,8 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
     const notificationClosed = useCallback(
         (event: SyntheticEvent | null, reason: CloseReason, key?: SnackbarKey, callback?: string) => {
             const final_reason = reason === "timeout" ? "timeout" : "forced";
-            if (key) {
-                if (callback) { 
-                    dispatch(createSendActionNameAction(notification?.notificationId, module, callback, final_reason));               
-                }
-                dispatch(createDeleteNotificationAction(key.toString()));
+            if (key && callback) {
+                dispatch(createSendActionNameAction(notification?.notificationId, module, callback, final_reason));               
             }
             snackbarIds.current = Object.fromEntries(
                 Object.entries(snackbarIds.current).filter(([id]) => id !== key)
@@ -98,7 +95,7 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
                 enqueueSnackbar(notification.message, {
                     variant: notification.nType as VariantType,
                     action: notificationAction,
-                    onClose: (event, reason, key) => notificationClosed(event, reason, key, notification.on_close),
+                    onClose: (event, reason, key) => notificationClosed(event, reason, key, notification.onClose),
                     key: notification.snackbarId,
                     autoHideDuration: notification.duration || null,
                 });
