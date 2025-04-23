@@ -12,6 +12,7 @@ export interface Element {
     type: string;
     id: string;
     properties?: Record<string, unknown>;
+    styles?: Record<string, unknown>;
     renderConfig?: CanvasRenderConfig;
     editModeRenderConfig?: CanvasRenderConfig;
 }
@@ -38,7 +39,13 @@ export class ElementManager {
         this.#canvas = new TaipyCanvas(taipyApp);
     }
 
-    init(canvasDomElement: HTMLElement, canvasEditModeCanvas?: HTMLElement, propertyEditorElement?: HTMLElement) {
+    init(
+        canvasDomElement: HTMLElement,
+        canvasEditModeCanvas?: HTMLElement,
+        propertyEditorElement?: HTMLElement,
+        styleHandler?: (id: string, styles: Record<string, unknown>) => void,
+    ) {
+        getStore().setStyleHandler(styleHandler);
         this.#canvas.init(canvasDomElement, canvasEditModeCanvas, propertyEditorElement);
     }
 
@@ -60,9 +67,13 @@ export class ElementManager {
         rootId: string,
         wrapper: CanvasRenderConfig["wrapper"],
         properties: Element["properties"] | undefined = undefined,
+        styles: Element["styles"] | undefined = undefined,
     ) {
         if (properties === undefined) {
             properties = {};
+        }
+        if (styles === undefined) {
+            styles = {};
         }
         const root = document.getElementById(rootId);
         if (!root) {
@@ -74,11 +85,16 @@ export class ElementManager {
         };
         // add element if not existed
         if (!isElementExisted(id)) {
-            getStore().addElementAction({ action: ElementActionEnum.Add, id, payload: properties });
+            getStore().addElementAction({
+                action: ElementActionEnum.Add,
+                id,
+                payload: { properties, styles },
+            });
             getStore().addElement({
                 type,
                 id,
                 properties,
+                styles,
                 ...renderConfig,
             });
             return;
@@ -88,8 +104,16 @@ export class ElementManager {
             ...getStore().elements.find((element) => element.id === id)?.properties,
             ...properties,
         };
-        getStore().addElementAction({ action: ElementActionEnum.Add, id, payload: editedProperties });
-        getStore().editElement(id, { ...renderConfig, properties: editedProperties });
+        const editedStyles = {
+            ...getStore().elements.find((element) => element.id === id)?.styles,
+            ...styles,
+        };
+        getStore().addElementAction({
+            action: ElementActionEnum.Add,
+            id,
+            payload: { properties: editedProperties, styles: editedStyles },
+        });
+        getStore().editElement(id, { ...renderConfig, properties: editedProperties, styles: editedStyles });
     }
 
     modifyElement(id: string, elementProperties: Record<string, unknown>) {

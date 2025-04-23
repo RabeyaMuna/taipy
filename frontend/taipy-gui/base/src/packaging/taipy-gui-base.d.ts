@@ -99,6 +99,7 @@ export interface Element {
     type: string;
     id: string;
     properties?: Record<string, unknown>;
+    styles?: Record<string, unknown>;
     renderConfig?: CanvasRenderConfig;
     editModeRenderConfig?: CanvasRenderConfig;
 }
@@ -117,7 +118,12 @@ declare class ElementManager {
     #private;
     taipyApp: TaipyApp;
     constructor(taipyApp: TaipyApp);
-    init(canvasDomElement: HTMLElement, canvasEditModeCanvas?: HTMLElement, propertyEditorElement?: HTMLElement): void;
+    init(
+        canvasDomElement: HTMLElement,
+        canvasEditModeCanvas?: HTMLElement,
+        propertyEditorElement?: HTMLElement,
+        styleHandler?: (id: string, styles: Record<string, unknown>) => void,
+    ): void;
     setEditMode(editMode: boolean): void;
     addElement(
         type: string,
@@ -125,6 +131,7 @@ declare class ElementManager {
         rootId: string,
         wrapper: CanvasRenderConfig["wrapper"],
         properties?: Element["properties"] | undefined,
+        styles?: Element["styles"] | undefined,
     ): void;
     modifyElement(id: string, elementProperties: Record<string, unknown>): void;
     modifyElementProperties(id: string, payload: Record<string, unknown>): void;
@@ -215,6 +222,7 @@ export declare class TaipyApp {
         canvasDomElement: HTMLElement,
         canvasEditModeCanvas?: HTMLElement,
         propertyEditorElement?: HTMLElement,
+        styleHandler?: (id: string, styles: Record<string, unknown>) => void,
     ): void;
     addElement2Canvas(
         type: string,
@@ -222,6 +230,7 @@ export declare class TaipyApp {
         rootId: string,
         wrapper: CanvasRenderConfig["wrapper"],
         properties?: Element["properties"] | undefined,
+        styles?: Element["styles"] | undefined,
     ): void;
     setCanvasEditMode(bool: boolean): void;
     modifyElement(id: string, modifiedRecord: Record<string, unknown>): void;

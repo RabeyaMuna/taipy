@@ -319,8 +319,9 @@ export class TaipyApp {
         canvasDomElement: HTMLElement,
         canvasEditModeCanvas?: HTMLElement,
         propertyEditorElement?: HTMLElement,
+        styleHandler?: (id: string, styles: Record<string, unknown>) => void,
     ) {
-        this.elementManager.init(canvasDomElement, canvasEditModeCanvas, propertyEditorElement);
+        this.elementManager.init(canvasDomElement, canvasEditModeCanvas, propertyEditorElement, styleHandler);
     }
 
     addElement2Canvas(
@@ -329,8 +330,9 @@ export class TaipyApp {
         rootId: string,
         wrapper: CanvasRenderConfig["wrapper"],
         properties: Element["properties"] | undefined = undefined,
+        styles: Element["styles"] | undefined = undefined,
     ) {
-        this.elementManager.addElement(type, id, rootId, wrapper, properties);
+        this.elementManager.addElement(type, id, rootId, wrapper, properties, styles);
     }
 
     setCanvasEditMode(bool: boolean) {

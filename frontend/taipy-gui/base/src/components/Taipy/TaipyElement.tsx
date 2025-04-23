@@ -6,7 +6,7 @@ import JsxParser from "react-jsx-parser";
 import { PageContext, TaipyContext } from "../../../../src/context/taipyContext";
 import { Element, ElementActionEnum } from "../../element/elementManager";
 import useStore, { getElementAction } from "../../store";
-import { getJsx } from "./utils";
+import { getJsx, getTaipyElementId } from "./utils";
 import { emptyArray } from "../../../../src/utils";
 import ErrorFallback from "../../../../src/utils/ErrorBoundary";
 import { getRegisteredComponents } from "../../../../src/components/Taipy";
@@ -23,6 +23,7 @@ const TaipyElement = (props: TaipyElementProps) => {
     const [module, setModule] = useState<string>("");
     const [jsx, setJsx] = useState<string>("");
     const app = useStore((state) => state.app);
+    const styleHandler = useStore((state) => state.styleHandler);
     const prevElement = useRef(props.element);
 
     const renderConfig = useMemo(
@@ -75,6 +76,14 @@ const TaipyElement = (props: TaipyElementProps) => {
             app && app.onCanvasReRenderEvent(props.editMode, getElementAction(potentialAction));
         };
     }, [props.element, app, props.editMode]);
+
+    useEffect(() => {
+        const potentialElementId = getTaipyElementId(props.element.id, props.editMode);
+        document.getElementById(potentialElementId) &&
+            styleHandler &&
+            props.element.styles &&
+            styleHandler(potentialElementId, props.element.styles);
+    }, [pageState.jsx, props.element.id, props.editMode, props.element.styles, styleHandler]);
 
     return renderConfig ? (
         createPortal(
