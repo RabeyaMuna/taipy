@@ -17,7 +17,7 @@ import "@testing-library/jest-dom";
 import { SnackbarProvider } from "notistack";
 
 import TaipyNotification from "./Notification";
-import { NotificationMessage } from "../../context/taipyReducers";
+import { NotificationMessage, createSendActionNameAction } from "../../context/taipyReducers";
 import userEvent from "@testing-library/user-event";
 
 const defaultMessage = "message";
@@ -38,6 +38,9 @@ describe("Notifications", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
+
+    const mockDispatch = jest.fn();
+
     it("renders", async () => {
         const { getByText } = render(
             <SnackbarProvider>
@@ -234,5 +237,91 @@ describe("Notifications", () => {
         const linkElement = document.querySelector("link[rel='shortcut icon']");
         expect(linkElement?.getAttribute("href")).toBe("/test-shortcut-icon.png");
         document.head.removeChild(link);
+    });
+
+    it("should dispatch createSendActionNameAction with 'forced' when a notification is manually closed", async () => {
+        const notification = {
+            notificationId: "test-id",
+            snackbarId: "test-snackbar",
+            message: "Test message",
+            nType: "info",
+            duration: 3000,
+            onClose: "onCloseCallback",
+            system: false,
+        };
+
+        const wrapper = render(
+            <SnackbarProvider>
+                <TaipyNotification notifications={[notification]} />
+            </SnackbarProvider>
+        );
+
+        const onCloseFn = wrapper.container.querySelector("div"); 
+
+        await waitFor(() => {
+            const module = "testModule";
+            const action = createSendActionNameAction(
+                "test-id",
+                module,
+                "onCloseCallback",
+                "forced"
+            );
+        
+            mockDispatch(action);
+        });
+
+        expect(mockDispatch).toHaveBeenCalledWith(
+            expect.objectContaining({
+                type: "SEND_ACTION_ACTION",
+                context: "testModule",
+                name: "test-id",
+                payload: {
+                    action: "onCloseCallback",
+                    args: ["forced"],
+                }
+            })
+        );
+    });
+
+    it("should dispatch createSendActionNameAction with 'timeout' when a notification times out", async () => {
+        const notification = {
+            notificationId: "test-id",
+            snackbarId: "test-snackbar",
+            message: "Test message",
+            nType: "info",
+            duration: 3000,
+            onClose: "onCloseCallback",
+            system: false,
+        };
+    
+        const module = "testModule";
+    
+        const wrapper = render(
+            <SnackbarProvider>
+                <TaipyNotification notifications={[notification]} />
+            </SnackbarProvider>
+        );
+    
+        await waitFor(() => {
+            const action = createSendActionNameAction(
+                "test-id",
+                module,
+                "onCloseCallback",
+                "timeout"
+            );
+            mockDispatch(action);
+        });
+    
+        expect(mockDispatch).toHaveBeenCalledWith(
+            expect.objectContaining({
+                type: "SEND_ACTION_ACTION",
+                context: "testModule",
+                name: "test-id",
+                payload: {
+                    action: "onCloseCallback",
+                    args: ["timeout"],
+                },
+            })
+        );
     });
 });

@@ -53,9 +53,8 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
 
     const notificationClosed = useCallback(
         (event: SyntheticEvent | null, reason: CloseReason, key?: SnackbarKey, callback?: string) => {
-            const final_reason = reason === "timeout" ? "timeout" : "forced";
-            if (key && callback) {
-                dispatch(createSendActionNameAction(notification?.notificationId, module, callback, final_reason));               
+            if (callback) {
+                dispatch(createSendActionNameAction(notification?.notificationId, module, callback, reason === "timeout" ? "timeout" : "forced"));               
             }
             snackbarIds.current = Object.fromEntries(
                 Object.entries(snackbarIds.current).filter(([id]) => id !== key)
