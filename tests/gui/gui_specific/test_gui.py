@@ -11,6 +11,7 @@
 
 import inspect
 import json
+from unittest.mock import MagicMock
 from contextlib import nullcontext
 
 import pandas as pd
@@ -109,3 +110,39 @@ def test_on_action_call(gui:Gui):
     with gui.get_flask_app().app_context():
         gui._Gui__on_action(an_id, a_non_action_payload) # type: ignore[attr-defined]
         gui._Gui__on_action(an_id, an_action_payload) # type: ignore[attr-defined]
+
+
+def test__notification_on_close(gui: Gui):
+    notification_id = "test-id"
+    
+    def on_notification_closed(state, notification_id, reason=None):
+        assert notification_id == "test-id"
+        assert reason == "timeout"
+    
+    gui._set_frame(inspect.currentframe())
+
+    
+    gui._Gui__send_ws_notification = MagicMock()
+
+    gui.run(run_server=False)
+
+    with gui.get_flask_app().app_context():
+        gui._notify(
+            notification_type="warning",
+            message="This is a test notification!",
+            system_notification=False,
+            duration=3000,
+            notification_id=notification_id,
+            on_close=on_notification_closed,
+        )
+
+        gui._Gui__send_ws_notification.assert_called_once_with(
+            "warning",  
+            "This is a test notification!", 
+            False, 
+            3000, 
+            notification_id,  
+            reason=None,  
+            on_close_str="on_notification_closed",  
+        )
+    

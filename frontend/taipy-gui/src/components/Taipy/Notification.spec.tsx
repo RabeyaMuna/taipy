@@ -17,8 +17,10 @@ import "@testing-library/jest-dom";
 import { SnackbarProvider } from "notistack";
 
 import TaipyNotification from "./Notification";
-import { NotificationMessage, createSendActionNameAction } from "../../context/taipyReducers";
+import { NotificationMessage, TaipyState, INITIAL_STATE } from "../../context/taipyReducers";
 import userEvent from "@testing-library/user-event";
+import { TaipyContext } from "../../context/taipyContext";
+import * as hooks from "../../utils/hooks";
 
 const defaultMessage = "message";
 const defaultNotifications: NotificationMessage[] = [
@@ -238,88 +240,50 @@ describe("Notifications", () => {
         expect(linkElement?.getAttribute("href")).toBe("/test-shortcut-icon.png");
         document.head.removeChild(link);
     });
-
-    it("should dispatch createSendActionNameAction with 'forced' when a notification is manually closed", async () => {
+    
+    it("dispatches the correct actions when a notification closes due to timeout", async () => {
+        jest.spyOn(hooks, "useModule").mockReturnValue("testModule");
+        const mockDispatch = jest.fn(); 
+        const state: TaipyState = INITIAL_STATE;
+    
         const notification = {
             notificationId: "test-id",
             snackbarId: "test-snackbar",
             message: "Test message",
             nType: "info",
-            duration: 3000,
+            duration: 100,
             onClose: "onCloseCallback",
             system: false,
         };
-
+    
         const wrapper = render(
             <SnackbarProvider>
-                <TaipyNotification notifications={[notification]} />
+                <TaipyContext.Provider value={{ state, dispatch: mockDispatch }}>
+                    <TaipyNotification notifications={[notification]} />
+                </TaipyContext.Provider>
             </SnackbarProvider>
         );
-
-        const onCloseFn = wrapper.container.querySelector("div"); 
-
+    
         await waitFor(() => {
-            const module = "testModule";
-            const action = createSendActionNameAction(
-                "test-id",
-                module,
-                "onCloseCallback",
-                "forced"
-            );
-        
-            mockDispatch(action);
+            const notificationElement = screen.queryByText("Test message");
+            expect(notificationElement).not.toBeInTheDocument(); 
         });
-
+    
         expect(mockDispatch).toHaveBeenCalledWith(
             expect.objectContaining({
-                type: "SEND_ACTION_ACTION",
-                context: "testModule",
-                name: "test-id",
-                payload: {
-                    action: "onCloseCallback",
-                    args: ["forced"],
-                }
+                type: "DELETE_NOTIFICATION",
+                snackbarId: "test-snackbar",
             })
         );
-    });
 
-    it("should dispatch createSendActionNameAction with 'timeout' when a notification times out", async () => {
-        const notification = {
-            notificationId: "test-id",
-            snackbarId: "test-snackbar",
-            message: "Test message",
-            nType: "info",
-            duration: 3000,
-            onClose: "onCloseCallback",
-            system: false,
-        };
-    
-        const module = "testModule";
-    
-        const wrapper = render(
-            <SnackbarProvider>
-                <TaipyNotification notifications={[notification]} />
-            </SnackbarProvider>
-        );
-    
-        await waitFor(() => {
-            const action = createSendActionNameAction(
-                "test-id",
-                module,
-                "onCloseCallback",
-                "timeout"
-            );
-            mockDispatch(action);
-        });
-    
         expect(mockDispatch).toHaveBeenCalledWith(
             expect.objectContaining({
                 type: "SEND_ACTION_ACTION",
-                context: "testModule",
-                name: "test-id",
+                context: "testModule", 
+                name: "test-id", 
                 payload: {
-                    action: "onCloseCallback",
-                    args: ["timeout"],
+                    action: "onCloseCallback", 
+                    args: ["timeout"], 
                 },
             })
         );
