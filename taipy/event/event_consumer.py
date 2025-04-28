@@ -61,22 +61,20 @@ class EventConsumer(_CoreEventConsumerBase):
 
     !!! note "Broadcast a callback to all states"
 
-        When registering a callback, you can specify if the callback is broadcast to all
-        states of the GUI. In this case, the first argument of the callback must be the
-        state and the second argument must be the event. Optionally, the callback can accept
-        extra arguments (see the `callback_args` argument).
-        In that case,
-        If a `Gui^` ìnstance is provided, the callback is broadcast for all states of
-        the GUI. In this case, the callbacks must accept the state as the first argument.
+        When registering a callback, you can specify if the callback is automatically
+        broadcast to all states. In this case, the first argument of the callback must be
+        the state otherwise it is the `GUI^` instance. The second argument is the event.
+        Optionally, the callback can accept more extra arguments (see the `callback_args`
+        argument).
 
     !!! example
 
-        === "One callback for all events"
+        === "One callback to match all events"
 
             ```python
-            from taipy import Event, EventConsumer
+            from taipy import Event, EventConsumer, Gui
 
-            def event_received(event: Event):
+            def event_received(gui: Gui, event: Event):
                 print(f"Received event created at : {event.creation_date}")
 
             if __name__ == "__main__":
@@ -85,15 +83,15 @@ class EventConsumer(_CoreEventConsumerBase):
                 event_consumer.start()
             ```
 
-        === "Two callbacks for different topics"
+        === "Two callbacks to match different topics"
 
             ```python
-            from taipy import Event, EventConsumer
+            from taipy import Event, EventConsumer, Gui
 
-            def on_entity_creation(event: Event):
+            def on_entity_creation(gui: Gui, event: Event):
                 print(f" {event.entity_type} entity created at {event.creation_date}")
 
-            def on_scenario(event: Event):
+            def on_scenario(gui: Gui, event: Event):
                 print(f"Scenario '{event.entity_id}' processed for a '{event.operation}' operation.")
 
             if __name__ == "__main__":
@@ -127,7 +125,7 @@ class EventConsumer(_CoreEventConsumerBase):
             import taipy as tp
             from taipy import Event, EventConsumer, Gui
 
-            def cycle_filter(event: Event):
+            def cycle_filter(gui: Gui, event: Event):
                 scenario = tp.get(event.entity_id)
                 return scenario.cycle.name == "2023"
 
@@ -157,7 +155,7 @@ class EventConsumer(_CoreEventConsumerBase):
         """Initialize the Event Consumer service.
 
         Arguments:
-            gui (Optional[Gui]): The GUI instance used to broadcast the callbacks to all states.
+            gui (Optional[Gui]): The Gui instance used to broadcast the callbacks to all states.
         """
         self._registration = _Registration()
         self._topic_callbacks_map: Dict[_Topic, List[_Callback]] = {}
@@ -185,11 +183,19 @@ class EventConsumer(_CoreEventConsumerBase):
 
         Arguments:
             callback (callable): The callback to be executed when the event is produced.
-                If the callback is executed for all states of the GUI (see the `broadcast`
-                argument), the first argument must be the state and the second argument must
-                be the event. Otherwise, the first argument must be the event.
-                Optionally, the callback can accept extra arguments (see the `callback_args`
-                argument).
+                If the callback is broadcast to all states (see the `broadcast`
+                argument), the first argument is a state.
+                ```python
+                def event_received(state: State, event: Event):
+                    ...
+                ```
+                Otherwise, it is the gui instance.
+                ```python
+                def event_received(gui: Gui, event: Event):
+                    ...
+                ```
+                The second argument must be the event. Optionally, the callback can accept
+                extra arguments (see the `callback_args` argument).
             callback_args (List[AnyOf]): The extra arguments to be passed to the callback
                 function in addition to the event and possibly the state.
             entity_type (Optional[EventEntityType]): The entity type of the event.
@@ -204,10 +210,8 @@ class EventConsumer(_CoreEventConsumerBase):
                 the event before triggering the callback. The filter must accept an event
                 as the only argument and return a boolean. If the filter returns False, the
                 callback is not triggered.
-            broadcast (Optional[bool]): If True, the callback is broadcast to all states
-                of the GUI. A `Gui^` instance must have been provided to the EventConsumer
-                constructor when the `broadcast` argument is True.<br/>
-                If false, the callback is only triggered once for each event.
+            broadcast (Optional[bool]): If True, the callback is broadcast to all states.
+                If false, the callback is only triggered once per event.
         Returns:
             EventConsumer: The current instance of the `EventConsumer` service.
         """
@@ -222,9 +226,7 @@ class EventConsumer(_CoreEventConsumerBase):
                             scenario_config: Union[str, ScenarioConfig, List, None]=None,
                             broadcast: Optional[bool]=False
                             ) -> 'EventConsumer':
-        """Register a callback for scenario creation events.
-
-        This method registers a callback for scenario creation events.
+        """ Register a callback for scenario creation events.
 
         !!! Examples:
 
@@ -234,7 +236,7 @@ class EventConsumer(_CoreEventConsumerBase):
                 import taipy as tp
                 from taipy import Event, EventConsumer, Gui, State
 
-                def print_scenario_created(event: Event, scenario: Scenario):
+                def print_scenario_created(gui: Optional[Gui], event: Event, scenario: Scenario):
                     print(f"Scenario '{scenario.name}' created at '{event.creation_date}'.")
 
                 def store_latest_scenario(state: State, event: Event, scenario: Scenario):
@@ -255,9 +257,9 @@ class EventConsumer(_CoreEventConsumerBase):
 
                 ```python
                 import taipy as tp
-                from taipy import Event, EventConsumer
+                from taipy import Event, EventConsumer, Gui
 
-                def print_scenario_created(event: Event, scenario: Scenario):
+                def print_scenario_created(gui: Optional[Gui], event: Event, scenario: Scenario):
                     print(f"Scenario '{scenario.name}' created at '{event.creation_date}'.")
 
 
@@ -273,13 +275,21 @@ class EventConsumer(_CoreEventConsumerBase):
         can also accept extra arguments (see the `callback_args` argument).
 
         Arguments:
-            callback (callable): The callback to be executed when the event is produced.
-                If the callback is executed for all states of the GUI (see the `broadcast`
-                argument), the callback first argument must be a state, the second
-                argument must be an event, and the third argument must be the scenario.
-                Otherwise, the first argument must be an event and the second argument must
-                be the scenario. Optionally, the callback can accept extra arguments (see
-                the `callback_args` argument).
+            callback (callable):The callback to be executed when consuming the event.
+                If the callback is broadcast to all states (see the `broadcast`
+                argument), the first argument is a state.
+                ```python
+                def event_received(state: State, event: Event, scenario: Scenario):
+                    ...
+                ```
+                Otherwise, it is the gui instance.
+                ```python
+                def event_received(gui: Optional[Gui], event: Event, scenario: Scenario):
+                    ...
+                ```
+                The second and third arguments are the event and the scenario.
+                Optionally, the callback can accept extra arguments (see the
+                `callback_args` argument).
             callback_args (List[AnyOf]): The extra arguments to be passed to the callback
                 function in addition to the state, the event, and the scenario.
             scenario_config (Union[str, ScenarioConfig, List, None]): The
@@ -287,13 +297,10 @@ class EventConsumer(_CoreEventConsumerBase):
                 for which the callback is registered. If None, the callback is registered
                 for all scenario configurations.
             broadcast (Optional[bool]): If True, the callback is broadcast to all states
-                of the GUI. A `Gui^` instance must have been provided to the EventConsumer
-                constructor when the `broadcast` argument is True.<br/>
-                If false, the callback is only triggered once for each event.
+                If false, the callback is only triggered once per event.
 
         Returns:
             EventConsumer: The current instance of the `EventConsumer` service.
-
         """
         scenario_config = self.__format_configs_parameter(ScenarioConfig, scenario_config)
 
@@ -326,8 +333,6 @@ class EventConsumer(_CoreEventConsumerBase):
                             ) -> 'EventConsumer':
         """ Register a callback for scenario deletion events.
 
-        This method registers a callback for scenario deletion events.
-
         !!! Examples:
 
             ```python
@@ -347,32 +352,33 @@ class EventConsumer(_CoreEventConsumerBase):
                 taipy.run(gui)
             ```
 
-        The callback is triggered when a scenario is deleted. If the `broadcast` argument
-        is set to True, the callback is broadcast to all states of the GUI. The callback
-        can also accept extra arguments (see the `callback_args` argument).
-
         Arguments:
-            callback (callable): The callback to be executed when consuming an event.
-                If the callback is executed for all states of the GUI (see the `broadcast`
-                argument), the callback first argument must be a state, the second
-                argument must be an event, and the third argument must be the scenario id.
-                Otherwise, the first argument must be an event and the second argument must
-                be the scenario id. Optionally, the callback can accept extra arguments (see
-                the `callback_args` argument).
+            callback (callable):The callback to be executed when consuming the event.
+                If the callback is broadcast to all states (see the `broadcast`
+                argument), the first argument is a state.
+                ```python
+                def event_received(state: State, event: Event, scenario_id: str):
+                    ...
+                ```
+                Otherwise, it is the gui instance.
+                ```python
+                def event_received(gui: Optional[Gui], event: Event, scenario_id: str):
+                    ...
+                ```
+                The second and third arguments are the event and the scenario_id.
+                Optionally, the callback can accept extra arguments (see the
+                `callback_args` argument).
             callback_args (List[AnyOf]): The extra arguments to be passed to the callback
                 function in addition to the state, the event, and the scenario id.
             scenario_config (Union[str, ScenarioConfig, List, None]): The
                 optional scenario configuration ids or scenario configurations
                 for which the callback is registered. If None, the callback is registered
                 for all scenario configurations.
-            broadcast (Optional[bool]): If True, the callback is broadcast to all states
-                of the GUI. A `Gui^` instance must have been provided to the EventConsumer
-                constructor when the `broadcast` argument is True.<br/>
-                If false, the callback is only triggered once for each event.
+            broadcast (Optional[bool]): If True, the callback is broadcast to all states.
+                If false, the callback is only triggered once per event.
 
         Returns:
             EventConsumer: The current instance of the `EventConsumer` service.
-
         """
         scenario_config = self.__format_configs_parameter(ScenarioConfig, scenario_config)
 
@@ -402,9 +408,7 @@ class EventConsumer(_CoreEventConsumerBase):
                             datanode_config: Union[str, DataNodeConfig, List, None] = None,
                             broadcast: Optional[bool] = False
                             ) -> 'EventConsumer':
-        """Register a callback for data node written events.
-
-        This method registers a callback for datanode written events.
+        """ Register a callback for data node written events.
 
         !!! Examples:
             ```python
@@ -425,29 +429,32 @@ class EventConsumer(_CoreEventConsumerBase):
             ```
 
         The callback is triggered when a datanode is written (see methods
-        `Datanode.write()^` or `Datanode.append()^`). If the `broadcast` argument
-        is set to True, the callback is broadcast to all states of the GUI. The callback
-        can also accept extra arguments (see the `callback_args` argument).
-
+        `Datanode.write()^` or `Datanode.append()^`).
 
         Arguments:
-            callback (callable): The callback to be executed when consuming an event.
-                If the callback is executed for all states of the GUI (see the `broadcast`
-                argument), the callback first argument must be a state, the second
-                argument must be an event, the third argument must be the datanode, and the
-                fourth argument must be the data. Otherwise, the first argument must be an
-                event, the second argument must be the datanode, and the third argument must
-                be the data. Optionally, the callback can accept extra arguments (see
-                the `callback_args` argument).
+            callback (callable):The callback to be executed when consuming the event.
+                If the callback is broadcast to all states (see the `broadcast`
+                argument), the first argument is a state.
+                ```python
+                def event_received(state: State, event: Event, datanode: Datanode, data: Any):
+                    ...
+                ```
+                Otherwise, it is the gui instance.
+                ```python
+                def event_received(gui: Optional[Gui], event: Event, datanode: Datanode, data: Any):
+                    ...
+                ```
+                The second, third, and fourth arguments are the event and the data node,
+                and the data.
+                Optionally, the callback can accept extra arguments (see the
+                `callback_args` argument).
             callback_args (List[AnyOf]): The extra arguments to be passed to the callback
                 function in addition to the state, the event, the datanode, and the data.
             datanode_config (Union[str, DataNodeConfig, List, None]): The
                 optional datanode configuration ids or datanode configurations
                 for which the callback is registered. If None, the callback is registered
                 for all datanode configurations.
-            broadcast (Optional[bool]): If True, the callback is broadcast to all states
-                of the GUI. A `Gui^` instance must have been provided to the EventConsumer
-                constructor when the `broadcast` argument is True.<br/>
+            broadcast (Optional[bool]): If True, the callback is broadcast to all states.
                 If false, the callback is only triggered once for each event.
 
         Returns:
@@ -485,8 +492,6 @@ class EventConsumer(_CoreEventConsumerBase):
                             ) -> 'EventConsumer':
         """ Register a callback for data node deletion events.
 
-        This method registers a callback for datanode deletion events.
-
         !!! Examples:
             ```python
             import taipy as tp
@@ -505,18 +510,22 @@ class EventConsumer(_CoreEventConsumerBase):
                 taipy.run(gui)
             ```
 
-        The callback is triggered when a datanode is deleted. If the `broadcast` argument
-        is set to True, the callback is broadcast to all states of the GUI. The callback
-        can also accept extra arguments (see the `callback_args` argument).
-
         Arguments:
-            callback (callable): The callback to be executed when consuming an event.
-                If the callback is executed for all states of the GUI (see the `broadcast`
-                argument), the callback first argument must be a state, the second
-                argument must be an event, and the third argument must be the datanode id.
-                Otherwise, the first argument must be an event and the second argument must
-                be the datanode id. Optionally, the callback can accept extra arguments (see
-                the `callback_args` argument).
+            callback (callable):The callback to be executed when consuming the event.
+                If the callback is broadcast to all states (see the `broadcast`
+                argument), the first argument is a state.
+                ```python
+                def event_received(state: State, event: Event, datanode_id: str):
+                    ...
+                ```
+                Otherwise, it is the gui instance.
+                ```python
+                def event_received(gui: Optional[Gui], event: Event, datanode_id: str):
+                    ...
+                ```
+                The second and third arguments are the event and the data node id.
+                Optionally, the callback can accept extra arguments (see the
+                `callback_args` argument).
             callback_args (List[AnyOf]): The extra arguments to be passed to the callback
                 function in addition to the state, the event, and the datanode id.
             datanode_config (Union[str, DataNodeConfig, List, None]): The
@@ -524,9 +533,7 @@ class EventConsumer(_CoreEventConsumerBase):
                 for which the callback is registered. If None, the callback is registered
                 for all datanode configurations.
             broadcast (Optional[bool]): If True, the callback is broadcast to all states
-                of the GUI. A `Gui^` instance must have been provided to the EventConsumer
-                constructor when the `broadcast` argument is True.<br/>
-                If false, the callback is only triggered once for each event.
+                of the GUI. If false, the callback is only triggered once for each event.
 
         Returns:
             EventConsumer: The current instance of the `EventConsumer` service.
@@ -562,14 +569,12 @@ class EventConsumer(_CoreEventConsumerBase):
                             ) -> 'EventConsumer':
         """ Register a callback to be executed on data node creation event.
 
-        This method registers a callback for datanode creation events.
-
         !!! Examples:
             ```python
             import taipy as tp
             from taipy import Event, EventConsumer, Gui, State
 
-            def record_creations(state: State, event: Event, datanode_id: str):
+            def record_creations(state: State, event: Event, datanode: DataNode):
                 print(f"Datanode created at '{event.creation_date}'.")
                 state.created_datanodes.append[datanode_id]
 
@@ -582,18 +587,22 @@ class EventConsumer(_CoreEventConsumerBase):
                 taipy.run(gui)
             ```
 
-        The callback is triggered when a datanode is created. If the `broadcast` argument
-        is set to True, the callback is broadcast to all states of the GUI. The callback
-        can also accept extra arguments (see the `callback_args` argument).
-
         Arguments:
-            callback (callable): The callback to be executed when consuming an event.
-                If the callback is executed for all states of the GUI (see the `broadcast`
-                argument), the callback first argument must be a state, the second
-                argument must be an event, and the third argument must be the datanode.
-                Otherwise, the first argument must be an event and the second argument must
-                be the datanode. Optionally, the callback can accept extra arguments (see
-                the `callback_args` argument).
+            callback (callable):The callback to be executed when consuming the event.
+                If the callback is broadcast to all states (see the `broadcast`
+                argument), the first argument is a state.
+                ```python
+                def event_received(state: State, event: Event, datanode: DataNode):
+                    ...
+                ```
+                Otherwise, it is the gui instance.
+                ```python
+                def event_received(gui: Optional[Gui], event: Event, datanode: DataNode):
+                    ...
+                ```
+                The second and third arguments are the event and the data node.
+                Optionally, the callback can accept extra arguments (see the
+                `callback_args` argument).
             callback_args (List[AnyOf]): The extra arguments to be passed to the callback
                 function in addition to the state, the event, and the datanode.
             datanode_config (Union[str, ScenarioConfig, List, None]): The
@@ -601,9 +610,7 @@ class EventConsumer(_CoreEventConsumerBase):
                 for which the callback is registered. If None, the callback is registered
                 for all datanode configurations.
             broadcast (Optional[bool]): If True, the callback is broadcast to all states
-                of the GUI. A `Gui^` instance must have been provided to the EventConsumer
-                constructor when the `broadcast` argument is True.<br/>
-                If false, the callback is only triggered once for each event.
+                of the GUI. If false, the callback is only triggered once for each event.
 
         Returns:
             EventConsumer: The current instance of the `EventConsumer` service.
@@ -640,8 +647,6 @@ class EventConsumer(_CoreEventConsumerBase):
                                ) -> 'EventConsumer':
         """Register a callback for submission finished events.
 
-        This method registers a callback for submission finished events.
-
         !!! Examples:
             ```python
             import taipy as tp
@@ -663,19 +668,22 @@ class EventConsumer(_CoreEventConsumerBase):
                 taipy.run(gui)
             ```
 
-        The callback is triggered when a submission is finished. If the `broadcast` argument
-        is set to True, the callback is broadcast to all states of the GUI. The callback
-        can also accept extra arguments (see the `callback_args` argument).
-
         Arguments:
-            callback (callable): The callback to be executed when consuming an event.
-                If the callback is executed for all states of the GUI (see the `broadcast`
-                argument), the callback first argument must be a state, the second
-                argument must be an event, the third argument must be the submittable, and
-                the fourth argument must be the submission. Otherwise, the first argument
-                must be an event and the second argument must be the submittable, and the
-                third argument must be the submission. Optionally, the callback can accept
-                extra arguments (see the `callback_args` argument).
+            callback (callable):The callback to be executed when consuming the event.
+                If the callback is broadcast to all states (see the `broadcast`
+                argument), the first argument is a state.
+                ```python
+                def event_received(state: State, event: Event, submittable: Submittable, submission: Submission):
+                    ...
+                ```
+                Otherwise, it is the gui instance.
+                ```python
+                def event_received(gui: Optional[Gui], event: Event, submittable: Submittable, submission: Submission):
+                    ...
+                ```
+                The second, third, and fourth arguments are the event, the submittable
+                (scenario, sequence or task), and the submission. Optionally, the
+                callback can accept extra arguments (see the `callback_args` argument).
             callback_args (List[AnyOf]): The extra arguments to be passed to the callback
                 function in addition to the state, the event, the submittable, and the
                 submission.
@@ -684,9 +692,7 @@ class EventConsumer(_CoreEventConsumerBase):
                 configurations or task configurations for which the callback is registered.
                 If None, the callback is registered for any submittable.
             broadcast (Optional[bool]): If True, the callback is broadcast to all states
-                of the GUI. A `Gui^` instance must have been provided to the EventConsumer
-                constructor when the `broadcast` argument is True.<br/>
-                If false, the callback is only triggered once for each event.
+                of the GUI. If false, the callback is only triggered once for each event.
 
         Returns:
             EventConsumer: The current instance of the `EventConsumer` service.
@@ -745,8 +751,7 @@ class EventConsumer(_CoreEventConsumerBase):
     def process_event(self, event: Event) -> None:
         """Process an event.
 
-        This method is responsible for processing the incoming event. It should be implemented
-        in subclasses to define the custom logic for handling events.
+        This method is responsible for processing the incoming event.
 
         Args:
             event (Event): The event to be processed.
@@ -818,4 +823,4 @@ class EventConsumer(_CoreEventConsumerBase):
                 return
             self._gui.broadcast_callback(cb.callback, [event, *predefined_args, *cb.args])
         else:
-            cb.callback(event, *predefined_args, *cb.args)
+            cb.callback(self._gui, event, *predefined_args, *cb.args)

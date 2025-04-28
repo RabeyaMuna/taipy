@@ -8,7 +8,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from unittest import mock
 
 from taipy import Gui, Scenario
@@ -26,7 +26,7 @@ def init_collector():
             "cb_scenario_creation": 0, "cb_scenario_creation_with_state": 0}, {}
 
 
-def cb_0(event: Event, extra:str):
+def cb_0(gui: Optional[Gui], event: Event, extra:str):
     collector["cb_0"]+=1
     if not args_collector.get("cb_0"):
         args_collector["cb_0"] = [extra]
@@ -35,17 +35,17 @@ def cb_0(event: Event, extra:str):
     print(f"event created at {event.creation_date} triggered callback cb_0.")  # noqa: T201
 
 
-def cb_1(event: Event):
+def cb_1(gui: Optional[Gui], event: Event):
     collector["cb_1"]+=1
     print(f"event created at {event.creation_date} triggered callback cb_1.")  # noqa: T201
 
 
-def cb_2(event: Event):
+def cb_2(gui: Optional[Gui], event: Event):
     collector["cb_2"]+=1
     print(f"event created at {event.creation_date} triggered callback cb_2.")  # noqa: T201
 
 
-def cb_3(event: Event):
+def cb_3(gui: Optional[Gui], event: Event):
     collector["cb_3"]+=1
     print(f"event created at {event.creation_date} triggered callback cb_3.")  # noqa: T201
 
@@ -55,7 +55,7 @@ def cb_for_state(state, event: Event):
     print(f"event created at {event.creation_date} triggered callback cb_for_state.")  # noqa: T201
 
 
-def cb_scenario_creation(event: Event, scenario: Scenario, extra_arg: str):
+def cb_scenario_creation(gui: Optional[Gui], event: Event, scenario: Scenario, extra_arg: str):
     collector["cb_scenario_creation"]+=1
     print(f"scenario {scenario.id} created at {event.creation_date} with {extra_arg}.")  # noqa: T201
 
