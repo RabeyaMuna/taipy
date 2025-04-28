@@ -7,8 +7,8 @@ The following table summarizes the supported and maintained versions of Taipy th
 
 | Version | Supported          |
 | ------- | ------------------ |
-| < 3.0   | :x:                |
-| >= 3.0  | :white_check_mark: |
+| < 3.1   | :x:                |
+| >= 3.1  | :white_check_mark: |
 
 
 ## Reporting a Vulnerability
