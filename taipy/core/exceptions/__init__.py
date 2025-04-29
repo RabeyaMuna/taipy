@@ -11,3 +11,10 @@
 
 """Exceptions raised by core package functionalities."""
 from .exceptions import *
+
+
+class NotAvailable(Exception):
+    """Exception raised when a feature is not available in the current version."""
+
+    def __init__(self, message: str):
+        super().__init__(message)

@@ -12,6 +12,7 @@
 import json
 from copy import copy
 from datetime import timedelta
+from importlib import util
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from taipy.common.config import Config
@@ -24,6 +25,7 @@ from taipy.common.config.section import Section
 from ..common._utils import _normalize_path
 from ..common._warnings import _warn_deprecated
 from ..common.mongo_default_document import MongoDefaultDocument
+from ..exceptions import NotAvailable
 
 
 class DataNodeConfig(Section):
@@ -270,6 +272,10 @@ class DataNodeConfig(Section):
         **properties,
     ):
         self._storage_type = storage_type
+        if storage_type == DataNodeConfig._STORAGE_TYPE_VALUE_PARQUET:
+            if not util.find_spec("pyarrow"):
+                raise NotAvailable("Parquet data node configuration is not available in this version."
+                                   "Use another storage type instead.")
         self._scope = scope
         self._validity_period = validity_period
         if "path" in properties:
@@ -642,6 +648,9 @@ class DataNodeConfig(Section):
         Returns:
             The new Parquet data node configuration.
         """  # noqa: E501
+        if not util.find_spec("pyarrow"):
+            raise NotAvailable("Parquet data node configuration is not available in this version."
+                                "Use another storage type instead.")
         if default_path is not None:
             properties[cls._OPTIONAL_DEFAULT_PATH_PARQUET_PROPERTY] = default_path
         if engine is not None:

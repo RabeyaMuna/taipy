@@ -10,6 +10,7 @@
 # specific language governing permissions and limitations under the License.
 
 from datetime import datetime, timedelta
+from importlib import util
 from os.path import isdir, isfile
 from typing import Any, Dict, List, Optional, Set
 
@@ -20,6 +21,7 @@ from taipy.common.config.common.scope import Scope
 
 from .._entity._reload import _Reloader
 from .._version._version_manager_factory import _VersionManagerFactory
+from ..exceptions import NotAvailable
 from ..exceptions.exceptions import UnknownCompressionAlgorithm, UnknownParquetEngine
 from ..job.job_id import JobId
 from ._file_datanode_mixin import _FileDataNodeMixin
@@ -80,6 +82,10 @@ class ParquetDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
         editor_expiration_date: Optional[datetime] = None,
         properties: Optional[Dict] = None,
     ) -> None:
+        if not util.find_spec("pyarrow"):
+            raise NotAvailable("ParquetDataNode is not available in this version. Use another storage type for your "
+                               "data nodes instead.")
+
         self.id = id or self._new_id(config_id)
 
         if properties is None:

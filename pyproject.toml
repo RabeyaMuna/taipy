@@ -32,7 +32,6 @@ image = [
     "python-magic-bin>=0.4.14,<0.5",
 ]
 rdp = ["rdp>=0.8"]
-arrow = ["pyarrow>=16.0.0,<19.0"]
 mssql = ["pyodbc>=4"]
 test = ["pytest>=6.0"]
 

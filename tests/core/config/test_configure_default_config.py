@@ -12,6 +12,8 @@
 import json
 from datetime import timedelta
 
+import pytest
+
 from taipy.common.config import Config
 from taipy.common.config.common.scope import Scope
 from taipy.core.common.mongo_default_document import MongoDefaultDocument
@@ -186,7 +188,7 @@ def test_set_default_json_data_node_configuration():
     assert dn3.scope == Scope.GLOBAL
     assert dn3.validity_period == timedelta(1)
 
-
+@pytest.mark.skip(reason="Parquet not available in this version")
 def test_set_default_parquet_data_node_configuration():
     Config.set_default_data_node_configuration(
         storage_type="parquet",
