@@ -75,7 +75,7 @@ types-toml = ">=0.10.0"
 types-tzlocal = "*"
 
 [requires]
-python_version = "3"
+python_version = "3.12"
 
 [pipenv]
 allow_prereleases = false
