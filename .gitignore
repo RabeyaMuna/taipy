@@ -96,6 +96,3 @@ demo[_|-]*/
 data_sources
 pipelines
 pickles
-
-build.sh
-.frontend/taipy-gui/dom/package-lock.json
