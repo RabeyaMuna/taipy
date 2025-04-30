@@ -11,8 +11,8 @@
 
 import inspect
 import json
-from unittest.mock import MagicMock
 from contextlib import nullcontext
+from flask import g
 
 import pandas as pd
 import pytest
@@ -112,21 +112,25 @@ def test_on_action_call(gui:Gui):
         gui._Gui__on_action(an_id, an_action_payload) # type: ignore[attr-defined]
 
 
-def test__notification_on_close(gui: Gui):
+def test_notification_on_close(gui: Gui, helpers):
     notification_id = "test-id"
-    
-    def on_notification_closed(state, notification_id, reason=None):
-        assert notification_id == "test-id"
+
+    def on_notification_closed(state, notif_id, reason=None):
+        assert notif_id == notification_id
         assert reason == "timeout"
-    
+
     gui._set_frame(inspect.currentframe())
-
-    
-    gui._Gui__send_ws_notification = MagicMock()
-
     gui.run(run_server=False)
 
-    with gui.get_flask_app().app_context():
+    flask_client = gui._server.test_client()
+    ws_client = gui._server._ws.test_client(gui._server.get_flask())  # type: ignore[arg-type]
+
+    cid = helpers.create_scope_and_get_sid(gui)
+    flask_client.get(f"/taipy-jsx/test?client_id={cid}")
+    
+    with gui.get_flask_app().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
+        g.client_id = cid
+
         gui._notify(
             notification_type="warning",
             message="This is a test notification!",
@@ -136,13 +140,20 @@ def test__notification_on_close(gui: Gui):
             on_close=on_notification_closed,
         )
 
-        gui._Gui__send_ws_notification.assert_called_once_with(
-            "warning",  
-            "This is a test notification!", 
-            False, 
-            3000, 
-            notification_id,  
-            reason=None,  
-            on_close_str="on_notification_closed",  
-        )
+    received_messages = ws_client.get_received()
+    print(received_messages)
+
+    helpers.assert_outward_ws_simple_message(
+        received_messages[0],
+        "AL",  
+        {
+            "nType": "warning",
+            "message": "This is a test notification!",
+            "system": False,
+            "duration": 3000,
+            "notificationId": notification_id,
+            "reason": None,
+            "onClose": "on_notification_closed",
+        }
+    )
     
