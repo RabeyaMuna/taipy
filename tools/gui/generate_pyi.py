@@ -82,6 +82,10 @@ with open(gui_pyi_file, "w", encoding="utf-8") as write_file:
 # ##################################################################################################
 # Types that appear in viselements.json
 
+from datetime import datetime  # noqa: E402, F401
+
+from taipy.core import Cycle, DataNode, Job, Scenario  # noqa: E402, F401
+from taipy.gui import Icon  # noqa: E402, F401
 
 # Read the version
 current_version = "latest"
