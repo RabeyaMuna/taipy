@@ -8,23 +8,3 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
-
-"""The setup script for taipy package"""
-
-import json
-from pathlib import Path
-
-from setuptools import setup
-
-root_folder = Path(__file__).parent
-
-with open(root_folder / "taipy" / "version.json") as version_file:
-    version = json.load(version_file)
-    version_string = f'{version.get("major")}.{version.get("minor")}.{version.get("patch")}'
-    if vext := version.get("ext"):
-        version_string = f"{version_string}.{vext}"
-
-setup(
-    version=version_string,
-    install_requires=[r for r in (root_folder / "setup.requirements.txt").read_text("UTF-8").splitlines() if r]
-)
