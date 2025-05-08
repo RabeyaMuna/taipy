@@ -10,29 +10,34 @@
                         "default_property": true,
                         "type": "dynamic(Any)",
                         "default_value": "\"\"",
-                        "doc": "The value displayed as text by this control."
+                        "doc": "The value displayed as text by this control.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "raw",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If set to True, the component renders as an HTML &lt;span&gt; element without any default style."
+                        "doc": "If set to True, the component renders as an HTML &lt;span&gt; element without any default style.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "mode",
                         "type": "str",
-                        "doc": "Define the way the text is processed:\n<ul><li>&quot;raw&quot;: synonym for setting the <i>raw</i> property to True</li><li>&quot;pre&quot;: keeps spaces and new lines</li><li>&quot;markdown&quot; or &quot;md&quot;: basic support for Markdown</li><li>&quot;latex&quot;: LaTe&chi; support</li></ul>"
+                        "doc": "Define the way the text is processed:\n<ul><li>&quot;raw&quot;: synonym for setting the <i>raw</i> property to True</li><li>&quot;pre&quot;: keeps spaces and new lines</li><li>&quot;markdown&quot; or &quot;md&quot;: basic support for Markdown</li><li>&quot;latex&quot;: LaTe&chi; support</li></ul>",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "format",
                         "type": "str",
-                        "doc": "The format to apply to the value.<br/>See below."
+                        "doc": "The format to apply to the value.<br/>See below.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "width",
                         "type": "Union[str,int]",
                         "default_value": "None",
-                        "doc": "The width of the text element, in CSS units."
+                        "doc": "The width of the text element, in CSS units.",
+                        "designer_input_types": ["string", "number"]
                     }
                 ]
             }
@@ -79,7 +84,8 @@
                         "name": "width",
                         "type": "Union[str,int]",
                         "default_value": "None",
-                        "doc": "The width of the button element."
+                        "doc": "The width of the button element.",
+                        "designer_input_types": ["string", "number"]
                     }
                 ]
             }
@@ -151,41 +157,48 @@
                         "name": "value",
                         "default_property": true,
                         "type": "dynamic(Any)",
-                        "doc": "The numerical value represented by this control."
+                        "doc": "The numerical value represented by this control.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "label",
                         "type": "str",
                         "default_value": "None",
-                        "doc": "The label associated with the number field.<br/>This provides context to the user and improves accessibility."
+                        "doc": "The label associated with the number field.<br/>This provides context to the user and improves accessibility.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "step",
                         "type": "dynamic(Union[int,float])",
                         "default_value": "1",
-                        "doc": "The increment or decrement applied to the value when the user clicks the arrow buttons."
+                        "doc": "The increment or decrement applied to the value when the user clicks the arrow buttons.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "step_multiplier",
                         "type": "dynamic(Union[int,float])",
                         "default_value": "10",
-                        "doc": "The factor by which the step value is multiplied when the user holds the Shift key while clicking the arrow buttons."
+                        "doc": "The factor by which the step value is multiplied when the user holds the Shift key while clicking the arrow buttons.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "min",
                         "type": "dynamic(Union[int,float])",
-                        "doc": "The minimum acceptable value.<br/>Values below this threshold are invalid."
+                        "doc": "The minimum acceptable value.<br/>Values below this threshold are invalid.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "max",
                         "type": "dynamic(Union[int,float])",
-                        "doc": "The maximum acceptable value.<br/>Values above this threshold are invalid."
+                        "doc": "The maximum acceptable value.<br/>Values above this threshold are invalid.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "action_on_blur",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, the <code>on_action</code> callback is triggered when the number control looses keyboard focus (e.g., when the user presses the Tab key). When this happens, the key name for the event (set in the <i>args</i> property of the <i>payload</i> parameter to the callback function) is set to \"Tab\"."
+                        "doc": "If True, the <code>on_action</code> callback is triggered when the number control looses keyboard focus (e.g., when the user presses the Tab key). When this happens, the key name for the event (set in the <i>args</i> property of the <i>payload</i> parameter to the callback function) is set to \"Tab\".",
+                        "designer_input_types": ["boolean"]
                     }
                 ]
             }
@@ -253,12 +266,14 @@
                         "name": "width",
                         "type": "str",
                         "default_value": "\"300px\"",
-                        "doc": "The width of the slider, in CSS units."
+                        "doc": "The width of the slider, in CSS units.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "height",
                         "type": "str",
-                        "doc": "The height of the slider, in CSS units.<br/>It defaults to the value of <i>width</i> when using the vertical orientation."
+                        "doc": "The height of the slider, in CSS units.<br/>It defaults to the value of <i>width</i> when using the vertical orientation.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "orientation",
@@ -282,29 +297,34 @@
                         "name": "theme",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If set, this toggle control acts as a way to set the application Theme (dark or light)."
+                        "doc": "If set, this toggle control acts as a way to set the application Theme (dark or light).",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "allow_unselect",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If set, this allows de-selection and the value is set to unselected_value."
+                        "doc": "If set, this allows de-selection and the value is set to unselected_value.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "mode",
                         "type": "str",
-                        "doc": "Define the way the toggle is displayed:\n<ul><li>&quot;theme&quot;: synonym for setting the <i>theme</i> property to True</li></ul>"
+                        "doc": "Define the way the toggle is displayed:\n<ul><li>&quot;theme&quot;: synonym for setting the <i>theme</i> property to True</li></ul>",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "label",
                         "type": "str",
-                        "doc": "The label associated with the toggle."
+                        "doc": "The label associated with the toggle.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "width",
                         "type": "Union[str,int]",
                         "default_value": "None",
-                        "doc": "The width of the element."
+                        "doc": "The width of the element.",
+                        "designer_input_types": ["string", "number"]
                     }
                 ]
             }
@@ -318,51 +338,60 @@
                         "name": "date",
                         "default_property": true,
                         "type": "dynamic(datetime)",
-                        "doc": "The date that this control represents and can modify.<br/>It is typically bound to a <code>datetime</code> object."
+                        "doc": "The date that this control represents and can modify.<br/>It is typically bound to a <code>datetime</code> object.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "with_time",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "Whether or not to show the time part of the date."
+                        "doc": "Whether or not to show the time part of the date.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "format",
                         "type": "str",
-                        "doc": "The format to apply to the value. See below."
+                        "doc": "The format to apply to the value. See below.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "editable",
                         "type": "dynamic(bool)",
                         "default_value": "True",
-                        "doc": "Shows the date as a formatted string if not editable."
+                        "doc": "Shows the date as a formatted string if not editable.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "label",
                         "type": "str",
-                        "doc": "The label associated with the input."
+                        "doc": "The label associated with the input.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "min",
                         "type": "dynamic(datetime)",
-                        "doc": "The minimum date to accept for this input."
+                        "doc": "The minimum date to accept for this input.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "max",
                         "type": "dynamic(datetime)",
-                        "doc": "The maximum date to accept for this input."
+                        "doc": "The maximum date to accept for this input.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "width",
                         "type": "Union[str,int]",
                         "default_value": "None",
-                        "doc": "The width of the date element."
+                        "doc": "The width of the date element.",
+                        "designer_input_types": ["string", "number"]
                     },
                     {
                         "name": "analogic",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "Whether or not to show timepicker as a clock."
+                        "doc": "Whether or not to show timepicker as a clock.",
+                        "designer_input_types": ["boolean"]
                     }
                 ]
             }
@@ -376,35 +405,41 @@
                         "name": "analogic",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "Whether or not to show timepicker as a clock."
+                        "doc": "Whether or not to show timepicker as a clock.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "format",
                         "type": "str",
-                        "doc": "The format to apply to the value. See below."
+                        "doc": "The format to apply to the value. See below.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "editable",
                         "type": "dynamic(bool)",
                         "default_value": "True",
-                        "doc": "Shows the time as a formatted string if not editable."
+                        "doc": "Shows the time as a formatted string if not editable.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "time",
                         "default_property": true,
                         "type": "dynamic(str)",
-                        "doc": "The time that this control represents and can modify"
+                        "doc": "The time that this control represents and can modify",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "label",
                         "type": "str",
-                        "doc": "The label associated with the input."
+                        "doc": "The label associated with the input.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "width",
                         "type": "Union[str,int]",
                         "default_value": "None",
-                        "doc": "The width of the time element."
+                        "doc": "The width of the time element.",
+                        "designer_input_types": ["string", "number"]
                     }
                 ]
             }
@@ -418,46 +453,54 @@
                         "name": "dates",
                         "default_property": true,
                         "type": "dynamic(list[datetime])",
-                        "doc": "The dates that this control represents and can modify.<br/>It is typically bound to a list of two <code>datetime</code> object."
+                        "doc": "The dates that this control represents and can modify.<br/>It is typically bound to a list of two <code>datetime</code> object.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "with_time",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "Whether or not to show the time part of the date."
+                        "doc": "Whether or not to show the time part of the date.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "format",
                         "type": "str",
-                        "doc": "The format to apply to the value. See below."
+                        "doc": "The format to apply to the value. See below.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "editable",
                         "type": "dynamic(bool)",
                         "default_value": "True",
-                        "doc": "Shows the date as a formatted string if not editable."
+                        "doc": "Shows the date as a formatted string if not editable.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "label_start",
                         "type": "str",
-                        "doc": "The label associated with the first input."
+                        "doc": "The label associated with the first input.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "label_end",
                         "type": "str",
-                        "doc": "The label associated with the second input."
+                        "doc": "The label associated with the second input.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "width",
                         "type": "Union[str,int]",
                         "default_value": "None",
-                        "doc": "The width of the date_range element."
+                        "doc": "The width of the date_range element.",
+                        "designer_input_types": ["string", "number"]
                     },
                     {
                         "name": "analogic",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "Whether or not to show timepicker as a clock."
+                        "doc": "Whether or not to show timepicker as a clock.",
+                        "designer_input_types": ["boolean"]
                     }
                 ]
             }
@@ -479,114 +522,136 @@
                         "name": "type",
                         "type": "indexed(str)",
                         "default_value": "\"scatter\"",
-                        "doc": "Chart type.<br/>See the Plotly <a href=\"https://plotly.com/javascript/reference/\">chart type</a> documentation for more details."
+                        "doc": "Chart type.<br/>See the Plotly <a href=\"https://plotly.com/javascript/reference/\">chart type</a> documentation for more details.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "mode",
                         "type": "indexed(str)",
                         "default_value": "\"lines+markers\"",
-                        "doc": "Chart mode.<br/>See the Plotly <a href=\"https://plotly.com/javascript/reference/scatter/#scatter-mode\">chart mode</a> documentation for more details."
+                        "doc": "Chart mode.<br/>See the Plotly <a href=\"https://plotly.com/javascript/reference/scatter/#scatter-mode\">chart mode</a> documentation for more details.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "x",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>x</i> axis."
+                        "doc": "Column name for the <i>x</i> axis.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "y",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>y</i> axis."
+                        "doc": "Column name for the <i>y</i> axis.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "z",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>z</i> axis."
+                        "doc": "Column name for the <i>z</i> axis.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "lon",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>longitude</i> value, for 'scattergeo' charts. See <a href=\"https://plotly.com/javascript/reference/scattergeo/#scattergeo-lon\">Plotly Map traces</a>."
+                        "doc": "Column name for the <i>longitude</i> value, for 'scattergeo' charts. See <a href=\"https://plotly.com/javascript/reference/scattergeo/#scattergeo-lon\">Plotly Map traces</a>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "lat",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>latitude</i> value, for 'scattergeo' charts. See <a href=\"https://plotly.com/javascript/reference/scattergeo/#scattergeo-lat\">Plotly Map traces</a>."
+                        "doc": "Column name for the <i>latitude</i> value, for 'scattergeo' charts. See <a href=\"https://plotly.com/javascript/reference/scattergeo/#scattergeo-lat\">Plotly Map traces</a>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "r",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>r</i> value, for 'scatterpolar' charts. See <a href=\"https://plotly.com/javascript/polar-chart/\">Plotly Polar charts</a>."
+                        "doc": "Column name for the <i>r</i> value, for 'scatterpolar' charts. See <a href=\"https://plotly.com/javascript/polar-chart/\">Plotly Polar charts</a>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "theta",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>theta</i> value, for 'scatterpolar' charts. See <a href=\"https://plotly.com/javascript/polar-chart/\">Plotly Polar charts</a>."
+                        "doc": "Column name for the <i>theta</i> value, for 'scatterpolar' charts. See <a href=\"https://plotly.com/javascript/polar-chart/\">Plotly Polar charts</a>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "high",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>high</i> value, for 'candlestick' charts. See <a href=\"https://plotly.com/javascript/reference/candlestick/#candlestick-high\">Plotly Candlestick charts</a>."
+                        "doc": "Column name for the <i>high</i> value, for 'candlestick' charts. See <a href=\"https://plotly.com/javascript/reference/candlestick/#candlestick-high\">Plotly Candlestick charts</a>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "low",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>low</i> value, for 'candlestick' charts. See <a href=\"https://plotly.com/javascript/reference/candlestick/#candlestick-low\">Ploty Candlestick charts</a>."
+                        "doc": "Column name for the <i>low</i> value, for 'candlestick' charts. See <a href=\"https://plotly.com/javascript/reference/candlestick/#candlestick-low\">Ploty Candlestick charts</a>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "open",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>open</i> value, for 'candlestick' charts. See <a href=\"https://plotly.com/javascript/reference/candlestick/#candlestick-open\">Plotly Candlestick charts</a>."
+                        "doc": "Column name for the <i>open</i> value, for 'candlestick' charts. See <a href=\"https://plotly.com/javascript/reference/candlestick/#candlestick-open\">Plotly Candlestick charts</a>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "close",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>close</i> value, for 'candlestick' charts. See <a href=\"https://plotly.com/javascript/reference/candlestick/#candlestick-close\">Plotly Candlestick charts</a>."
+                        "doc": "Column name for the <i>close</i> value, for 'candlestick' charts. See <a href=\"https://plotly.com/javascript/reference/candlestick/#candlestick-close\">Plotly Candlestick charts</a>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "measure",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>measure</i> value, for 'waterfall' charts. See <a href=\"https://plotly.com/javascript/reference/waterfall/#waterfall-measure\">Plotly Waterfall charts</a>."
+                        "doc": "Column name for the <i>measure</i> value, for 'waterfall' charts. See <a href=\"https://plotly.com/javascript/reference/waterfall/#waterfall-measure\">Plotly Waterfall charts</a>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "locations",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>locations</i> value. See <a href=\"https://plotly.com/javascript/choropleth-maps/\">Plotly Choropleth maps</a>."
+                        "doc": "Column name for the <i>locations</i> value. See <a href=\"https://plotly.com/javascript/choropleth-maps/\">Plotly Choropleth maps</a>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "values",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>values</i> value. See <a href=\"https://plotly.com/javascript/reference/pie/#pie-values\">Plotly Pie charts</a> or <a href=\"https://plotly.com/javascript/reference/funnelarea/#funnelarea-values\">Plotly Funnel Area charts</a>."
+                        "doc": "Column name for the <i>values</i> value. See <a href=\"https://plotly.com/javascript/reference/pie/#pie-values\">Plotly Pie charts</a> or <a href=\"https://plotly.com/javascript/reference/funnelarea/#funnelarea-values\">Plotly Funnel Area charts</a>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "labels",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>labels</i> value. See <a href=\"https://plotly.com/javascript/reference/pie/#pie-labels\">Plotly Pie charts</a>."
+                        "doc": "Column name for the <i>labels</i> value. See <a href=\"https://plotly.com/javascript/reference/pie/#pie-labels\">Plotly Pie charts</a>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "parents",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>parents</i> value. See <a href=\"https://plotly.com/javascript/reference/treemap/#treemap-parents\">Plotly Treemap charts</a>."
+                        "doc": "Column name for the <i>parents</i> value. See <a href=\"https://plotly.com/javascript/reference/treemap/#treemap-parents\">Plotly Treemap charts</a>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "text",
                         "type": "indexed(str)",
-                        "doc": "Column name for the text associated to the point for the indicated trace.<br/>This is meaningful only when <i>mode</i> has the <i>text</i> option."
+                        "doc": "Column name for the text associated to the point for the indicated trace.<br/>This is meaningful only when <i>mode</i> has the <i>text</i> option.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "base",
                         "type": "indexed(str)",
-                        "doc": "Column name for the <i>base</i> value. Used in bar charts only.<br/>See the Plotly <a href=\"https://plotly.com/javascript/reference/bar/#bar-base\">bar chart base</a> documentation for more details.\""
+                        "doc": "Column name for the <i>base</i> value. Used in bar charts only.<br/>See the Plotly <a href=\"https://plotly.com/javascript/reference/bar/#bar-base\">bar chart base</a> documentation for more details.\"",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "title",
                         "type": "str",
-                        "doc": "The title of the chart control."
+                        "doc": "The title of the chart control.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "render",
                         "type": "dynamic(bool)",
                         "default_value": "True",
-                        "doc": "If True, this chart is visible on the page."
+                        "doc": "If True, this chart is visible on the page.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "on_range_change",
@@ -607,27 +672,32 @@
                     {
                         "name": "label",
                         "type": "indexed(str)",
-                        "doc": "The label for the indicated trace.<br/>This is used when the mouse hovers over a trace."
+                        "doc": "The label for the indicated trace.<br/>This is used when the mouse hovers over a trace.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "name",
                         "type": "indexed(str)",
-                        "doc": "The name of the indicated trace."
+                        "doc": "The name of the indicated trace.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "selected",
                         "type": "indexed(dynamic(Union[list[int],str]))",
-                        "doc": "The list of the selected point indices  ."
+                        "doc": "The list of the selected point indices  .",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "color",
                         "type": "indexed(str)",
-                        "doc": "The color of the indicated trace (or a column name for scattered)."
+                        "doc": "The color of the indicated trace (or a column name for scattered).",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "selected_color",
                         "type": "indexed(str)",
-                        "doc": "The color of the selected points for the indicated trace."
+                        "doc": "The color of the selected points for the indicated trace.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "marker",
@@ -662,33 +732,39 @@
                     {
                         "name": "orientation",
                         "type": "indexed(str)",
-                        "doc": "The orientation of the indicated trace."
+                        "doc": "The orientation of the indicated trace.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "text_anchor",
                         "type": "indexed(str)",
-                        "doc": "Position of the text relative to the point.<br/>Valid values are: <i>top</i>, <i>bottom</i>, <i>left</i>, and <i>right</i>."
+                        "doc": "Position of the text relative to the point.<br/>Valid values are: <i>top</i>, <i>bottom</i>, <i>left</i>, and <i>right</i>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "xaxis",
                         "type": "indexed(str)",
-                        "doc": "The <i>x</i> axis identifier for the indicated trace."
+                        "doc": "The <i>x</i> axis identifier for the indicated trace.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "yaxis",
                         "type": "indexed(str)",
-                        "doc": "The <i>y</i> axis identifier for the indicated trace."
+                        "doc": "The <i>y</i> axis identifier for the indicated trace.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "width",
                         "type": "Union[str,int,float]",
                         "default_value": "\"100%\"",
-                        "doc": "The width of the chart, in CSS units."
+                        "doc": "The width of the chart, in CSS units.",
+                        "designer_input_types": ["string", "number"]
                     },
                     {
                         "name": "height",
                         "type": "Union[str,int,float]",
-                        "doc": "The height of the chart, in CSS units."
+                        "doc": "The height of the chart, in CSS units.",
+                        "designer_input_types": ["string", "number"]
                     },
                     {
                         "name": "template",
@@ -714,7 +790,8 @@
                         "name": "rebuild",
                         "type": "dynamic(bool)",
                         "default_value": "False",
-                        "doc": "Allows dynamic config refresh if set to True."
+                        "doc": "Allows dynamic config refresh if set to True.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "figure",
@@ -751,30 +828,35 @@
                         "name": "page_size",
                         "type": "int",
                         "default_value": "100",
-                        "doc": "For a paginated table, the number of visible rows."
+                        "doc": "For a paginated table, the number of visible rows.",
+                        "designer_input_types": ["number"]
                     },
                     {
                         "name": "allow_all_rows",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "For a paginated table, adds an option to show all the rows."
+                        "doc": "For a paginated table, adds an option to show all the rows.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "show_all",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "For a paginated table, show all the rows."
+                        "doc": "For a paginated table, show all the rows.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "auto_loading",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, the data will be loaded on demand."
+                        "doc": "If True, the data will be loaded on demand.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "width[<i>column_name</i>]",
                         "type": "str",
-                        "doc": "The width of the indicated column, in CSS units (% values are not supported)."
+                        "doc": "The width of the indicated column, in CSS units (% values are not supported).",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "selected",
@@ -797,24 +879,28 @@
                         "name": "date_format",
                         "type": "str",
                         "default_value": "\"MM/dd/yyyy\"",
-                        "doc": "The date format used for all date columns when the format is not specifically defined."
+                        "doc": "The date format used for all date columns when the format is not specifically defined.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "number_format",
                         "type": "str",
-                        "doc": "The number format used for all number columns when the format is not specifically defined."
+                        "doc": "The number format used for all number columns when the format is not specifically defined.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "group_by[<i>column_name</i>]",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "Indicates, if True, that the given column can be aggregated.<br/>See <a href=\"#aggregation\">below</a> for more details."
+                        "doc": "Indicates, if True, that the given column can be aggregated.<br/>See <a href=\"#aggregation\">below</a> for more details.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "apply[<i>column_name</i>]",
                         "type": "str",
                         "default_value": "\"first\"",
-                        "doc": "The name of the aggregation function to use.<br/>This is used only if <i>group_by[column_name]</i> is set to True.<br/>See <a href=\"#aggregation\">below</a> for more details."
+                        "doc": "The name of the aggregation function to use.<br/>This is used only if <i>group_by[column_name]</i> is set to True.<br/>See <a href=\"#aggregation\">below</a> for more details.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "row_class_name",
@@ -852,49 +938,57 @@
                         "name": "width",
                         "type": "str",
                         "default_value": "\"100%\"",
-                        "doc": "The width of the table control, in CSS units."
+                        "doc": "The width of the table control, in CSS units.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "height",
                         "type": "str",
                         "default_value": "\"80vh\"",
-                        "doc": "The height of the table control, in CSS units."
+                        "doc": "The height of the table control, in CSS units.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "filter",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "Indicates, if True, that all columns can be filtered."
+                        "doc": "Indicates, if True, that all columns can be filtered.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "filter[<i>column_name</i>]",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "Indicates, if True, that the indicated column can be filtered."
+                        "doc": "Indicates, if True, that the indicated column can be filtered.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "nan_value",
                         "type": "str",
                         "default_value": "\"\"",
-                        "doc": "The replacement text for NaN (not-a-number) values."
+                        "doc": "The replacement text for NaN (not-a-number) values.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "nan_value[<i>column_name</i>]",
                         "type": "str",
                         "default_value": "\"\"",
-                        "doc": "The replacement text for NaN (not-a-number) values for the indicated column."
+                        "doc": "The replacement text for NaN (not-a-number) values for the indicated column.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "editable",
                         "type": "dynamic(bool)",
                         "default_value": "False",
-                        "doc": "Indicates, if True, that all cells can be edited."
+                        "doc": "Indicates, if True, that all cells can be edited.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "editable[<i>column_name</i>]",
                         "type": "bool",
                         "default_value": "<i>editable</i>",
-                        "doc": "Indicates, if False, that the indicated column cannot be edited, even if <i>editable</i> is True.<br/>By default, all columns are editable or not, depending on the value of the <i>editable</i> property."
+                        "doc": "Indicates, if False, that the indicated column cannot be edited, even if <i>editable</i> is True.<br/>By default, all columns are editable or not, depending on the value of the <i>editable</i> property.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "on_edit",
@@ -942,24 +1036,28 @@
                         "name": "size",
                         "type": "str",
                         "default_value": "\"small\"",
-                        "doc": "The size of the rows.<br/>Valid values are \"small\" and \"medium\"."
+                        "doc": "The size of the rows.<br/>Valid values are \"small\" and \"medium\".",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "rebuild",
                         "type": "dynamic(bool)",
                         "default_value": "False",
-                        "doc": "If set to True, this allows to dynamically refresh the  columns."
+                        "doc": "If set to True, this allows to dynamically refresh the  columns.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "lov[<i>column_name</i>]",
                         "type": "Union[list[str],str]",
-                        "doc": "The list of values of the indicated column."
+                        "doc": "The list of values of the indicated column.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "downloadable",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, a clickable icon is shown so the user can download the data as CSV."
+                        "doc": "If True, a clickable icon is shown so the user can download the data as CSV.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "on_compare",
@@ -975,13 +1073,15 @@
                         "name": "use_checkbox",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, boolean values are rendered as a simple HTML checkbox."
+                        "doc": "If True, boolean values are rendered as a simple HTML checkbox.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "sortable",
                         "type": "bool",
                         "default_value": "True",
-                        "doc": "If False, the table provides no sorting capability. Individual columns can override this global setting, allowing specific columns to be marked as sortable or non-sortable regardless of value of <i>sortable</i>, by setting the <i>sortable</i> property to True or False accordingly, in the dictionary for that column in the <i>columns</i> property value."
+                        "doc": "If False, the table provides no sorting capability. Individual columns can override this global setting, allowing specific columns to be marked as sortable or non-sortable regardless of value of <i>sortable</i>, by setting the <i>sortable</i> property to True or False accordingly, in the dictionary for that column in the <i>columns</i> property value.",
+                        "designer_input_types": ["boolean"]
                     }
                 ]
             }
@@ -995,52 +1095,61 @@
                         "name": "label",
                         "type": "str",
                         "default_value": "None",
-                        "doc": "The label associated with the selector when in dropdown mode."
+                        "doc": "The label associated with the selector when in dropdown mode.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "mode",
                         "type": "str",
-                        "doc": "Define the way the selector is displayed:\n<ul><li>&quot;radio&quot;: as a list of radio buttons</li><li>&quot;check&quot;: as a list of check boxes</li><li>any other value: a plain list.</ul>"
+                        "doc": "Define the way the selector is displayed:\n<ul><li>&quot;radio&quot;: as a list of radio buttons</li><li>&quot;check&quot;: as a list of check boxes</li><li>any other value: a plain list.</ul>",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "dropdown",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, the list of items is shown in a dropdown menu.<br/><br/>You cannot use the filter in that situation."
+                        "doc": "If True, the list of items is shown in a dropdown menu.<br/><br/>You cannot use the filter in that situation.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "selection_message",
                         "type": "dynamic(str)",
-                        "doc": "TODO the message shown in the selection area of a dropdown selector when at least one element is selected, list the selected elements if None."
+                        "doc": "TODO the message shown in the selection area of a dropdown selector when at least one element is selected, list the selected elements if None.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "multiple",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, the user can select multiple items."
+                        "doc": "If True, the user can select multiple items.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "show_select_all",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "TODO If True and multiple, show a select all option"
+                        "doc": "TODO If True and multiple, show a select all option",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "filter",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, this control is combined with a filter input area."
+                        "doc": "If True, this control is combined with a filter input area.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "width",
                         "type": "Union[str,int]",
                         "default_value": "\"360px\"",
-                        "doc": "The width of the selector, in CSS units."
+                        "doc": "The width of the selector, in CSS units.",
+                        "designer_input_types": ["string", "number"]
                     },
                     {
                         "name": "height",
                         "type": "Union[str,int]",
-                        "doc": "The height of the selector, in CSS units."
+                        "doc": "The height of the selector, in CSS units.",
+                        "designer_input_types": ["string", "number"]
                     }
                 ]
             }
@@ -1054,12 +1163,14 @@
                         "name": "content",
                         "default_property": true,
                         "type": "dynamic(Union[path,file,URL,ReadableBuffer,None])",
-                        "doc": "The content to transfer.<br/>If this is a string, a URL, or a file, then the content is read from this source.<br/>If a readable buffer is provided (such as an array of bytes...), and to prevent the bandwidth from being consumed too much, the way the data is transferred depends on the <i>data_url_max_size</i> parameter of the application configuration (which is set to 50kB by default):\n<ul>\n<li>If the buffer size is smaller than this setting, then the raw content is generated as a data URL, encoded using base64 (i.e. <code>\"data:&lt;mimetype&gt;;base64,&lt;data&gt;\"</code>).</li><li>If the buffer size exceeds this setting, then it is transferred through a temporary file.</li></ul>If this property is set to None, that indicates that dynamic content is generated. Please take a look at the examples below for more details on dynamic generation."
+                        "doc": "The content to transfer.<br/>If this is a string, a URL, or a file, then the content is read from this source.<br/>If a readable buffer is provided (such as an array of bytes...), and to prevent the bandwidth from being consumed too much, the way the data is transferred depends on the <i>data_url_max_size</i> parameter of the application configuration (which is set to 50kB by default):\n<ul>\n<li>If the buffer size is smaller than this setting, then the raw content is generated as a data URL, encoded using base64 (i.e. <code>\"data:&lt;mimetype&gt;;base64,&lt;data&gt;\"</code>).</li><li>If the buffer size exceeds this setting, then it is transferred through a temporary file.</li></ul>If this property is set to None, that indicates that dynamic content is generated. Please take a look at the examples below for more details on dynamic generation.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "label",
                         "type": "dynamic(str)",
-                        "doc": "The label of the button."
+                        "doc": "The label of the button.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "on_action",
@@ -1075,30 +1186,35 @@
                         "name": "auto",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, the download starts as soon as the page is loaded."
+                        "doc": "If True, the download starts as soon as the page is loaded.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "render",
                         "type": "dynamic(bool)",
                         "default_value": "True",
-                        "doc": "If True, the control is displayed.<br/>If False, the control is not displayed."
+                        "doc": "If True, the control is displayed.<br/>If False, the control is not displayed.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "bypass_preview",
                         "type": "bool",
                         "default_value": "True",
-                        "doc": "If False, allows the browser to try to show the content in a different tab.<br/>The file download is always performed."
+                        "doc": "If False, allows the browser to try to show the content in a different tab.<br/>The file download is always performed.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "name",
                         "type": "str",
-                        "doc": "A name proposition for the file to save, that the user can change."
+                        "doc": "A name proposition for the file to save, that the user can change.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "width",
                         "type": "Union[str,int]",
                         "default_value": "None",
-                        "doc": "The width of the element."
+                        "doc": "The width of the element.",
+                        "designer_input_types": ["string", "number"]
                     }
                 ]
             }
@@ -1112,12 +1228,14 @@
                         "name": "content",
                         "default_property": true,
                         "type": "dynamic(str)",
-                        "doc": "The path or the list of paths of the uploaded files."
+                        "doc": "The path or the list of paths of the uploaded files.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "label",
                         "type": "str",
-                        "doc": "The label of the button."
+                        "doc": "The label of the button.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "on_action",
@@ -1133,37 +1251,43 @@
                         "name": "multiple",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If set to True, multiple files can be uploaded."
+                        "doc": "If set to True, multiple files can be uploaded.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "selection_type",
                         "type": "str",
                         "default_value": "\"file\"",
-                        "doc": "Can be set to \"file\" (with \"f\", \"\" aliases) or \"directory\" (with \"d\", \"dir\", \"folder\" aliases) to upload the respective element with preserved inner structure."
+                        "doc": "Can be set to \"file\" (with \"f\", \"\" aliases) or \"directory\" (with \"d\", \"dir\", \"folder\" aliases) to upload the respective element with preserved inner structure.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "extensions",
                         "type": "str",
                         "default_value": "\".csv,.xlsx\"",
-                        "doc": "The list of file extensions that can be uploaded."
+                        "doc": "The list of file extensions that can be uploaded.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "drop_message",
                         "type": "str",
                         "default_value": "\"Drop here to Upload\"",
-                        "doc": "The message that is displayed when the user drags a file above the button."
+                        "doc": "The message that is displayed when the user drags a file above the button.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "notify",
                         "type": "bool",
                         "default_value": "True",
-                        "doc": "If set to False, the user won't be notified of upload finish."
+                        "doc": "If set to False, the user won't be notified of upload finish.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "width",
                         "type": "Union[str,int]",
                         "default_value": "None",
-                        "doc": "The width of the element."
+                        "doc": "The width of the element.",
+                        "designer_input_types": ["string", "number"]
                     }
                 ]
             }
@@ -1177,12 +1301,14 @@
                         "name": "content",
                         "default_property": true,
                         "type": "dynamic(Union[path,URL,file,ReadableBuffer])",
-                        "doc": "The image source.<br/>If a buffer is provided (string, array of bytes...), and in order to prevent the bandwidth to be consumed too much, the way the image data is transferred depends on the <i>data_url_max_size</i> parameter of the application configuration (which is set to 50kB by default):\n<ul>\n<li>If the size of the buffer is smaller than this setting, then the raw content is generated as a\n  data URL, encoded using base64 (i.e. <code>\"data:&lt;mimetype&gt;;base64,&lt;data&gt;\"</code>).</li><li>If the size of the buffer is greater than this setting, then it is transferred through a temporary\n  file.</li></ul>"
+                        "doc": "The image source.<br/>If a buffer is provided (string, array of bytes...), and in order to prevent the bandwidth to be consumed too much, the way the image data is transferred depends on the <i>data_url_max_size</i> parameter of the application configuration (which is set to 50kB by default):\n<ul>\n<li>If the size of the buffer is smaller than this setting, then the raw content is generated as a\n  data URL, encoded using base64 (i.e. <code>\"data:&lt;mimetype&gt;;base64,&lt;data&gt;\"</code>).</li><li>If the size of the buffer is greater than this setting, then it is transferred through a temporary\n  file.</li></ul>",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "label",
                         "type": "dynamic(str)",
-                        "doc": "The label for this image."
+                        "doc": "The label for this image.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "on_action",
@@ -1198,12 +1324,14 @@
                         "name": "width",
                         "type": "Union[str,int,float]",
                         "default_value": "\"300px\"",
-                        "doc": "The width of the image control, in CSS units."
+                        "doc": "The width of the image control, in CSS units.",
+                        "designer_input_types": ["string", "number"]
                     },
                     {
                         "name": "height",
                         "type": "Union[str,int,float]",
-                        "doc": "The height of the image control, in CSS units."
+                        "doc": "The height of the image control, in CSS units.",
+                        "designer_input_types": ["string", "number"]
                     }
                 ]
             }
@@ -1217,72 +1345,85 @@
                         "name": "value",
                         "default_property": true,
                         "type": "dynamic(Union[int,float])",
-                        "doc": "The value to represent."
+                        "doc": "The value to represent.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "type",
                         "default_value": "\"circular\"",
                         "type": "str",
-                        "doc": "The type of the gauge.<br/>Possible values are:\n<ul>\n<li>\"none\"</li><li>\"circular\"</li><li>\"linear\"</li></ul>Setting this value to \"none\" remove the gauge."
+                        "doc": "The type of the gauge.<br/>Possible values are:\n<ul>\n<li>\"none\"</li><li>\"circular\"</li><li>\"linear\"</li></ul>Setting this value to \"none\" remove the gauge.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "min",
                         "type": "Union[int,float]",
                         "default_value": "0",
-                        "doc": "The minimum value of the metric control's gauge."
+                        "doc": "The minimum value of the metric control's gauge.",
+                        "designer_input_types": ["number"]
                     },
                     {
                         "name": "max",
                         "type": "Union[int,float]",
                         "default_value": "100",
-                        "doc": "The maximum value of the metric control's gauge."
+                        "doc": "The maximum value of the metric control's gauge.",
+                        "designer_input_types": ["number"]
                     },
                     {
                         "name": "delta",
                         "type": "dynamic(Union[int,float])",
-                        "doc": "The delta value to display."
+                        "doc": "The delta value to display.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "delta_color",
                         "type": "str",
-                        "doc": "The color that is used to display the value of the <i>delta</i> property.<br/>If <i>negative_delta_color</i> is set, then this property applies for positive values of <i>delta</i> only.<br/>If this property is set to \"invert\", then values for <i>delta</i> are represented with the color used for negative values if delta is positive and <i>delta</i> is represented with the color used for positive values if it is negative."
+                        "doc": "The color that is used to display the value of the <i>delta</i> property.<br/>If <i>negative_delta_color</i> is set, then this property applies for positive values of <i>delta</i> only.<br/>If this property is set to \"invert\", then values for <i>delta</i> are represented with the color used for negative values if delta is positive and <i>delta</i> is represented with the color used for positive values if it is negative.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "title",
                         "default_value": "None",
                         "type": "str",
-                        "doc": "The title of the metric."
+                        "doc": "The title of the metric.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "negative_delta_color",
                         "type": "str",
-                        "doc": "If set, this represents the color to be used when the value of <i>delta</i> is negative (or positive if <i>delta_color</i> is set to \"invert\")."
+                        "doc": "If set, this represents the color to be used when the value of <i>delta</i> is negative (or positive if <i>delta_color</i> is set to \"invert\").",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "threshold",
                         "type": "dynamic(Union[int,float])",
-                        "doc": "The threshold value to display."
+                        "doc": "The threshold value to display.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "show_value",
                         "type": "bool",
                         "default_value": "True",
-                        "doc": "If set to False, the value is not displayed."
+                        "doc": "If set to False, the value is not displayed.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "format",
                         "type": "str",
-                        "doc": "The format to use when displaying the value.<br/>This uses the <code>printf</code> syntax."
+                        "doc": "The format to use when displaying the value.<br/>This uses the <code>printf</code> syntax.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "delta_format",
                         "type": "str",
-                        "doc": "The format to use when displaying the delta value.<br/>This uses the <code>printf</code> syntax."
+                        "doc": "The format to use when displaying the delta value.<br/>This uses the <code>printf</code> syntax.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "bar_color",
                         "type": "str",
-                        "doc": "The color of the bar in the gauge."
+                        "doc": "The color of the bar in the gauge.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "color_map",
@@ -1333,42 +1474,49 @@
                         "type": "dynamic(int)",
                         "default_value": "None",
                         "doc": "The progress percentage represented by the control.<br/>If this property is not set or set to None, the progress control represents an indeterminate state.",
-                        "default_property": true
+                        "default_property": true,
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "linear",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If set to True, the control displays a linear progress indicator instead of a circular one."
+                        "doc": "If set to True, the control displays a linear progress indicator instead of a circular one.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "show_value",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If set to True, the progress value is shown."
+                        "doc": "If set to True, the progress value is shown.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "title",
                         "type": "dynamic(str)",
-                        "doc": "The title of the progress indicator."
+                        "doc": "The title of the progress indicator.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "title_anchor",
                         "type": "str",
                         "default_value": "\"bottom\"",
-                        "doc": "The anchor of the title.<br/>Possible values are:\n<ul>\n<li>\"bottom\"</li><li>\"top\"</li><li>\"left\"</li><li>\"right\"</li><li>\"none\" (no title is displayed)</li></ul>"
+                        "doc": "The anchor of the title.<br/>Possible values are:\n<ul>\n<li>\"bottom\"</li><li>\"top\"</li><li>\"left\"</li><li>\"right\"</li><li>\"none\" (no title is displayed)</li></ul>",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "render",
                         "type": "dynamic(bool)",
                         "default_value": "True",
-                        "doc": "If False, this progress indicator is hidden from the page."
+                        "doc": "If False, this progress indicator is hidden from the page.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "width",
                         "type": "Union[str,int]",
                         "default_value": "None",
-                        "doc": "The width of the progress indicator, in CSS units."
+                        "doc": "The width of the progress indicator, in CSS units.",
+                        "designer_input_types": ["string", "number"]
                     }
                 ]
             }
@@ -1382,48 +1530,56 @@
                         "name": "display",
                         "default_property": true,
                         "type": "dynamic(Any)",
-                        "doc": "The label to be displayed.<br/>This can be formatted if it is a numerical value."
+                        "doc": "The label to be displayed.<br/>This can be formatted if it is a numerical value.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "value",
                         "type": "dynamic(Union[int, float])",
                         "default_value": "<i>min</i>",
-                        "doc": "The location of the label on the [<i>min</i>, <i>max</i>] range.<br/>The default value is the <i>min</i> value."
+                        "doc": "The location of the label on the [<i>min</i>, <i>max</i>] range.<br/>The default value is the <i>min</i> value.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "min",
                         "type": "Union[int, float]",
                         "default_value": "0",
-                        "doc": "The minimum value of the range."
+                        "doc": "The minimum value of the range.",
+                        "designer_input_types": ["number"]
                     },
                     {
                         "name": "max",
                         "type": "Union[int,float]",
                         "default_value": "100",
-                        "doc": "The maximum value of the range."
+                        "doc": "The maximum value of the range.",
+                        "designer_input_types": ["number"]
                     },
                     {
                         "name": "format",
                         "type": "str",
-                        "doc": "The format to use when displaying the value.<br/>This uses the <code>printf</code> syntax."
+                        "doc": "The format to use when displaying the value.<br/>This uses the <code>printf</code> syntax.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "orientation",
                         "type": "str",
                         "default_value": "\"horizontal\"",
-                        "doc": "The orientation of the indicator."
+                        "doc": "The orientation of the indicator.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "width",
                         "type": "str",
                         "default_value": "None",
-                        "doc": "The width of the indicator, in CSS units (used when orientation is horizontal)."
+                        "doc": "The width of the indicator, in CSS units (used when orientation is horizontal).",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "height",
                         "type": "str",
                         "default_value": "None",
-                        "doc": "The height of the indicator, in CSS units (used when orientation is vertical)."
+                        "doc": "The height of the indicator, in CSS units (used when orientation is vertical).",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "hover_text",
@@ -1446,7 +1602,8 @@
                     {
                         "name": "label",
                         "type": "str",
-                        "doc": "The title of the menu."
+                        "doc": "The title of the menu.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "on_action",
@@ -1461,7 +1618,8 @@
                     {
                         "name": "selected",
                         "type": "dynamic(list[str])",
-                        "doc": "Semicolon (';')-separated list or a list of menu items identifiers that should be selected."
+                        "doc": "Semicolon (';')-separated list or a list of menu items identifiers that should be selected.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "inactive_ids",
@@ -1478,19 +1636,22 @@
                         "name": "type",
                         "type": "str",
                         "default_value": "<i>Type name of the first lov element</i>",
-                        "doc": "This property is required if <i>lov</i> contains a non-specific type of data (e.g., a dictionary).<br/>Then:<ul><li><i>value</i> must be of that type</li><li><i>lov</i> must be an iterable containing elements of this type</li><li>The function set to <i>adapter</i> will receive an object of this type.</li></ul><br/>The default value is the type of the first element in <i>lov</i>."
+                        "doc": "This property is required if <i>lov</i> contains a non-specific type of data (e.g., a dictionary).<br/>Then:<ul><li><i>value</i> must be of that type</li><li><i>lov</i> must be an iterable containing elements of this type</li><li>The function set to <i>adapter</i> will receive an object of this type.</li></ul><br/>The default value is the type of the first element in <i>lov</i>.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "width",
                         "type": "str",
                         "default_value": "\"15vw\"",
-                        "doc": "The width of the menu when unfolded, in CSS units.<br/>Note that when running on a mobile device, the property <i>width[active]</i> is used instead."
+                        "doc": "The width of the menu when unfolded, in CSS units.<br/>Note that when running on a mobile device, the property <i>width[active]</i> is used instead.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "width[mobile]",
                         "type": "str",
                         "default_value": "\"85vw\"",
-                        "doc": "The width of the menu when unfolded, in CSS units, when running on a mobile device."
+                        "doc": "The width of the menu when unfolded, in CSS units, when running on a mobile device.",
+                        "designer_input_types": ["string"]
                     }
                 ]
             }
@@ -1519,25 +1680,29 @@
                         "default_property": true,
                         "type": "dynamic(str)",
                         "default_value": "\"\"",
-                        "doc": "The message displayed in the notification. Can be a dynamic string."
+                        "doc": "The message displayed in the notification. Can be a dynamic string.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "severity",
                         "type": "dynamic(str)",
                         "default_value": "\"error\"",
-                        "doc": "The severity level of the alert. Valid values: \"error\", \"warning\", \"info\", \"success\".\nThe default is \"error\"."
+                        "doc": "The severity level of the alert. Valid values: \"error\", \"warning\", \"info\", \"success\".\nThe default is \"error\".",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "variant",
                         "type": "dynamic(str)",
                         "default_value": "\"filled\"",
-                        "doc": "The variant of the alert. Valid values: \"filled\", \"outlined\".\nThe default is \"filled\"."
+                        "doc": "The variant of the alert. Valid values: \"filled\", \"outlined\".\nThe default is \"filled\".",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "render",
                         "type": "dynamic(bool)",
                         "default_value": "True",
-                        "doc": "If False, the alert is hidden."
+                        "doc": "If False, the alert is hidden.",
+                        "designer_input_types": ["binding", "expression"]
                     }
                 ]
             }
@@ -1557,7 +1722,8 @@
                         "name": "without_close",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, the user cannot remove the status items from the list."
+                        "doc": "If True, the user cannot remove the status items from the list.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "use_icon",
@@ -1578,7 +1744,8 @@
                         "default_property": true,
                         "type": "str",
                         "default_value": "\"Log in\"",
-                        "doc": "The title of the login dialog."
+                        "doc": "The title of the login dialog.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "on_action",
@@ -1593,7 +1760,8 @@
                     {
                         "name": "message",
                         "type": "dynamic(str)",
-                        "doc": "The message shown in the dialog."
+                        "doc": "The message shown in the dialog.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "labels",
@@ -1613,7 +1781,8 @@
                         "default_property": true,
                         "required": true,
                         "type": "dynamic(list[str])",
-                        "doc": "The list of messages. Each item of this list must consist of a list of three strings: a message identifier, a message content, a user identifier, and an image URL."
+                        "doc": "The list of messages. Each item of this list must consist of a list of three strings: a message identifier, a message content, a user identifier, and an image URL.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "users",
@@ -1624,13 +1793,15 @@
                         "name": "sender_id",
                         "type": "str",
                         "default_value": "\"taipy\"",
-                        "doc": "The user identifier, as indicated in the <i>users</i> list, associated with all messages sent from the input."
+                        "doc": "The user identifier, as indicated in the <i>users</i> list, associated with all messages sent from the input.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "with_input",
                         "type": "dynamic(bool)",
                         "default_value": "True",
-                        "doc": "If False, the input field is not rendered."
+                        "doc": "If False, the input field is not rendered.",
+                        "designer_input_types": ["binding", "expression"]
                     },
                     {
                         "name": "on_action",
@@ -1646,36 +1817,42 @@
                         "name": "page_size",
                         "type": "int",
                         "default_value": "50",
-                        "doc": "The number of messages retrieved from the application and sent to the frontend. Larger values imply more potential latency."
+                        "doc": "The number of messages retrieved from the application and sent to the frontend. Larger values imply more potential latency.",
+                        "designer_input_types": ["number"]
                     },
                     {
                         "name": "height",
                         "type": "Union[str,int,float]",
-                        "doc": "The maximum height of the chat control, in CSS units."
+                        "doc": "The maximum height of the chat control, in CSS units.",
+                        "designer_input_types": ["string", "number"]
                     },
                     {
                         "name": "show_sender",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, the sender avatar and name are displayed."
+                        "doc": "If True, the sender avatar and name are displayed.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "mode",
                         "type": "str",
                         "default_value": "\"markdown\"",
-                        "doc": "Define the way the messages are processed when they are displayed:\n<ul><li>&quot;raw&quot; no processing</li><li>&quot;pre&quot;: keeps spaces and new lines</li><li>&quot;markdown&quot; or &quot;md&quot;: basic support for Markdown.</li></ul>"
+                        "doc": "Define the way the messages are processed when they are displayed:\n<ul><li>&quot;raw&quot; no processing</li><li>&quot;pre&quot;: keeps spaces and new lines</li><li>&quot;markdown&quot; or &quot;md&quot;: basic support for Markdown.</li></ul>",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "max_file_size",
                         "type": "int",
                         "default_value": "0.8 * 1024 * 1024",
-                        "doc": "The maximum allowable file size, in bytes, for files uploaded to a chat message.\nThe default is 0.8 MB."
+                        "doc": "The maximum allowable file size, in bytes, for files uploaded to a chat message.\nThe default is 0.8 MB.",
+                        "designer_input_types": ["number"]
                     },
                     {
                         "name": "allow_send_images",
                         "type": "bool",
                         "default_value": "True",
-                        "doc": "TODO if True, an upload image icon is shown."
+                        "doc": "TODO if True, an upload image icon is shown.",
+                        "designer_input_types": ["boolean"]
                     }
                 ]
             }
@@ -1695,18 +1872,21 @@
                         "name": "multiple",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, the user can select multiple items by holding the <code>Ctrl</code> key while clicking on items."
+                        "doc": "If True, the user can select multiple items by holding the <code>Ctrl</code> key while clicking on items.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "select_leafs_only",
                         "type": "bool",
                         "default_value": "False",
-                        "doc": "If True, the user can only select leaf nodes."
+                        "doc": "If True, the user can only select leaf nodes.",
+                        "designer_input_types": ["boolean"]
                     },
                     {
                         "name": "row_height",
                         "type": "str",
-                        "doc": "The height of each row of the tree, in CSS units."
+                        "doc": "The height of each row of the tree, in CSS units.",
+                        "designer_input_types": ["string"]
                     },
                     {
                         "name": "mode",
