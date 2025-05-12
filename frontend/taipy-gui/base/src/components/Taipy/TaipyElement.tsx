@@ -11,7 +11,6 @@ import { emptyArray } from "../../../../src/utils";
 import ErrorFallback from "../../../../src/utils/ErrorBoundary";
 import { getRegisteredComponents } from "../../../../src/components/Taipy";
 import { renderError, unregisteredRender } from "../../../../src/components/Taipy/Unregistered";
-import "./taipyelements.css";
 
 interface TaipyElementProps {
     editMode: boolean;
