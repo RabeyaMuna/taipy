@@ -46,7 +46,7 @@ def __build_taipy_package_line(line: str, version: Version, use_pypi: bool, gh_p
         return f"{line} >={version.major}.{version.minor},<{version.major}.{version.minor + 1}\n"
     tag = f"{version}-{line.split('-')[1]}"
     tar_name = f"{line}-{version}"
-    return f"{line} @ https://github.com/{gh_path}/releases/download/{tag}/{tar_name}.tar.gz\n"
+    return f"{line} @ https://github.com/{gh_path}/releases/download/{tag}/{tar_name}.tar.gz#egg={line}\n"
 
 
 def update_setup_requirements(
