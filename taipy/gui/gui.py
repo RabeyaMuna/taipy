@@ -24,7 +24,7 @@ import typing as t
 import warnings
 from importlib import metadata, util
 from importlib.util import find_spec
-from inspect import currentframe, getabsfile, ismethod, ismodule, isroutine
+from inspect import currentframe, getabsfile, iscoroutinefunction, ismethod, ismodule, isroutine
 from pathlib import Path
 from threading import Timer
 from types import FrameType, FunctionType, LambdaType, ModuleType, SimpleNamespace
@@ -71,7 +71,7 @@ from .extension.library import Element, ElementLibrary
 from .page import Page
 from .partial import Partial
 from .server import _Server
-from .state import State
+from .state import State, _AsyncState, _GuiState
 from .types import _WsType
 from .utils import (
     _delscopeattr,
@@ -89,6 +89,7 @@ from .utils import (
     _getscopeattr_drill,
     _hasscopeattr,
     _is_in_notebook,
+    _is_unnamed_function,
     _LocalsContext,
     _MapDict,
     _setscopeattr,
@@ -110,6 +111,7 @@ from .utils._evaluator import _Evaluator
 from .utils._variable_directory import _is_moduled_variable, _VariableDirectory
 from .utils.chart_config_builder import _build_chart_config
 from .utils.table_col_builder import _enhance_columns
+from .utils.threads import _invoke_async_callback
 
 
 class Gui:
@@ -1129,6 +1131,7 @@ class Gui:
             for var, val in state_context.items():
                 self._update_var(var, val, True, forward=False)
 
+
     def __request_data_update(self, var_name: str, payload: t.Any) -> None:
         # Use custom attrgetter function to allow value binding for _MapDict
         newvalue = _getscopeattr_drill(self, var_name)
@@ -1547,7 +1550,12 @@ class Gui:
 
     def _call_function_with_state(self, user_function: t.Callable, args: t.Optional[t.List[t.Any]] = None) -> t.Any:
         cp_args = [] if args is None else args.copy()
-        cp_args.insert(0, self.__get_state())
+        cp_args.insert(
+            0,
+            _AsyncState(t.cast(_GuiState, self.__get_state()))
+            if iscoroutinefunction(user_function)
+            else self.__get_state(),
+        )
         argcount = user_function.__code__.co_argcount
         if argcount > 0 and ismethod(user_function):
             argcount -= 1
@@ -1555,7 +1563,10 @@ class Gui:
             cp_args += (argcount - len(cp_args)) * [None]
         else:
             cp_args = cp_args[:argcount]
-        return user_function(*cp_args)
+        if iscoroutinefunction(user_function):
+            return _invoke_async_callback(user_function, cp_args)
+        else:
+            return user_function(*cp_args)
 
     def _set_module_context(self, module_context: t.Optional[str]) -> t.ContextManager[None]:
         return self._set_locals_context(module_context) if module_context is not None else contextlib.nullcontext()
@@ -2278,8 +2289,15 @@ class Gui:
         callback: t.Optional[t.Union[str, t.Callable]] = None,
         message: t.Optional[str] = "Work in Progress...",
     ):  # pragma: no cover
-        action_name = callback.__name__ if callable(callback) else callback
-        # TODO: what if lambda? (it does work)
+        action_name = (
+            callback
+            if isinstance(callback, str)
+            else _get_lambda_id(t.cast(LambdaType, callback))
+            if _is_unnamed_function(callback)
+            else callback.__name__
+            if callback is not None
+            else None
+        )
         func = self.__get_on_cancel_block_ui(action_name)
         def_action_name = func.__name__
         _setscopeattr(self, def_action_name, func)
@@ -2805,7 +2823,9 @@ class Gui:
         self.__var_dir.set_default(self.__frame)
 
         if self.__state is None or is_reloading:
-            self.__state = State(self, self.__locals_context.get_all_keys(), self.__locals_context.get_all_context())
+            self.__state = _GuiState(
+                self, self.__locals_context.get_all_keys(), self.__locals_context.get_all_context()
+            )
 
         if _is_in_notebook():
             # Allow gui.state.x in notebook mode

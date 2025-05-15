@@ -19,14 +19,14 @@
 # incognito windows so a given user's context is not reused.
 # -----------------------------------------------------------------------------------------
 from os import path
-from typing import Union
+from typing import Optional, Union, cast
 
 from taipy.gui import Gui, Icon
 from taipy.gui.gui_actions import navigate, notify
 
 username = ""
-users: list[Union[str, Icon]] = []
-messages: list[tuple[str, str, str]] = []
+users: list[tuple[str, Union[str, Icon]]] = []
+messages: list[tuple[str, str, str, Optional[str]]] = []
 
 Gui.add_shared_variables("messages", "users")
 
@@ -62,8 +62,8 @@ def register(state):
 
 
 def send(state, _: str, payload: dict):
-    (_, _, message, sender_id) = payload.get("args", [])
-    messages.append((f"{len(messages)}", message, sender_id))
+    (_, _, message, sender_id, image_url) = payload.get("args", [])
+    messages.append((f"{len(messages)}", cast(str, message), cast(str, sender_id), cast(str, image_url)))
     state.messages = messages
 
 
@@ -82,4 +82,6 @@ discuss_page = """
 """
 
 pages = {"register": register_page, "discuss": discuss_page}
-gui = Gui(pages=pages).run(title="Chat - Discuss")
+
+if __name__ == "__main__":
+    gui = Gui(pages=pages).run(title="Chat - Discuss")
