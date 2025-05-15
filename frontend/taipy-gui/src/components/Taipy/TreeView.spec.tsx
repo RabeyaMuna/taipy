@@ -88,19 +88,19 @@ describe("TreeView Component", () => {
         expect(elt2.parentElement).toHaveClass("Mui-selected");
     });
     it("is disabled", async () => {
-        const { getAllByRole } = render(<TreeView lov={lov} active={false} />);
-        const elts = getAllByRole("treeitem");
-        elts.forEach((elt) => expect(elt.firstElementChild).toHaveClass("Mui-disabled"));
+        const { getByText } = render(<TreeView lov={lov} active={false} />);
+        const elt = getByText("Item 1");
+        expect(elt).toHaveClass("Mui-disabled");
     });
     it("is enabled by default", async () => {
-        const { getAllByRole } = render(<TreeView lov={lov} />);
-        const elts = getAllByRole("treeitem");
-        elts.forEach((elt) => expect(elt.firstElementChild).not.toHaveClass("Mui-disabled"));
+        const { getByText } = render(<TreeView lov={lov} />);
+        const elt = getByText("Item 1");
+        expect(elt).not.toHaveClass("Mui-disabled");
     });
     it("is enabled by active", async () => {
-        const { getAllByRole } = render(<TreeView lov={lov} active={true} />);
-        const elts = getAllByRole("treeitem");
-        elts.forEach((elt) => expect(elt.firstElementChild).not.toHaveClass("Mui-disabled"));
+        const { getByText } = render(<TreeView lov={lov} active={true} />);
+        const elt = getByText("Item 1");
+        expect(elt).not.toHaveClass("Mui-disabled");
     });
     it("dispatch a well formed message base", async () => {
         const dispatch = jest.fn();

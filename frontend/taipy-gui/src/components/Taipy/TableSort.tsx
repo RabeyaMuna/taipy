@@ -17,7 +17,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SortByAlpha from "@mui/icons-material/SortByAlpha";
 import Badge from "@mui/material/Badge";
 import FormControl from "@mui/material/FormControl";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";

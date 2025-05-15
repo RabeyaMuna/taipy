@@ -80,16 +80,16 @@ const Field = (props: TaipyFieldProps) => {
                         {value}
                     </pre>
                 ) : mode == "markdown" || mode == "md" ? (
-                    <Suspense fallback={<div>Loading Markdown...</div>}>
-                        <Markdown
-                            className={`${className} ${getSuffixedClassNames(
-                                className,
-                                "-markdown"
-                            )} ${getComponentClassName(props.children)}`}
-                        >
-                            {value}
-                        </Markdown>
-                    </Suspense>
+                    <div
+                        className={`${className} ${getSuffixedClassNames(
+                            className,
+                            "-markdown"
+                        )} ${getComponentClassName(props.children)}`}
+                    >
+                        <Suspense fallback={<div>Loading Markdown...</div>}>
+                            <Markdown>{value}</Markdown>
+                        </Suspense>
+                    </div>
                 ) : raw || mode == "raw" ? (
                     <span
                         className={`${className} ${getSuffixedClassNames(className, "-raw")} ${getComponentClassName(

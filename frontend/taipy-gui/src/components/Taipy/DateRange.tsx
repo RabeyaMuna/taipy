@@ -44,7 +44,7 @@ interface DateRangeProps extends TaipyActiveProps, TaipyChangeProps {
     analogic?: boolean;
 }
 
-const textFieldProps = { textField: { margin: "dense" } } as BaseDateTimePickerSlotProps<Date>;
+const textFieldProps = { textField: { margin: "dense" } } as BaseDateTimePickerSlotProps;
 
 const getRangeDateTime = (
     json: string | string[] | undefined,
@@ -152,7 +152,7 @@ const DateRange = (props: DateRangeProps) => {
                         withTime ? (
                             <>
                                 <DateTimePicker
-                                    {...(startProps as DateTimePickerProps<Date>)}
+                                    {...(startProps as DateTimePickerProps)}
                                     value={value[0]}
                                     onChange={handleChangeStart}
                                     className={
@@ -169,7 +169,7 @@ const DateRange = (props: DateRangeProps) => {
                                 />
                                 <Typography>{separator}</Typography>
                                 <DateTimePicker
-                                    {...(endProps as DateTimePickerProps<Date>)}
+                                    {...(endProps as DateTimePickerProps)}
                                     value={value[1]}
                                     onChange={handleChangeEnd}
                                     className={
@@ -188,7 +188,7 @@ const DateRange = (props: DateRangeProps) => {
                         ) : (
                             <>
                                 <DatePicker
-                                    {...(startProps as DatePickerProps<Date>)}
+                                    {...(startProps as DatePickerProps)}
                                     value={value[0]}
                                     onChange={handleChangeStart}
                                     className={
@@ -204,7 +204,7 @@ const DateRange = (props: DateRangeProps) => {
                                 />
                                 <Typography>{separator}</Typography>
                                 <DatePicker
-                                    {...(endProps as DatePickerProps<Date>)}
+                                    {...(endProps as DatePickerProps)}
                                     value={value[1]}
                                     onChange={handleChangeEnd}
                                     className={

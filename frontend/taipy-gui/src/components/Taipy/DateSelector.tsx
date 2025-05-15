@@ -50,7 +50,7 @@ interface DateSelectorProps extends TaipyActiveProps, TaipyChangeProps {
 }
 
 const boxSx = { display: "inline-block" };
-const textFieldProps = { textField: { margin: "dense" } } as BaseDateTimePickerSlotProps<Date>;
+const textFieldProps = { textField: { margin: "dense" } } as BaseDateTimePickerSlotProps;
 
 const analogicRenderers = {
     hours: renderTimeViewClock,
@@ -122,8 +122,8 @@ const DateSelector = (props: DateSelectorProps) => {
                     {editable ? (
                         withTime ? (
                             <DateTimePicker
-                                    {...(startProps as DateTimePickerProps<Date>)}
-                                    {...(endProps as DateTimePickerProps<Date>)}
+                                    {...(startProps as DateTimePickerProps)}
+                                    {...(endProps as DateTimePickerProps)}
                                     value={value}
                                     onChange={handleChange}
                                     className={getSuffixedClassNames(className, "-picker")}
@@ -136,8 +136,8 @@ const DateSelector = (props: DateSelectorProps) => {
                                 />
                         ) : (
                             <DatePicker
-                                {...(startProps as DatePickerProps<Date>)}
-                                {...(endProps as DatePickerProps<Date>)}
+                                {...(startProps as DatePickerProps)}
+                                {...(endProps as DatePickerProps)}
                                 value={value}
                                 onChange={handleChange}
                                 className={getSuffixedClassNames(className, "-picker")}

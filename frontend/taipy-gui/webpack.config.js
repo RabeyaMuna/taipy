@@ -112,11 +112,16 @@ module.exports = (env, options) => {
         },
         {
             mode: options.mode, //'development', //'production',
+            name: "TaipyGuiDom",
             context: resolveApp("dom"),
             entry: ["./src/index.tsx"],
             output: {
                 filename: "taipy-gui-dom.js",
                 path: webAppPath,
+                library: {
+                    name: "TaipyGuiDom",
+                    type: "umd",
+                },
                 publicPath: "",
             },
             dependencies: [taipyBundleName, reactBundleName],
