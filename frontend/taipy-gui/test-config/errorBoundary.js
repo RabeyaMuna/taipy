@@ -10,7 +10,9 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-
-// mock nanoid that is ESM and does not work with jest
-// https://github.com/ai/nanoid/issues/363
-jest.mock("nanoid", () => ({ nanoid: () => {} }));
+jest.mock("react-error-boundary", () => ({
+    ErrorBoundary:
+        () =>
+        ({ children }) =>
+            children,
+}));

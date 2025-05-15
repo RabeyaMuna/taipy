@@ -27,7 +27,9 @@ module.exports = {
     ],
     coverageReporters: ["json", "html", "text"],
     modulePathIgnorePatterns: ["<rootDir>/packaging/"],
-    moduleNameMapper: {"react-markdown": "<rootDir>/test-config/markdown.tsx"},
+    moduleNameMapper: {"react-markdown": "<rootDir>/test-config/markdown.tsx",
+        "react-error-boundary": "<rootDir>/test-config/errorBoundary.tsx"
+    },
     transformIgnorePatterns: ["<rootDir>/node_modules/(?!react-jsx-parser/)"],
     ...createJsWithTsPreset()
 };
