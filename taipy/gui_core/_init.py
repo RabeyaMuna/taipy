@@ -15,7 +15,7 @@ from ._GuiCoreLib import _GuiCore
 def _init_gui_core():
     from taipy.gui import Gui
 
-    # Gui.add_library(_GuiCore())
+    Gui.add_library(_GuiCore())
 
 
 _init_gui_core()

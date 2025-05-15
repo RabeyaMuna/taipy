@@ -45,6 +45,9 @@
     "react-dom": "^18.2.0",
     "taipy-gui": "file:../../taipy/gui/webapp"
   },
+  "overrides": {
+    "@mui/material": "$@mui/material"
+  },
   "scripts": {
     "postinstall": "node scripts/install.js",
     "build:dev": "webpack --mode development",
