@@ -52,6 +52,7 @@ type TreeItemWithLabel = {
     label: string;
     lovIcon?: Icon;
     height?: string;
+    allowSelection?: boolean;
 };
 
 interface CustomTreeProps extends HTMLAttributes<HTMLElement> {
@@ -75,9 +76,9 @@ const CustomLabel = (props: CustomTreeProps) => {
 
 const CustomTreeItem = forwardRef(function CustomTreeItem(props: TreeItemProps, ref: Ref<HTMLLIElement>) {
     const item = useTreeItemModel<TreeItemWithLabel>(props.itemId)!;
-    const { lovIcon, height } = item;
+    const { lovIcon, height, allowSelection = true } = item;
     const ctProps = { lovIcon, height, disabled: props.disabled } as CustomTreeProps;
-    return <TreeItem {...props} ref={ref} slots={{ label: CustomLabel }} slotProps={{ label: ctProps }} />;
+    return <TreeItem {...props} data-selectable={allowSelection} ref={ref} slots={{ label: CustomLabel }} slotProps={{ label: ctProps }} />;
 });
 
 const treeSlots = { expandIcon: ChevronRightIcon, item: CustomTreeItem };
