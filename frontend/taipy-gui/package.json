@@ -46,11 +46,9 @@
     "lint:fix": "npm run lint -- --fix",
     "coverage": "npm test -- --coverage",
     "types": "dts-bundle-generator -o packaging/taipy-gui.gen.d.ts src/extensions/exports.ts",
-    "types-custom": "dts-bundle-generator -o packaging-customfe/taipy-gui.gen.d.ts src/customfe/exports.ts",
     "doc": "typedoc --plugin typedoc-plugin-markdown --excludeNotDocumented --disableSources src/extensions/exports.ts",
     "doc.json": "typedoc --json docs/taipy-gui.json src/extensions/exports.ts",
-    "mkdocs": "typedoc --options typedoc-mkdocs.json",
-    "pack-custom": "cd ../../taipy/gui/webapp/taipy-gui-base-export && npm pack"
+    "mkdocs": "typedoc --options typedoc-mkdocs.json"
   },
   "husky": {
     "hooks": {
