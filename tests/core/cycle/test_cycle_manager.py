@@ -29,7 +29,7 @@ def test_save_and_get_cycle_entity(tmpdir, cycle, current_datetime):
 
     assert len(_CycleManager._get_all()) == 0
 
-    _CycleManager._set(cycle)
+    _CycleManager._repository._save(cycle)
     assert _CycleManager._exists(cycle.id)
 
     cycle_1 = _CycleManager._get(cycle.id)
@@ -62,7 +62,7 @@ def test_save_and_get_cycle_entity(tmpdir, cycle, current_datetime):
         name="bar",
         id=cycle_1.id,
     )
-    _CycleManager._set(cycle_3)
+    _CycleManager._repository._save(cycle_3)
 
     cycle_3 = _CycleManager._get(cycle_1.id)
 
@@ -242,10 +242,10 @@ def test_get_primary(tmpdir, cycle, current_datetime):
 
     assert len(_CycleManager._get_all()) == 0
 
-    _CycleManager._set(cycle)
+    _CycleManager._repository._save(cycle)
     cycle_1 = _CycleManager._get(cycle.id)
     cycle_2 = Cycle(Frequency.MONTHLY, {}, current_datetime, current_datetime, current_datetime, name="foo")
-    _CycleManager._set(cycle_2)
+    _CycleManager._repository._save(cycle_2)
     cycle_2 = _CycleManager._get(cycle_2.id)
     cycles = _CycleManager._get_all()
     assert len(_CycleManager._get_all()) == 2

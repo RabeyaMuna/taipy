@@ -101,8 +101,8 @@ class TestCycleRepositories:
 
         for i in range(10):
             cycle.id = CycleId(f"cycle-{i}")
-            cycle.name = f"cycle-{i}"
             repository._save(cycle)
+            cycle.name = f"cycle-{i}"
 
         assert len(repository._load_all()) == 10
 

@@ -84,7 +84,7 @@ class TestExcelDataNode:
         excel_dn_config = Config.configure_excel_data_node(
             id="foo_bar", default_path=path, has_header=False, sheet_name="Sheet1", name="super name"
         )
-        dn = _DataManagerFactory._build_manager()._create_and_set(excel_dn_config, None, None)
+        dn = _DataManagerFactory._build_manager()._create(excel_dn_config, None, None)
         assert isinstance(dn, ExcelDataNode)
         assert dn.storage_type() == "excel"
         assert dn.config_id == "foo_bar"
@@ -103,7 +103,7 @@ class TestExcelDataNode:
         excel_dn_config_1 = Config.configure_excel_data_node(
             id="baz", default_path=path, has_header=True, sheet_name="Sheet1", exposed_type=MyCustomObject
         )
-        dn_1 = _DataManagerFactory._build_manager()._create_and_set(excel_dn_config_1, None, None)
+        dn_1 = _DataManagerFactory._build_manager()._create(excel_dn_config_1, None, None)
         assert isinstance(dn_1, ExcelDataNode)
         assert dn_1.properties["has_header"] is True
         assert dn_1.properties["sheet_name"] == "Sheet1"
@@ -116,7 +116,7 @@ class TestExcelDataNode:
             sheet_name=sheet_names,
             exposed_type={"Sheet1": "pandas", "Sheet2": "numpy"},
         )
-        dn_2 = _DataManagerFactory._build_manager()._create_and_set(excel_dn_config_2, None, None)
+        dn_2 = _DataManagerFactory._build_manager()._create(excel_dn_config_2, None, None)
         assert isinstance(dn_2, ExcelDataNode)
         assert dn_2.properties["sheet_name"] == sheet_names
         assert dn_2.properties["exposed_type"] == {"Sheet1": "pandas", "Sheet2": "numpy"}
@@ -124,7 +124,7 @@ class TestExcelDataNode:
         excel_dn_config_3 = Config.configure_excel_data_node(
             id="baz", default_path=path, has_header=True, sheet_name=sheet_names, exposed_type=MyCustomObject
         )
-        dn_3 = _DataManagerFactory._build_manager()._create_and_set(excel_dn_config_3, None, None)
+        dn_3 = _DataManagerFactory._build_manager()._create(excel_dn_config_3, None, None)
         assert isinstance(dn_3, ExcelDataNode)
         assert dn_3.properties["sheet_name"] == sheet_names
         assert dn_3.properties["exposed_type"] == MyCustomObject
@@ -136,7 +136,7 @@ class TestExcelDataNode:
             sheet_name=sheet_names,
             exposed_type={"Sheet1": MyCustomObject, "Sheet2": MyCustomObject2},
         )
-        dn_4 = _DataManagerFactory._build_manager()._create_and_set(excel_dn_config_4, None, None)
+        dn_4 = _DataManagerFactory._build_manager()._create(excel_dn_config_4, None, None)
         assert isinstance(dn_4, ExcelDataNode)
         assert dn_4.properties["sheet_name"] == sheet_names
         assert dn_4.properties["exposed_type"] == {"Sheet1": MyCustomObject, "Sheet2": MyCustomObject2}
@@ -172,6 +172,7 @@ class TestExcelDataNode:
 
     def test_set_path(self):
         dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"default_path": "foo.xlsx"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         assert dn.path == "foo.xlsx"
         dn.path = "bar.xlsx"
         assert dn.path == "bar.xlsx"
@@ -192,6 +193,7 @@ class TestExcelDataNode:
         path = os.path.join(pathlib.Path(__file__).parent.resolve(), "data_sample/example.xlsx")
         new_path = os.path.join(pathlib.Path(__file__).parent.resolve(), "data_sample/temp.xlsx")
         dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"default_path": path})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         read_data = dn.read()
         assert read_data is not None
         dn.path = new_path
@@ -207,6 +209,7 @@ class TestExcelDataNode:
             pathlib.Path(__file__).parent.resolve(), "data_sample/example_2.xlsx"
         )  # ["Sheet1", "Sheet2", "Sheet3"]
         dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"default_path": path, "exposed_type": MyCustomObject1})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         assert dn.properties["exposed_type"] == MyCustomObject1
         dn.read()
         dn.path = new_path
@@ -253,6 +256,7 @@ class TestExcelDataNode:
             Scope.SCENARIO,
             properties={"default_path": path_1, "exposed_type": [MyCustomObject1, MyCustomObject2]},
         )
+        _DataManagerFactory._build_manager()._repository._save(dn)
         data = dn.read()
         assert isinstance(data, Dict)
         assert isinstance(data["Sheet1"][0], MyCustomObject1)
@@ -475,6 +479,7 @@ class TestExcelDataNode:
         temp_file_path = str(tmpdir_factory.mktemp("data").join("temp.xlsx"))
         pd.DataFrame([]).to_excel(temp_file_path)
         dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"path": temp_file_path, "exposed_type": "pandas"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
 
         dn.write(pd.DataFrame([1, 2, 3]))
         previous_edit_date = dn.last_edit_date
@@ -543,6 +548,7 @@ class TestExcelDataNode:
         old_data = pd.DataFrame([{"a": 0, "b": 1, "c": 2}, {"a": 3, "b": 4, "c": 5}])
 
         dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"path": old_xlsx_path, "exposed_type": "pandas"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(old_data)
         old_last_edit_date = dn.last_edit_date
 
@@ -560,6 +566,7 @@ class TestExcelDataNode:
         old_data = pd.DataFrame([{"a": 0, "b": 1, "c": 2}, {"a": 3, "b": 4, "c": 5}])
 
         dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"path": old_xlsx_path, "exposed_type": "pandas"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(old_data)
         old_last_edit_date = dn.last_edit_date
 
@@ -613,6 +620,7 @@ class TestExcelDataNode:
         pd.DataFrame(new_data).to_excel(new_excel_path, index=False)
 
         dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"path": old_excel_path, "exposed_type": "numpy"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(old_data)
         old_last_edit_date = dn.last_edit_date
 

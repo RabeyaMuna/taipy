@@ -12,7 +12,9 @@
 import os
 import pathlib
 
+import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
 
 from taipy import Scope
 from taipy.common.config import Config
@@ -23,7 +25,7 @@ from taipy.core.data.csv import CSVDataNode
 from taipy.core.data.data_node_id import DataNodeId
 from taipy.core.data.in_memory import InMemoryDataNode
 from taipy.core.data.pickle import PickleDataNode
-from taipy.core.exceptions.exceptions import InvalidDataNodeType, ModelNotFound
+from taipy.core.exceptions.exceptions import InvalidDataNodeType, ModelNotFound, NoData
 from taipy.core.reason import EntityDoesNotExist, NotGlobalScope, WrongConfigType
 from tests.core.utils.named_temporary_file import NamedTemporaryFile
 
@@ -35,12 +37,12 @@ def file_exists(file_path: str) -> bool:
 class TestDataManager:
     def test_create_data_node_and_modify_properties_does_not_modify_config(self):
         dn_config = Config.configure_data_node(id="name", foo="bar")
-        dn = _DataManager._create_and_set(dn_config, None, None)
+        dn = _DataManager._create(dn_config, None, None)
         assert dn_config.properties.get("foo") == "bar"
         assert dn_config.properties.get("baz") is None
 
         dn.properties["baz"] = "qux"
-        _DataManager._set(dn)
+        _DataManager._update(dn)
         assert dn_config.properties.get("foo") == "bar"
         assert dn_config.properties.get("baz") is None
         assert dn.properties.get("foo") == "bar"
@@ -75,7 +77,7 @@ class TestDataManager:
 
     def test_create_data_node_with_name_provided(self):
         dn_config = Config.configure_data_node(id="dn", foo="bar", name="acb")
-        dn = _DataManager._create_and_set(dn_config, None, None)
+        dn = _DataManager._create(dn_config, None, None)
         assert dn.name == "acb"
 
     def test_create_and_get_csv_data_node(self):
@@ -84,7 +86,7 @@ class TestDataManager:
         # - a default scenario scope
         # - No owner_id
         csv_dn_config = Config.configure_data_node(id="foo", storage_type="csv", path="bar", has_header=True)
-        csv_dn = _DataManager._create_and_set(csv_dn_config, None, None)
+        csv_dn = _DataManager._create(csv_dn_config, None, None)
 
         assert isinstance(csv_dn, CSVDataNode)
         assert isinstance(_DataManager._get(csv_dn.id), CSVDataNode)
@@ -148,7 +150,7 @@ class TestDataManager:
 
     def test_edit_and_get_data_node(self):
         config = Config.configure_pickle_data_node(id="foo")
-        dn = _DataManager._create_and_set(config, None, None)
+        dn = _DataManager._create(config, None, None)
 
         assert _DataManager._get(dn.id).last_edit_date is None
         assert len(_DataManager._get(dn.id).properties) == 2  # is_generated and path
@@ -187,7 +189,7 @@ class TestDataManager:
         in_memory_dn_config = Config.configure_data_node(
             id="baz", storage_type="in_memory", scope=Scope.SCENARIO, default_data="qux", other_data="foo"
         )
-        in_mem_dn = _DataManager._create_and_set(in_memory_dn_config, "Scenario_id", {"task_id"})
+        in_mem_dn = _DataManager._create(in_memory_dn_config, "Scenario_id", {"task_id"})
 
         assert isinstance(in_mem_dn, InMemoryDataNode)
         assert isinstance(_DataManager._get(in_mem_dn.id), InMemoryDataNode)
@@ -240,7 +242,7 @@ class TestDataManager:
         # - No owner id
         # - no default data
         dn_config = Config.configure_data_node(id="plop", storage_type="pickle", scope=Scope.CYCLE)
-        pickle_dn = _DataManager._create_and_set(dn_config, None, {"task_id_1", "task_id_2"})
+        pickle_dn = _DataManager._create(dn_config, None, {"task_id_1", "task_id_2"})
 
         assert isinstance(pickle_dn, PickleDataNode)
         assert isinstance(_DataManager._get(pickle_dn.id), PickleDataNode)
@@ -287,26 +289,26 @@ class TestDataManager:
     def test_create_raises_exception_with_wrong_type(self):
         wrong_type_dn_config = DataNodeConfig(id="foo", storage_type="bar", scope=DataNodeConfig._DEFAULT_SCOPE)
         with pytest.raises(InvalidDataNodeType):
-            _DataManager._create_and_set(wrong_type_dn_config, None, None)
+            _DataManager._create(wrong_type_dn_config, None, None)
 
     def test_create_from_same_config_generates_new_data_node_and_new_id(self):
         dn_config = Config.configure_data_node(id="foo", storage_type="in_memory")
-        dn = _DataManager._create_and_set(dn_config, None, None)
-        dn_2 = _DataManager._create_and_set(dn_config, None, None)
+        dn = _DataManager._create(dn_config, None, None)
+        dn_2 = _DataManager._create(dn_config, None, None)
         assert dn_2.id != dn.id
 
     def test_create_uses_overridden_attributes_in_config_file(self):
         Config.override(os.path.join(pathlib.Path(__file__).parent.resolve(), "data_sample/config.toml"))
 
         csv_dn_cfg = Config.configure_data_node(id="foo", storage_type="csv", path="bar", has_header=True)
-        csv_dn = _DataManager._create_and_set(csv_dn_cfg, None, None)
+        csv_dn = _DataManager._create(csv_dn_cfg, None, None)
         assert csv_dn.config_id == "foo"
         assert isinstance(csv_dn, CSVDataNode)
         assert csv_dn._path == "path_from_config_file"
         assert csv_dn.properties["has_header"]
 
         csv_dn_cfg = Config.configure_data_node(id="baz", storage_type="csv", path="bar", has_header=True)
-        csv_dn = _DataManager._create_and_set(csv_dn_cfg, None, None)
+        csv_dn = _DataManager._create(csv_dn_cfg, None, None)
         assert csv_dn.config_id == "baz"
         assert isinstance(csv_dn, CSVDataNode)
         assert csv_dn._path == "bar"
@@ -319,11 +321,11 @@ class TestDataManager:
     def test_get_all(self):
         assert len(_DataManager._get_all()) == 0
         dn_config_1 = Config.configure_data_node(id="foo", storage_type="in_memory")
-        _DataManager._create_and_set(dn_config_1, None, None)
+        _DataManager._create(dn_config_1, None, None)
         assert len(_DataManager._get_all()) == 1
         dn_config_2 = Config.configure_data_node(id="baz", storage_type="in_memory")
-        _DataManager._create_and_set(dn_config_2, None, None)
-        _DataManager._create_and_set(dn_config_2, None, None)
+        _DataManager._create(dn_config_2, None, None)
+        _DataManager._create(dn_config_2, None, None)
         assert len(_DataManager._get_all()) == 3
         assert len([dn for dn in _DataManager._get_all() if dn.config_id == "foo"]) == 1
         assert len([dn for dn in _DataManager._get_all() if dn.config_id == "baz"]) == 2
@@ -334,7 +336,7 @@ class TestDataManager:
         # Only version 2.0 has the data node with config_id = "config_id_6"
         for version in range(1, 3):
             for i in range(5):
-                _DataManager._set(
+                _DataManager._repository._save(
                     InMemoryDataNode(
                         f"config_id_{i + version}",
                         Scope.SCENARIO,
@@ -363,7 +365,7 @@ class TestDataManager:
         assert len(_DataManager._get_all_by(filters=[{"version": "2.0", "config_id": "config_id_1"}])) == 0
         assert len(_DataManager._get_all_by(filters=[{"version": "2.0", "config_id": "config_id_6"}])) == 1
 
-    def test_set(self):
+    def test_save_and_update(self):
         dn = InMemoryDataNode(
             "config_id",
             Scope.SCENARIO,
@@ -377,26 +379,26 @@ class TestDataManager:
         )
         assert len(_DataManager._get_all()) == 0
         assert not _DataManager._exists(dn.id)
-        _DataManager._set(dn)
+        _DataManager._repository._save(dn)
         assert len(_DataManager._get_all()) == 1
         assert _DataManager._exists(dn.id)
 
         # changing data node attribute
         dn._config_id = "foo"
         assert dn.config_id == "foo"
-        _DataManager._set(dn)
+        _DataManager._update(dn)
         assert len(_DataManager._get_all()) == 1
         assert dn.config_id == "foo"
         assert _DataManager._get(dn.id).config_id == "foo"
 
     def test_delete(self):
-        dn_1 = InMemoryDataNode("config_id", Scope.SCENARIO, id="id_1")
-        dn_2 = InMemoryDataNode("config_id", Scope.SCENARIO, id="id_2")
-        dn_3 = InMemoryDataNode("config_id", Scope.SCENARIO, id="id_3")
+        dn_1 = InMemoryDataNode("config_id", Scope.SCENARIO, id=DataNodeId("id_1"))
+        dn_2 = InMemoryDataNode("config_id", Scope.SCENARIO, id=DataNodeId("id_2"))
+        dn_3 = InMemoryDataNode("config_id", Scope.SCENARIO, id=DataNodeId("id_3"))
         assert len(_DataManager._get_all()) == 0
-        _DataManager._set(dn_1)
-        _DataManager._set(dn_2)
-        _DataManager._set(dn_3)
+        _DataManager._repository._save(dn_1)
+        _DataManager._repository._save(dn_2)
+        _DataManager._repository._save(dn_3)
         assert len(_DataManager._get_all()) == 3
         assert all(_DataManager._exists(dn.id) for dn in [dn_1, dn_2, dn_3])
         _DataManager._delete(dn_1.id)
@@ -494,6 +496,67 @@ class TestDataManager:
         assert len(dm._get_all()) == 2
 
         dm._delete_all()
+
+    @pytest.mark.parametrize(
+        "storage_type,path",
+        [
+            ("pickle", "pickle_file_path"),
+            ("csv", "csv_file"),
+            ("excel", "excel_file"),
+            ("json", "json_file"),
+            ("parquet", "parquet_file_path"),
+        ],
+    )
+    def test_read(self, storage_type, path, request):
+        path = request.getfixturevalue(path)
+
+        non_exist_dn_config = Config.configure_data_node(id="d1", storage_type=storage_type, path="non_exist_path")
+        dn_config = Config.configure_data_node(id="d2", storage_type=storage_type, path=path)
+        dn_1 = _DataManager._create(non_exist_dn_config, None, None)
+        dn_2 = _DataManager._create(dn_config, None, None)
+
+        with pytest.raises(NoData):
+            _DataManager._read(dn_1)
+
+        assert dn_2._read() is not None
+
+    @pytest.mark.parametrize(
+        "storage_type,path",
+        [
+            ("pickle", "pickle_file_path"),
+            ("csv", "csv_file"),
+            ("parquet", "parquet_file_path"),
+        ],
+    )
+    def test_write(self, storage_type, path, request):
+        path = request.getfixturevalue(path)
+
+        dn_config = Config.configure_data_node(id="d2", storage_type=storage_type, path=path)
+        dn = _DataManager._create(dn_config, None, None)
+
+        new_data = pd.DataFrame([{"a": 11, "b": 12, "c": 13}, {"a": 14, "b": 15, "c": 16}])
+
+        _DataManager._write(dn, new_data)
+        assert_frame_equal(dn._read(), new_data)
+
+    @pytest.mark.parametrize(
+        "storage_type,path",
+        [
+            ("csv", "csv_file"),
+            ("parquet", "parquet_file_path"),
+        ],
+    )
+    def test_append(self, storage_type, path, request):
+        path = request.getfixturevalue(path)
+
+        dn_config = Config.configure_data_node(id="d2", storage_type=storage_type, path=path)
+        dn = _DataManager._create(dn_config, None, None)
+
+        old_data = _DataManager._read(dn)
+        new_data = pd.DataFrame([{"a": 11, "b": 12, "c": 13}, {"a": 14, "b": 15, "c": 16}])
+
+        _DataManager._append(dn, new_data)
+        assert_frame_equal(dn._read(), pd.concat([old_data, new_data], ignore_index=True))
 
     @pytest.mark.parametrize(
         "storage_type,path",
@@ -684,16 +747,16 @@ class TestDataManager:
         dn_config_2 = Config.configure_data_node("dn_2", scope=Scope.SCENARIO)
         dn_config_3 = Config.configure_data_node("dn_3", scope=Scope.SCENARIO)
 
-        dn_1_1 = _DataManager._create_and_set(dn_config_1, None, None)
-        dn_1_2 = _DataManager._create_and_set(dn_config_1, None, None)
-        dn_1_3 = _DataManager._create_and_set(dn_config_1, None, None)
+        dn_1_1 = _DataManager._create(dn_config_1, None, None)
+        dn_1_2 = _DataManager._create(dn_config_1, None, None)
+        dn_1_3 = _DataManager._create(dn_config_1, None, None)
         assert len(_DataManager._get_all()) == 3
 
-        dn_2_1 = _DataManager._create_and_set(dn_config_2, None, None)
-        dn_2_2 = _DataManager._create_and_set(dn_config_2, None, None)
+        dn_2_1 = _DataManager._create(dn_config_2, None, None)
+        dn_2_2 = _DataManager._create(dn_config_2, None, None)
         assert len(_DataManager._get_all()) == 5
 
-        dn_3_1 = _DataManager._create_and_set(dn_config_3, None, None)
+        dn_3_1 = _DataManager._create(dn_config_3, None, None)
         assert len(_DataManager._get_all()) == 6
 
         dn_1_datanodes = _DataManager._get_by_config_id(dn_config_1.id)
@@ -713,28 +776,28 @@ class TestDataManager:
         dn_config_2 = Config.configure_data_node("dn_2", scope=Scope.SCENARIO)
 
         _VersionManager._set_experiment_version("1.0")
-        _DataManager._create_and_set(dn_config_1, None, None)
-        _DataManager._create_and_set(dn_config_1, None, None)
-        _DataManager._create_and_set(dn_config_1, None, None)
-        _DataManager._create_and_set(dn_config_2, None, None)
-        _DataManager._create_and_set(dn_config_2, None, None)
+        _DataManager._create(dn_config_1, None, None)
+        _DataManager._create(dn_config_1, None, None)
+        _DataManager._create(dn_config_1, None, None)
+        _DataManager._create(dn_config_2, None, None)
+        _DataManager._create(dn_config_2, None, None)
 
         assert len(_DataManager._get_by_config_id(dn_config_1.id)) == 3
         assert len(_DataManager._get_by_config_id(dn_config_2.id)) == 2
 
         _VersionManager._set_experiment_version("2.0")
-        _DataManager._create_and_set(dn_config_1, None, None)
-        _DataManager._create_and_set(dn_config_1, None, None)
-        _DataManager._create_and_set(dn_config_1, None, None)
-        _DataManager._create_and_set(dn_config_2, None, None)
-        _DataManager._create_and_set(dn_config_2, None, None)
+        _DataManager._create(dn_config_1, None, None)
+        _DataManager._create(dn_config_1, None, None)
+        _DataManager._create(dn_config_1, None, None)
+        _DataManager._create(dn_config_2, None, None)
+        _DataManager._create(dn_config_2, None, None)
 
         assert len(_DataManager._get_by_config_id(dn_config_1.id)) == 3
         assert len(_DataManager._get_by_config_id(dn_config_2.id)) == 2
 
     def test_can_duplicate(self):
         dn_config = Config.configure_data_node("dn_1")
-        dn = _DataManager._create_and_set(dn_config, None, None)
+        dn = _DataManager._create(dn_config, None, None)
 
         reasons = _DataManager._can_duplicate(dn.id)
         assert bool(reasons)

@@ -401,7 +401,7 @@ class CycleList(Resource):
         manager = _CycleManagerFactory._build_manager()
 
         cycle = self.__create_cycle_from_schema(schema.load(request.json))
-        manager._set(cycle)
+        manager._repository._save(cycle)
 
         return {
             "message": "Cycle was created.",

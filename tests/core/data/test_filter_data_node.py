@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from taipy.core.data._data_manager_factory import _DataManagerFactory
 from taipy.core.data.operator import JoinOperator, Operator
 
 from .utils import (
@@ -31,6 +32,7 @@ from .utils import (
 
 def test_filter_pandas_exposed_type(default_data_frame):
     dn = FakeDataNode("fake_dn")
+    _DataManagerFactory._build_manager()._repository._save(dn)
     dn.write("Any data")
 
     with pytest.raises(NotImplementedError):

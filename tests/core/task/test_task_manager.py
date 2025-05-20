@@ -61,7 +61,7 @@ def test_do_not_recreate_existing_data_node():
     input_config = Config.configure_data_node("my_input", "in_memory", scope=Scope.SCENARIO)
     output_config = Config.configure_data_node("my_output", "in_memory", scope=Scope.SCENARIO)
 
-    _DataManager._create_and_set(input_config, "scenario_id", "task_id")
+    _DataManager._create(input_config, "scenario_id", "task_id")
     assert len(_DataManager._get_all()) == 1
 
     task_config = Config.configure_task("foo", print, input_config, output_config)
@@ -186,7 +186,7 @@ def test_set_and_get_task():
     assert _TaskManager._get(second_task) is None
 
     # Save one task. We expect to have only one task stored
-    _TaskManager._set(first_task)
+    _TaskManager._repository._save(first_task)
     assert len(_TaskManager._get_all()) == 1
     assert _TaskManager._get(task_id_1).id == first_task.id
     assert _TaskManager._get(first_task).id == first_task.id
@@ -194,7 +194,7 @@ def test_set_and_get_task():
     assert _TaskManager._get(second_task) is None
 
     # Save a second task. Now, we expect to have a total of two tasks stored
-    _TaskManager._set(second_task)
+    _TaskManager._repository._save(second_task)
     assert len(_TaskManager._get_all()) == 2
     assert _TaskManager._get(task_id_1).id == first_task.id
     assert _TaskManager._get(first_task).id == first_task.id
@@ -202,7 +202,7 @@ def test_set_and_get_task():
     assert _TaskManager._get(second_task).id == second_task.id
 
     # We save the first task again. We expect nothing to change
-    _TaskManager._set(first_task)
+    _TaskManager._update(first_task)
     assert len(_TaskManager._get_all()) == 2
     assert _TaskManager._get(task_id_1).id == first_task.id
     assert _TaskManager._get(first_task).id == first_task.id
@@ -211,7 +211,7 @@ def test_set_and_get_task():
 
     # We save a third task with same id as the first one.
     # We expect the first task to be updated
-    _TaskManager._set(third_task_with_same_id_as_first_task)
+    _TaskManager._repository._save(third_task_with_same_id_as_first_task)
     assert len(_TaskManager._get_all()) == 2
     assert _TaskManager._get(task_id_1).id == third_task_with_same_id_as_first_task.id
     assert _TaskManager._get(task_id_1).config_id == third_task_with_same_id_as_first_task.config_id
@@ -226,7 +226,7 @@ def test_get_all_on_multiple_versions_environment():
     # Only version 2.0 has the task with config_id = "config_id_6"
     for version in range(1, 3):
         for i in range(5):
-            _TaskManager._set(
+            _TaskManager._repository._save(
                 Task(
                     f"config_id_{i+version}", {}, print, [], [], id=TaskId(f"id{i}_v{version}"), version=f"{version}.0"
                 )
@@ -329,7 +329,9 @@ def test_is_submittable():
 
 def test_submit_task():
     data_node_1 = InMemoryDataNode("foo", Scope.SCENARIO, "s1")
+    _DataManager._repository._save(data_node_1)
     data_node_2 = InMemoryDataNode("bar", Scope.SCENARIO, "s2")
+    _DataManager._repository._save(data_node_2)
     task_1 = Task(
         "grault",
         {},
@@ -356,7 +358,7 @@ def test_submit_task():
         with pytest.raises(NonExistingTask):
             _TaskManager._submit(task_1.id)
 
-        _TaskManager._set(task_1)
+        _TaskManager._repository._save(task_1)
         _TaskManager._submit(task_1)
         call_ids = [call.id for call in MockOrchestrator.submit_calls]
         assert call_ids == [task_1.id]
@@ -484,6 +486,7 @@ def test_get_scenarios_by_config_id_in_multiple_versions_environment():
 
 def _create_task_from_config(task_config, *args, **kwargs):
     return _TaskManager._bulk_get_or_create([task_config], *args, **kwargs)[0]
+
 
 def test_can_duplicate():
     dn_config = Config.configure_pickle_data_node("dn", scope=Scope.SCENARIO)

@@ -88,7 +88,7 @@ class TestSQLTableDataNode:
     @pytest.mark.parametrize("properties", __sql_properties)
     def test_create(self, properties):
         sql_table_dn_config = Config.configure_sql_table_data_node("foo_bar", **properties)
-        dn = _DataManagerFactory._build_manager()._create_and_set(sql_table_dn_config, None, None)
+        dn = _DataManagerFactory._build_manager()._create(sql_table_dn_config, None, None)
         assert isinstance(dn, SQLTableDataNode)
         assert dn.storage_type() == "sql_table"
         assert dn.config_id == "foo_bar"
@@ -104,7 +104,7 @@ class TestSQLTableDataNode:
         sql_table_dn_config_1 = Config.configure_sql_table_data_node(
             "foo_bar", **properties, exposed_type=MyCustomObject
         )
-        dn_1 = _DataManagerFactory._build_manager()._create_and_set(sql_table_dn_config_1, None, None)
+        dn_1 = _DataManagerFactory._build_manager()._create(sql_table_dn_config_1, None, None)
         assert isinstance(dn_1, SQLTableDataNode)
         assert dn_1.properties["exposed_type"] == MyCustomObject
 
@@ -158,6 +158,7 @@ class TestSQLTableDataNode:
             Scope.SCENARIO,
             properties=properties,
         )
+        _DataManagerFactory._build_manager()._repository._save(dn)
 
         assert dn._engine is None
 

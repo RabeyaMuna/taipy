@@ -15,6 +15,7 @@ from unittest.mock import patch
 from taipy.core import JobId
 from taipy.core._orchestrator._dispatcher import _DevelopmentJobDispatcher
 from taipy.core._orchestrator._orchestrator_factory import _OrchestratorFactory
+from taipy.core.job._job_manager_factory import _JobManagerFactory
 from taipy.core.job.job import Job
 from taipy.core.task._task_manager_factory import _TaskManagerFactory
 from taipy.core.task.task import Task
@@ -26,13 +27,14 @@ def nothing(*args):
 
 def create_task():
     task = Task("config_id", {}, nothing, [], [])
-    _TaskManagerFactory._build_manager()._set(task)
+    _TaskManagerFactory._build_manager()._repository._save(task)
     return task
 
 
 def test_dispatch_executes_the_function_no_exception():
     task = create_task()
     job = Job(JobId("job"), task, "s_id", task.id)
+    _JobManagerFactory._build_manager()._repository._save(job)
     dispatcher = _OrchestratorFactory._build_dispatcher()
 
     with patch("taipy.core._orchestrator._dispatcher._task_function_wrapper._TaskFunctionWrapper.execute") as mck:
@@ -48,6 +50,7 @@ def test_dispatch_executes_the_function_no_exception():
 def test_dispatch_executes_the_function_with_exceptions():
     task = create_task()
     job = Job(JobId("job"), task, "s_id", task.id)
+    _JobManagerFactory._build_manager()._repository._save(job)
     dispatcher = _OrchestratorFactory._build_dispatcher()
     e_1 = Exception("test")
     e_2 = Exception("test")

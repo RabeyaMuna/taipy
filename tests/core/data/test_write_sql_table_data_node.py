@@ -18,6 +18,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from taipy import Scope
+from taipy.core.data._data_manager_factory import _DataManagerFactory
 from taipy.core.data.sql_table import SQLTableDataNode
 
 
@@ -87,6 +88,7 @@ class TestWriteSQLTableDataNode:
         custom_properties = properties.copy()
         custom_properties.pop("db_extra_args")
         sql_table_dn = SQLTableDataNode("foo", Scope.SCENARIO, properties=custom_properties)
+        _DataManagerFactory._build_manager()._repository._save(sql_table_dn)
 
         with (
             patch("sqlalchemy.engine.Engine.connect") as engine_mock,
@@ -119,6 +121,7 @@ class TestWriteSQLTableDataNode:
         custom_properties["exposed_type"] = "numpy"
         custom_properties.pop("db_extra_args")
         sql_table_dn = SQLTableDataNode("foo", Scope.SCENARIO, properties=custom_properties)
+        _DataManagerFactory._build_manager()._repository._save(sql_table_dn)
 
         with (
             patch("sqlalchemy.engine.Engine.connect") as engine_mock,
@@ -147,6 +150,7 @@ class TestWriteSQLTableDataNode:
         custom_properties["exposed_type"] = MyCustomObject
         custom_properties.pop("db_extra_args")
         sql_table_dn = SQLTableDataNode("foo", Scope.SCENARIO, properties=custom_properties)
+        _DataManagerFactory._build_manager()._repository._save(sql_table_dn)
 
         with (
             patch("sqlalchemy.engine.Engine.connect") as engine_mock,
@@ -180,6 +184,7 @@ class TestWriteSQLTableDataNode:
         }
 
         dn = SQLTableDataNode("sqlite_dn", Scope.SCENARIO, properties=properties)
+        _DataManagerFactory._build_manager()._repository._save(dn)
         original_data = pd.DataFrame([{"foo": 1, "bar": 2}, {"foo": 3, "bar": 4}])
         data = dn.read()
         assert_frame_equal(data, original_data)

@@ -220,7 +220,7 @@ class JobList(Resource):
         manager = _JobManagerFactory._build_manager()
         schema = JobSchema()
         job = self.__create_job_from_schema(task_config_id)
-        manager._set(job)
+        manager._repository._save(job)
         return {
             "message": "Job was created.",
             "job": schema.dump(job),

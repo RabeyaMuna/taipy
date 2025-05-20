@@ -8,6 +8,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
+
 from datetime import datetime, timedelta
 from unittest import mock
 
@@ -42,7 +43,7 @@ def test_scenario_equals(scenario):
     scenario_manager = _ScenarioManagerFactory()._build_manager()
 
     scenario_id = scenario.id
-    scenario_manager._set(scenario)
+    scenario_manager._repository._save(scenario)
 
     # To test if instance is same type
     task = Task("task", {}, print, [], [], scenario_id)
@@ -135,15 +136,16 @@ def test_create_scenario_and_add_sequences():
 
     data_manager = _DataManagerFactory._build_manager()
     task_manager = _TaskManagerFactory._build_manager()
-    data_manager._set(input_1)
-    data_manager._set(output_1)
-    data_manager._set(output_2)
-    data_manager._set(additional_dn_1)
-    data_manager._set(additional_dn_2)
-    task_manager._set(task_1)
-    task_manager._set(task_2)
+    data_manager._repository._save(input_1)
+    data_manager._repository._save(output_1)
+    data_manager._repository._save(output_2)
+    data_manager._repository._save(additional_dn_1)
+    data_manager._repository._save(additional_dn_2)
+    task_manager._repository._save(task_1)
+    task_manager._repository._save(task_2)
 
     scenario = Scenario("scenario", {task_1}, {})
+    _ScenarioManagerFactory._build_manager()._repository._save(scenario)
     scenario.sequences = {"sequence_1": {"tasks": [task_1]}, "sequence_2": {"tasks": []}}
     assert scenario.id is not None
     assert scenario.config_id == "scenario"
@@ -184,15 +186,16 @@ def test_create_scenario_overlapping_sequences():
     task_2 = Task("task_2", {}, print, [output_1], [output_2], TaskId("task_id_2"))
     data_manager = _DataManagerFactory._build_manager()
     task_manager = _TaskManagerFactory._build_manager()
-    data_manager._set(input_1)
-    data_manager._set(output_1)
-    data_manager._set(output_2)
-    data_manager._set(additional_dn_1)
-    data_manager._set(additional_dn_2)
-    task_manager._set(task_1)
-    task_manager._set(task_2)
+    data_manager._repository._save(input_1)
+    data_manager._repository._save(output_1)
+    data_manager._repository._save(output_2)
+    data_manager._repository._save(additional_dn_1)
+    data_manager._repository._save(additional_dn_2)
+    task_manager._repository._save(task_1)
+    task_manager._repository._save(task_2)
 
     scenario = Scenario("scenario", {task_1, task_2}, {})
+    _ScenarioManagerFactory._build_manager()._repository._save(scenario)
     scenario.add_sequence("sequence_1", [task_1])
     scenario.add_sequence("sequence_2", [task_1, task_2])
     assert scenario.id is not None
@@ -227,14 +230,14 @@ def test_create_scenario_one_additional_dn():
     task_2 = Task("task_2", {}, print, [input_2], [output_2], TaskId("task_id_2"))
     data_manager = _DataManagerFactory._build_manager()
     task_manager = _TaskManagerFactory._build_manager()
-    data_manager._set(input_1)
-    data_manager._set(output_1)
-    data_manager._set(input_2)
-    data_manager._set(output_2)
-    data_manager._set(additional_dn_1)
-    data_manager._set(additional_dn_2)
-    task_manager._set(task_1)
-    task_manager._set(task_2)
+    data_manager._repository._save(input_1)
+    data_manager._repository._save(output_1)
+    data_manager._repository._save(input_2)
+    data_manager._repository._save(output_2)
+    data_manager._repository._save(additional_dn_1)
+    data_manager._repository._save(additional_dn_2)
+    task_manager._repository._save(task_1)
+    task_manager._repository._save(task_2)
 
     scenario = Scenario("scenario", set(), {}, {additional_dn_1})
     assert scenario.id is not None
@@ -258,14 +261,14 @@ def test_create_scenario_wth_additional_dns():
     task_2 = Task("task_2", {}, print, [input_2], [output_2], TaskId("task_id_2"))
     data_manager = _DataManagerFactory._build_manager()
     task_manager = _TaskManagerFactory._build_manager()
-    data_manager._set(input_1)
-    data_manager._set(output_1)
-    data_manager._set(input_2)
-    data_manager._set(output_2)
-    data_manager._set(additional_dn_1)
-    data_manager._set(additional_dn_2)
-    task_manager._set(task_1)
-    task_manager._set(task_2)
+    data_manager._repository._save(input_1)
+    data_manager._repository._save(output_1)
+    data_manager._repository._save(input_2)
+    data_manager._repository._save(output_2)
+    data_manager._repository._save(additional_dn_1)
+    data_manager._repository._save(additional_dn_2)
+    task_manager._repository._save(task_1)
+    task_manager._repository._save(task_2)
 
     scenario = Scenario("scenario", set(), {}, {additional_dn_1, additional_dn_2})
     assert scenario.id is not None
@@ -348,14 +351,15 @@ def test_raise_sequence_tasks_not_in_scenario(data_node):
 
 
 def test_adding_sequence_raises_tasks_not_in_scenario(data_node):
+    _DataManagerFactory._build_manager()._repository._save(data_node)
     task_1 = Task("task_1", {}, print, output=[data_node])
     task_2 = Task("task_2", {}, print, input=[data_node])
     scenario = Scenario("scenario", [task_1], {})
     scenario_manager = _ScenarioManagerFactory._build_manager()
     task_manager = _TaskManagerFactory._build_manager()
-    scenario_manager._set(scenario)
-    task_manager._set(task_1)
-    task_manager._set(task_2)
+    scenario_manager._repository._save(scenario)
+    task_manager._repository._save(task_1)
+    task_manager._repository._save(task_2)
 
     scenario.add_sequences({"sequence_1": {}})
 
@@ -378,12 +382,13 @@ def test_adding_sequence_raises_tasks_not_in_scenario(data_node):
 
 
 def test_adding_existing_sequence_raises_exception(data_node):
+    _DataManagerFactory._build_manager()._repository._save(data_node)
     task_1 = Task("task_1", {}, print, output=[data_node])
-    _TaskManagerFactory._build_manager()._set(task_1)
+    _TaskManagerFactory._build_manager()._repository._save(task_1)
     task_2 = Task("task_2", {}, print, input=[data_node])
-    _TaskManagerFactory._build_manager()._set(task_2)
+    _TaskManagerFactory._build_manager()._repository._save(task_2)
     scenario = Scenario("scenario", tasks={task_1, task_2}, properties={})
-    _ScenarioManagerFactory._build_manager()._set(scenario)
+    _ScenarioManagerFactory._build_manager()._repository._save(scenario)
 
     scenario.add_sequence("sequence_1", [task_1])
     with pytest.raises(SequenceAlreadyExists):
@@ -391,12 +396,13 @@ def test_adding_existing_sequence_raises_exception(data_node):
 
 
 def test_renaming_existing_sequence_raises_exception(data_node):
+    _DataManagerFactory._build_manager()._repository._save(data_node)
     task_1 = Task("task_1", {}, print, output=[data_node])
-    _TaskManagerFactory._build_manager()._set(task_1)
+    _TaskManagerFactory._build_manager()._repository._save(task_1)
     task_2 = Task("task_2", {}, print, input=[data_node])
-    _TaskManagerFactory._build_manager()._set(task_2)
+    _TaskManagerFactory._build_manager()._repository._save(task_2)
     scenario = Scenario("scenario", {task_1, task_2}, {})
-    _ScenarioManagerFactory._build_manager()._set(scenario)
+    _ScenarioManagerFactory._build_manager()._repository._save(scenario)
 
     scenario.add_sequence("sequence_1", [task_1])
     scenario.add_sequence("sequence_2", [task_2])
@@ -426,10 +432,10 @@ def test_add_rename_and_remove_sequences():
     data_manager = _DataManagerFactory._build_manager()
     scenario_manager = _ScenarioManagerFactory._build_manager()
     for dn in [data_node_1, data_node_2, data_node_3, data_node_4, data_node_5]:
-        data_manager._set(dn)
+        data_manager._repository._save(dn)
     for t in [task_1, task_2, task_3, task_4, task_5]:
-        task_manager._set(t)
-    scenario_manager._set(scenario)
+        task_manager._repository._save(t)
+    scenario_manager._repository._save(scenario)
 
     assert scenario.get_inputs() == {data_node_1, data_node_2, data_node_5}
     assert scenario._get_set_of_tasks() == {task_1, task_2, task_3, task_4, task_5}
@@ -464,9 +470,13 @@ def test_add_rename_and_remove_sequences():
 
 
 def test_update_sequence(data_node):
+    _DataManagerFactory._build_manager()._repository._save(data_node)
     task_1 = Task("foo", {}, print, [data_node], [], TaskId("t1"))
     task_2 = Task("bar", {}, print, [], [data_node], id=TaskId("t2"))
     scenario = Scenario("baz", {task_1, task_2}, {})
+    _TaskManagerFactory._build_manager()._repository._save(task_1)
+    _TaskManagerFactory._build_manager()._repository._save(task_2)
+    _ScenarioManagerFactory._build_manager()._repository._save(scenario)
     scenario.add_sequence("seq_1", [task_1])
 
     assert len(scenario.sequences) == 1
@@ -480,12 +490,13 @@ def test_update_sequence(data_node):
 
 
 def test_add_rename_and_remove_sequences_within_context(data_node):
+    _DataManagerFactory._build_manager()._repository._save(data_node)
     task_1 = Task("task_1", {}, print, output=[data_node])
     task_2 = Task("task_2", {}, print, input=[data_node])
-    _TaskManagerFactory._build_manager()._set(task_1)
-    _TaskManagerFactory._build_manager()._set(task_2)
+    _TaskManagerFactory._build_manager()._repository._save(task_1)
+    _TaskManagerFactory._build_manager()._repository._save(task_2)
     scenario = Scenario(config_id="scenario", tasks={task_1, task_2}, properties={})
-    _ScenarioManagerFactory._build_manager()._set(scenario)
+    _ScenarioManagerFactory._build_manager()._repository._save(scenario)
 
     with scenario as sc:
         sc.add_sequence("seq_name", [task_1])
@@ -508,6 +519,7 @@ def test_add_rename_and_remove_sequences_within_context(data_node):
 
 def test_add_property_to_scenario():
     scenario = Scenario("foo", set(), {"key": "value"})
+    _ScenarioManagerFactory._build_manager()._repository._save(scenario)
     assert scenario.properties == {"key": "value"}
     assert scenario.properties["key"] == "value"
 
@@ -520,8 +532,9 @@ def test_add_property_to_scenario():
 
 def test_add_cycle_to_scenario(cycle):
     scenario = Scenario("foo", set(), {})
+    _ScenarioManagerFactory._build_manager()._repository._save(scenario)
     assert scenario.cycle is None
-    _CycleManagerFactory._build_manager()._set(cycle)
+    _CycleManagerFactory._build_manager()._repository._save(cycle)
     scenario.cycle = cycle
 
     assert scenario.cycle == cycle
@@ -529,6 +542,7 @@ def test_add_cycle_to_scenario(cycle):
 
 def test_add_and_remove_subscriber():
     scenario = Scenario("foo", set(), {})
+    _ScenarioManagerFactory._build_manager()._repository._save(scenario)
 
     scenario._add_subscriber(print)
     assert len(scenario.subscribers) == 1
@@ -548,7 +562,7 @@ def test_add_and_remove_tag():
     assert len(scenario.tags) == 0
 
 
-def test_auto_set_and_reload(cycle, current_datetime, task, data_node):
+def test_auto_update_and_reload(cycle, current_datetime, task, data_node):
     scenario_1 = Scenario(
         "foo",
         set(),
@@ -580,15 +594,14 @@ def test_auto_set_and_reload(cycle, current_datetime, task, data_node):
         SequenceId(f"SEQUENCE_{tmp_sequence_name}_{scenario_1.id}"),
     )
 
-    _TaskManagerFactory._build_manager()._set(task)
-    _DataManagerFactory._build_manager()._set(data_node)
-    _DataManagerFactory._build_manager()._set(additional_dn)
-    _CycleManagerFactory._build_manager()._set(cycle)
+    _TaskManagerFactory._build_manager()._repository._save(task)
+    _DataManagerFactory._build_manager()._repository._save(data_node)
+    _DataManagerFactory._build_manager()._repository._save(additional_dn)
     scenario_manager = _ScenarioManagerFactory._build_manager()
     cycle_manager = _CycleManagerFactory._build_manager()
-    cycle_manager._set(cycle)
-    cycle_manager._set(tmp_cycle)
-    scenario_manager._set(scenario_1)
+    cycle_manager._repository._save(cycle)
+    cycle_manager._repository._save(tmp_cycle)
+    scenario_manager._repository._save(scenario_1)
 
     scenario_2 = scenario_manager._get(scenario_1)
     assert scenario_1.config_id == "foo"
@@ -767,7 +780,7 @@ def test_auto_set_and_reload(cycle, current_datetime, task, data_node):
     assert not scenario_1._is_in_context
 
 
-def test_auto_set_and_reload_properties():
+def test_auto_update_and_reload_properties():
     scenario_1 = Scenario(
         "foo",
         set(),
@@ -775,7 +788,7 @@ def test_auto_set_and_reload_properties():
     )
 
     scenario_manager = _ScenarioManagerFactory._build_manager()
-    scenario_manager._set(scenario_1)
+    scenario_manager._repository._save(scenario_1)
 
     scenario_2 = scenario_manager._get(scenario_1)
 
@@ -1044,11 +1057,11 @@ def test_is_ready_to_run():
     data_manager = _DataManagerFactory._build_manager()
     data_manager._delete_all()
     for dn in [data_node_1, data_node_2, data_node_4, data_node_5, data_node_6, data_node_7, data_node_8, data_node_9]:
-        data_manager._set(dn)
+        data_manager._repository._save(dn)
     task_manager = _TaskManagerFactory._build_manager()
     for task in [task_1, task_2, task_3, task_4, task_5, task_6]:
-        task_manager._set(task)
-    _ScenarioManagerFactory._build_manager()._set(scenario)
+        task_manager._repository._save(task)
+    _ScenarioManagerFactory._build_manager()._repository._save(scenario)
 
     assert scenario.is_ready_to_run()
 
@@ -1095,7 +1108,7 @@ def test_data_nodes_being_edited():
 
     data_manager = _DataManagerFactory._build_manager()
     for dn in [data_node_1, data_node_2, data_node_4, data_node_5, data_node_6, data_node_7, data_node_8, data_node_9]:
-        data_manager._set(dn)
+        data_manager._repository._save(dn)
 
     assert len(scenario.data_nodes_being_edited()) == 0
     assert scenario.data_nodes_being_edited() == set()

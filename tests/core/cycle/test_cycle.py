@@ -24,7 +24,7 @@ def test_cycle_equals(cycle):
     cycle_manager = _CycleManagerFactory()._build_manager()
 
     cycle_id = cycle.id
-    cycle_manager._set(cycle)
+    cycle_manager._repository._save(cycle)
 
     # To test if instance is same type
     task = Task("task", {}, print, [], [], cycle_id)
@@ -94,6 +94,8 @@ def test_cycle_label(current_datetime):
         start_date=current_datetime,
         end_date=current_datetime,
     )
+    _CycleManagerFactory()._build_manager()._repository._save(cycle)
+
     assert cycle.get_label() == cycle.name
     assert cycle.get_simple_label() == cycle.name
 
@@ -111,6 +113,8 @@ def test_add_property_to_scenario(current_datetime):
         current_datetime,
         name="foo",
     )
+    _CycleManagerFactory()._build_manager()._repository._save(cycle)
+
     assert cycle.properties == {"key": "value"}
     assert cycle.properties["key"] == "value"
 
@@ -121,7 +125,7 @@ def test_add_property_to_scenario(current_datetime):
     assert cycle.properties["new_key"] == "new_value"
 
 
-def test_auto_set_and_reload(current_datetime):
+def test_auto_update_and_reload(current_datetime):
     cycle_1 = Cycle(
         Frequency.WEEKLY,
         {"key": "value"},
@@ -131,7 +135,7 @@ def test_auto_set_and_reload(current_datetime):
         name="foo",
     )
 
-    _CycleManager._set(cycle_1)
+    _CycleManager._repository._save(cycle_1)
     cycle_2 = _CycleManager._get(cycle_1)
 
     # auto set & reload on frequency attribute

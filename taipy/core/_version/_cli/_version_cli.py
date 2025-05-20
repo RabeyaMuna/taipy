@@ -157,19 +157,19 @@ class _VersionCLI(_AbstractCLI):
         # Update the version of all entities
         for job in jobs:
             job._version = new_version
-            _JobManagerFactory._build_manager()._set(job)
+            _JobManagerFactory._build_manager()._update(job)
         for scenario in scenarios:
             scenario._version = new_version
-            _ScenarioManagerFactory._build_manager()._set(scenario)
+            _ScenarioManagerFactory._build_manager()._update(scenario)
         for sequence in sequences:
             sequence._version = new_version
-            _SequenceManagerFactory._build_manager()._set(sequence)
+            _SequenceManagerFactory._build_manager()._update(sequence)
         for task in tasks:
             task._version = new_version
-            _TaskManagerFactory._build_manager()._set(task)
+            _TaskManagerFactory._build_manager()._update(task)
         for datanode in datanodes:
             datanode._version = new_version
-            _DataManagerFactory._build_manager()._set(datanode)
+            _DataManagerFactory._build_manager()._update(datanode)
 
         # Rename the _Version entity
         _version_manager._rename_version(old_version, new_version)

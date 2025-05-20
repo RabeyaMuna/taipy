@@ -52,7 +52,7 @@ def test_task_equals(task):
     task_manager = _TaskManagerFactory()._build_manager()
 
     task_id = task.id
-    task_manager._set(task)
+    task_manager._repository._save(task)
 
     # To test if instance is same type
     dn = CSVDataNode("foo_bar", Scope.SCENARIO, task_id)
@@ -185,13 +185,13 @@ def mock_func():
     pass
 
 
-def test_auto_set_and_reload(data_node):
+def test_auto_update_and_reload(data_node):
     task_1 = Task(
         config_id="foo", properties={}, function=print, input=None, output=None, owner_id=None, skippable=False
     )
 
-    _DataManager._set(data_node)
-    _TaskManager._set(task_1)
+    _DataManager._repository._save(data_node)
+    _TaskManager._repository._save(task_1)
 
     task_2 = _TaskManager._get(task_1)
 
@@ -219,12 +219,12 @@ def test_auto_set_and_reload(data_node):
     assert task_1.parent_ids == set()
     assert task_2.parent_ids == set()
     task_1._parent_ids.update(["sc2"])
-    _TaskManager._set(task_1)
+    _TaskManager._update(task_1)
     assert task_1.parent_ids == {"sc2"}
     assert task_2.parent_ids == {"sc2"}
     task_2._parent_ids.clear()
     task_2._parent_ids.update(["sc1"])
-    _TaskManager._set(task_2)
+    _TaskManager._update(task_2)
     assert task_1.parent_ids == {"sc1"}
     assert task_2.parent_ids == {"sc1"}
 
@@ -251,12 +251,12 @@ def test_auto_set_and_reload(data_node):
     assert not task_1._is_in_context
 
 
-def test_auto_set_and_reload_properties():
+def test_auto_update_and_reload_properties():
     task_1 = Task(
         config_id="foo", properties={}, function=print, input=None, output=None, owner_id=None, skippable=False
     )
 
-    _TaskManager._set(task_1)
+    _TaskManager._repository._save(task_1)
 
     task_2 = _TaskManager._get(task_1)
 

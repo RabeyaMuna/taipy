@@ -13,6 +13,8 @@ from unittest import mock
 
 from flask import url_for
 
+from taipy.core.data._data_manager_factory import _DataManagerFactory
+
 
 def test_get_datanode(client, default_datanode):
     # test 404
@@ -94,6 +96,7 @@ def test_read_datanode(client, default_df_datanode):
 
 
 def test_write_datanode(client, default_datanode):
+    _DataManagerFactory._build_manager()._repository._save(default_datanode)
     with mock.patch("taipy.core.data._data_manager._DataManager._get") as config_mock:
         config_mock.return_value = default_datanode
         # Get DataNode

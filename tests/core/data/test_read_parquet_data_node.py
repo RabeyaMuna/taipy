@@ -18,6 +18,7 @@ import pandas as pd
 import pytest
 
 from taipy import Scope
+from taipy.core.data._data_manager_factory import _DataManagerFactory
 from taipy.core.data.parquet import ParquetDataNode
 from taipy.core.exceptions.exceptions import NoData
 
@@ -67,8 +68,10 @@ class TestReadParquetDataNode:
         not_existing_parquet = ParquetDataNode(
             "foo", Scope.SCENARIO, properties={"path": "nonexistent.parquet", "engine": engine}
         )
+        assert not_existing_parquet.read() is None
         with pytest.raises(NoData):
-            assert not_existing_parquet.read() is None
+            _DataManagerFactory._build_manager()._read(not_existing_parquet)
+        with pytest.raises(NoData):
             not_existing_parquet.read_or_raise()
 
     @pytest.mark.parametrize("engine", __engine)
@@ -170,6 +173,7 @@ class TestReadParquetDataNode:
         dn = ParquetDataNode(
             "foo", Scope.SCENARIO, properties={"path": temp_file_path, "engine": engine, "read_kwargs": read_kwargs}
         )
+        _DataManagerFactory._build_manager()._repository._save(dn)
 
         df = pd.read_csv(os.path.join(pathlib.Path(__file__).parent.resolve(), "data_sample/example.csv"))
         dn.write(df)

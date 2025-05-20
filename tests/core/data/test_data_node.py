@@ -60,7 +60,7 @@ class TestDataNode:
         data_manager = _DataManagerFactory()._build_manager()
 
         dn_id = data_node.id
-        data_manager._set(data_node)
+        data_manager._repository._save(data_node)
 
         # # To test if instance is same type
         task = Task("task", {}, print, [], [], dn_id)
@@ -149,8 +149,11 @@ class TestDataNode:
 
     def test_read_write(self):
         dn = FakeDataNode("foo_bar")
+        _DataManagerFactory._build_manager()._repository._save(dn)
+        assert dn.read() is None
         with pytest.raises(NoData):
-            assert dn.read() is None
+            _DataManagerFactory._build_manager()._read(dn)
+        with pytest.raises(NoData):
             dn.read_or_raise()
         assert dn.write_has_been_called == 0
         assert dn.read_has_been_called == 0
@@ -197,6 +200,7 @@ class TestDataNode:
 
     def test_locked_dn_unlockable_only_by_same_editor(self):
         dn = InMemoryDataNode("dn", Scope.SCENARIO)
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.lock_edit("user_1")
         assert dn.edit_in_progress
         assert dn._editor_id == "user_1"
@@ -212,6 +216,7 @@ class TestDataNode:
 
     def test_none_editor_can_lock_a_locked_dn(self):
         dn = InMemoryDataNode("dn", Scope.SCENARIO)
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.lock_edit("user")
         assert dn.edit_in_progress
         assert dn._editor_id == "user"
@@ -223,6 +228,7 @@ class TestDataNode:
 
     def test_none_editor_can_unlock_a_locked_dn(self):
         dn = InMemoryDataNode("dn", Scope.SCENARIO)
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.lock_edit("user")
         assert dn.edit_in_progress
         assert dn._editor_id == "user"
@@ -243,6 +249,7 @@ class TestDataNode:
 
     def test_ready_for_reading(self):
         dn = InMemoryDataNode("foo_bar", Scope.CYCLE)
+        _DataManagerFactory._build_manager()._repository._save(dn)
         assert dn.last_edit_date is None
         assert not dn.is_ready_for_reading
         assert dn.job_ids == []
@@ -268,8 +275,10 @@ class TestDataNode:
         assert dn.job_ids == [job_id]
 
     def test_is_valid_no_validity_period(self):
-        # Test Never been written
         dn = InMemoryDataNode("foo", Scope.SCENARIO, DataNodeId("id"), "name", "owner_id")
+        _DataManagerFactory._build_manager()._repository._save(dn)
+
+        # Test Never been written
         assert not dn.is_valid
 
         # test has been written
@@ -277,10 +286,12 @@ class TestDataNode:
         assert dn.is_valid
 
     def test_is_valid_with_30_min_validity_period(self):
-        # Test Never been written
         dn = InMemoryDataNode(
             "foo", Scope.SCENARIO, DataNodeId("id"), "name", "owner_id", validity_period=timedelta(minutes=30)
         )
+        _DataManagerFactory._build_manager()._repository._save(dn)
+
+        # Test Never been written
         assert dn.is_valid is False
 
         # Has been written less than 30 minutes ago
@@ -292,8 +303,10 @@ class TestDataNode:
         assert dn.is_valid is False
 
     def test_is_valid_with_5_days_validity_period(self):
-        # Test Never been written
         dn = InMemoryDataNode("foo", Scope.SCENARIO, validity_period=timedelta(days=5))
+        _DataManagerFactory._build_manager()._repository._save(dn)
+
+        # Test Never been written
         assert dn.is_valid is False
 
         # Has been written less than 30 minutes ago
@@ -302,7 +315,7 @@ class TestDataNode:
 
         # Has been written more than 30 minutes ago
         dn._last_edit_date = datetime.now() - timedelta(days=6)
-        _DataManager()._set(dn)
+        _DataManager()._repository._save(dn)
         assert dn.is_valid is False
 
     def test_is_up_to_date(self, current_datetime):
@@ -441,7 +454,7 @@ class TestDataNode:
     def test_data_node_update_after_writing(self):
         dn = FakeDataNode("foo")
 
-        _DataManager._set(dn)
+        _DataManager._repository._save(dn)
         assert not _DataManager._get(dn.id).is_ready_for_reading
         dn.write("Any data")
 
@@ -459,7 +472,7 @@ class TestDataNode:
 
         assert dn.validity_period is None
 
-    def test_auto_set_and_reload(self, current_datetime):
+    def test_auto_update_and_reload(self, current_datetime):
         dn_1 = InMemoryDataNode(
             "foo",
             scope=Scope.GLOBAL,
@@ -476,7 +489,7 @@ class TestDataNode:
         )
 
         dm = _DataManager()
-        dm._set(dn_1)
+        dm._repository._save(dn_1)
 
         dn_2 = dm._get(dn_1)
 
@@ -517,16 +530,16 @@ class TestDataNode:
         assert dn_1.parent_ids == set()
         assert dn_2.parent_ids == set()
         dn_1._parent_ids.update(["sc2"])
-        _DataManager._set(dn_1)
+        _DataManager._update(dn_1)
         assert dn_1.parent_ids == {"sc2"}
         assert dn_2.parent_ids == {"sc2"}
         dn_2._parent_ids.clear()
         dn_2._parent_ids.update(["sc1"])
-        _DataManager._set(dn_2)
+        _DataManager._update(dn_2)
         assert dn_1.parent_ids == {"sc1"}
         assert dn_2.parent_ids == {"sc1"}
         dn_2._parent_ids.clear()
-        _DataManager._set(dn_2)
+        _DataManager._update(dn_2)
 
         # auto set & reload on edit_in_progress attribute
         assert not dn_2.edit_in_progress
@@ -596,11 +609,11 @@ class TestDataNode:
         assert not dn_1._is_in_context
         assert len(dn_1.job_ids) == 1
 
-    def test_auto_set_and_reload_properties(self):
+    def test_auto_update_and_reload_properties(self):
         dn_1 = InMemoryDataNode("foo", scope=Scope.GLOBAL, properties={"name": "def"})
 
         dm = _DataManager()
-        dm._set(dn_1)
+        dm._repository._save(dn_1)
 
         dn_2 = dm._get(dn_1)
 
@@ -808,9 +821,9 @@ class TestDataNode:
     def test_locked_data_node_append_should_fail_with_wrong_editor(self):
         dn_config = Config.configure_csv_data_node("A")
         dn = _DataManager._bulk_get_or_create([dn_config])[dn_config]
-        first_line = pd.DataFrame(data={'col1': [1], 'col2': [3]})
-        second_line = pd.DataFrame(data={'col1': [2], 'col2': [4]})
-        data = pd.DataFrame(data={'col1': [1, 2], 'col2': [3, 4]})
+        first_line = pd.DataFrame(data={"col1": [1], "col2": [3]})
+        second_line = pd.DataFrame(data={"col1": [2], "col2": [4]})
+        data = pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
         dn.write(first_line)
         assert first_line.equals(dn.read())
 
@@ -825,9 +838,9 @@ class TestDataNode:
     def test_locked_data_node_append_should_fail_before_expiration_date_and_succeed_after(self):
         dn_config = Config.configure_csv_data_node("A")
         dn = _DataManager._bulk_get_or_create([dn_config])[dn_config]
-        first_line = pd.DataFrame(data={'col1': [1], 'col2': [3]})
-        second_line = pd.DataFrame(data={'col1': [2], 'col2': [4]})
-        data = pd.DataFrame(data={'col1': [1, 2], 'col2': [3, 4]})
+        first_line = pd.DataFrame(data={"col1": [1], "col2": [3]})
+        second_line = pd.DataFrame(data={"col1": [2], "col2": [4]})
+        data = pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
         dn.write(first_line)
         assert first_line.equals(dn.read())
 
@@ -857,7 +870,7 @@ class TestDataNode:
     def test_editor_fails_writing_a_data_node_locked_by_orchestrator(self):
         dn_config = Config.configure_data_node("A")
         dn = _DataManager._bulk_get_or_create([dn_config])[dn_config]
-        dn.lock_edit() # Locked by orchestrator
+        dn.lock_edit()  # Locked by orchestrator
 
         with pytest.raises(DataNodeIsBeingEdited):
             dn.write("data", editor_id="editor_1")
@@ -869,13 +882,13 @@ class TestDataNode:
     def test_editor_fails_appending_a_data_node_locked_by_orchestrator(self):
         dn_config = Config.configure_csv_data_node("A")
         dn = _DataManager._bulk_get_or_create([dn_config])[dn_config]
-        first_line = pd.DataFrame(data={'col1': [1], 'col2': [3]})
-        second_line = pd.DataFrame(data={'col1': [2], 'col2': [4]})
-        data = pd.DataFrame(data={'col1': [1, 2], 'col2': [3, 4]})
+        first_line = pd.DataFrame(data={"col1": [1], "col2": [3]})
+        second_line = pd.DataFrame(data={"col1": [2], "col2": [4]})
+        data = pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
         dn.write(first_line)
         assert first_line.equals(dn.read())
         dn = _DataManager._bulk_get_or_create([dn_config])[dn_config]
-        dn.lock_edit() # Locked by orchestrator
+        dn.lock_edit()  # Locked by orchestrator
 
         with pytest.raises(DataNodeIsBeingEdited):
             dn.append(second_line, editor_id="editor_1")
@@ -897,7 +910,7 @@ class TestDataNode:
         after = datetime.now()
         timestamp = datetime.now()
         data_node.track_edit(timestamp=timestamp)
-        _DataManagerFactory._build_manager()._set(data_node)
+        _DataManagerFactory._build_manager()._update(data_node)
         # To save the edits because track edit does not save the data node
 
         assert len(data_node.edits) == 6

@@ -68,7 +68,7 @@ class _VersionManager(_Manager[_Version]):
         else:
             version = _Version(id=id, config=Config._applied_config)  # type: ignore[attr-defined]
 
-        cls._set(version)
+        cls._repository._save(version)
         return version
 
     @classmethod
@@ -166,7 +166,7 @@ class _VersionManager(_Manager[_Version]):
 
         if not cls._get(new_version):
             version_entity.id = new_version
-            cls._set(version_entity)
+            cls._repository._save(version_entity)
 
     @classmethod
     def _manage_version(cls) -> None:

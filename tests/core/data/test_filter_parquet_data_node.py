@@ -19,6 +19,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from taipy import Scope
+from taipy.core.data._data_manager_factory import _DataManagerFactory
 from taipy.core.data.operator import JoinOperator, Operator
 from taipy.core.data.parquet import ParquetDataNode
 
@@ -55,6 +56,7 @@ class TestFilterParquetDataNode:
 
     def test_filter_pandas_exposed_type(self, parquet_file_path):
         dn = ParquetDataNode("foo", Scope.SCENARIO, properties={"path": parquet_file_path, "exposed_type": "pandas"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(
             [
                 {"foo": 1, "bar": 1},
@@ -104,6 +106,7 @@ class TestFilterParquetDataNode:
 
     def test_filter_numpy_exposed_type(self, parquet_file_path):
         dn = ParquetDataNode("foo", Scope.SCENARIO, properties={"path": parquet_file_path, "exposed_type": "numpy"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(
             [
                 [1, 1],

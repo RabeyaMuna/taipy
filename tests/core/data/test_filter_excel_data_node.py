@@ -18,6 +18,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from taipy import Scope
+from taipy.core.data._data_manager_factory import _DataManagerFactory
 from taipy.core.data.excel import ExcelDataNode
 from taipy.core.data.operator import JoinOperator, Operator
 
@@ -34,6 +35,7 @@ def test_filter_pandas_exposed_type_with_sheetname(excel_file):
     dn = ExcelDataNode(
         "foo", Scope.SCENARIO, properties={"path": excel_file, "sheet_name": "Sheet1", "exposed_type": "pandas"}
     )
+    _DataManagerFactory._build_manager()._repository._save(dn)
     dn.write(
         [
             {"foo": 1, "bar": 1},
@@ -84,6 +86,7 @@ def test_filter_pandas_exposed_type_with_sheetname(excel_file):
 
 def test_filter_pandas_exposed_type_without_sheetname(excel_file):
     dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"path": excel_file, "exposed_type": "pandas"})
+    _DataManagerFactory._build_manager()._repository._save(dn)
     dn.write(
         [
             {"foo": 1, "bar": 1},
@@ -110,6 +113,7 @@ def test_filter_pandas_exposed_type_multisheet(excel_file):
         Scope.SCENARIO,
         properties={"path": excel_file, "sheet_name": ["sheet_1", "sheet_2"], "exposed_type": "pandas"},
     )
+    _DataManagerFactory._build_manager()._repository._save(dn)
     dn.write(
         {
             "sheet_1": pd.DataFrame(
@@ -161,6 +165,7 @@ def test_filter_numpy_exposed_type_with_sheetname(excel_file):
     dn = ExcelDataNode(
         "foo", Scope.SCENARIO, properties={"path": excel_file, "sheet_name": "Sheet1", "exposed_type": "numpy"}
     )
+    _DataManagerFactory._build_manager()._repository._save(dn)
     dn.write(
         [
             [1, 1],
@@ -198,6 +203,7 @@ def test_filter_numpy_exposed_type_with_sheetname(excel_file):
 
 def test_filter_numpy_exposed_type_without_sheetname(excel_file):
     dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"path": excel_file, "exposed_type": "numpy"})
+    _DataManagerFactory._build_manager()._repository._save(dn)
     dn.write(
         [
             [1, 1],
@@ -227,6 +233,7 @@ def test_filter_numpy_exposed_type_multisheet(excel_file):
         Scope.SCENARIO,
         properties={"path": excel_file, "sheet_name": ["sheet_1", "sheet_2"], "exposed_type": "numpy"},
     )
+    _DataManagerFactory._build_manager()._repository._save(dn)
     dn.write(
         {
             "sheet_1": pd.DataFrame(

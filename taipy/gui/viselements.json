@@ -145,6 +145,12 @@
                         "type": "bool",
                         "default_value": "False",
                         "doc": "If True, the <code>on_action</code> callback is triggered when the input control looses keyboard focus (e.g., when the user presses the Tab key). When this happens, the key name for the event (set in the <i>args</i> property of the <i>payload</i> parameter to the callback function) is set to \"Tab\"."
+                    },
+                    {
+                        "name": "size",
+                        "type": "str",
+                        "default_value": "\"medium\"",
+                        "doc": "The size of the input. Valid values: \"small\" or \"medium\"."
                     }
                 ]
             }
@@ -503,6 +509,11 @@
                         "doc": "Chart type.<br/>See the Plotly <a href=\"https://plotly.com/javascript/reference/\">chart type</a> documentation for more details."
                     },
                     {
+                        "name": "animation_data",
+                        "type": "dynamic(Any)",
+                        "doc": "A dictionary representing updated values for the dataset defined in <i>data</i>.<br/>Each key in <i>animation_data</i> must exist in <i>data</i>. Changing this property triggers an animation of the chart, showing the changes between the original (<i>data</i>) and updated (<i>animation_data</i>) values.<br/> This animation functionality currently works only with <i>scatter</i> trace types. If you are using other trace types, the animation may not behave as expected."
+                    },
+                    {
                         "name": "mode",
                         "type": "indexed(str)",
                         "default_value": "\"lines+markers\"",
@@ -600,7 +611,7 @@
                     },
                     {
                         "name": "title",
-                        "type": "str",
+                        "type": "dynamic(str)",
                         "doc": "The title of the chart control."
                     },
                     {
@@ -1092,7 +1103,8 @@
             {
                 "inherits": [
                     "lovComp",
-                    "propagate"
+                    "propagate",
+                    "dndComp"
                 ],
                 "properties": [
                     {
@@ -1646,6 +1658,12 @@
                         "type": "str",
                         "default_value": "\"85vw\"",
                         "doc": "The width of the menu when unfolded, in CSS units, when running on a mobile device."
+                    },
+                    {
+                        "name": "expanded",
+                        "type":"bool",
+                        "default_value":"False",
+                        "doc": "Defines whether the menu starts expanded or folded"
                     }
                 ]
             }
@@ -1913,7 +1931,8 @@
             {
                 "inherits": [
                     "partial",
-                    "shared"
+                    "shared",
+                    "dndComp"
                 ],
                 "properties": [
                     {
@@ -2178,6 +2197,53 @@
                         "type": "bool",
                         "default_value": "False",
                         "doc": "If False, the selection value (in <i>value</i>) is the selected element in <i>lov</i>. If set to True, then <i>value</i> is set to the id of the selected element in <i>lov</i>."
+                    }
+                ]
+            }
+        ],
+
+        [
+            "dndComp",
+            {
+                "properties": [
+                    {
+                        "name": "drag_type",
+                        "type": "str",
+                        "doc": "The type of source element that the user can drag.<br/>If empty, the element is not draggable."
+                    },
+                    {
+                        "name": "allowed_drag_types",
+                        "type": "list[str]",
+                        "doc": "The list of source elements types supported by this component. ie to allow a dragged source element to be dropped on this drop target.<br/>If empty, the element does not support drops."
+                    },
+                    {
+                        "name": "drag_data",
+                        "type": "dynamic[dict[str, Any]]",
+                        "doc": "A dict containing data that will be associated with the drag source."
+                    },
+                    {
+                        "name": "drop_data",
+                        "type": "dynamic[dict[str, Any]]",
+                        "doc": "A dict containing data that will be associated with the drop target."
+                    },
+                    {
+                        "name": "on_action",
+                        "type": "Union[str, Callable]",
+                        "doc": "A function or the name of a function that is triggered when a source element is dropped on a target element.<br/>This function is invoked with the following parameters:\n<ul><li><i>state</i> (<code>State^</code>): the state instance.</li><li><i>payload</i> (dict): a dictionary that contains the following keys <ul><li>action</li><li>reason: \"drop\"</li><li>source_id,</li><li>source_item_id</li><li>source_data</li><li>source_var_name</li><li>target_id</li><li>target_item_id</li><li>target_data</li><li>target_var_name</li></ul>.</li></ul>",
+                        "signature": [
+                            [
+                                "state",
+                                "State"
+                            ],
+                            [
+                                "id",
+                                "str"
+                            ],
+                            [
+                                "payload",
+                                "dict"
+                            ]
+                        ]
                     }
                 ]
             }

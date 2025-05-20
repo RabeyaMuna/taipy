@@ -482,10 +482,10 @@ def test_is_ready_to_run():
 
     data_manager = _DataManagerFactory._build_manager()
     for dn in [data_node_1, data_node_2, data_node_3, data_node_4, data_node_5, data_node_6]:
-        data_manager._set(dn)
+        data_manager._repository._save(dn)
     for task in [task_1, task_2, task_3, task_4]:
-        _TaskManager._set(task)
-    _ScenarioManager._set(scenario)
+        _TaskManager._repository._save(task)
+    _ScenarioManager._repository._save(scenario)
     scenario.add_sequence("sequence", [task_4, task_2, task_1, task_3])
     sequence = scenario.sequences["sequence"]
     # s1 ---      s5 ---> t2 ---> s4
@@ -529,7 +529,7 @@ def test_data_nodes_being_edited():
 
     data_manager = _DataManagerFactory._build_manager()
     for dn in [data_node_1, data_node_2, data_node_4, data_node_5, data_node_6, data_node_7]:
-        data_manager._set(dn)
+        data_manager._repository._save(dn)
 
     assert len(sequence.data_nodes_being_edited()) == 0
     assert sequence.data_nodes_being_edited() == set()
@@ -581,18 +581,18 @@ def test_get_set_of_tasks():
     assert sequence_1._get_set_of_tasks() == {task_1, task_2, task_3}
 
 
-def test_auto_set_and_reload(task):
+def test_auto_update_and_reload(task):
     tmp_task = Task("tmp_task_config_id", {}, print, list(task.output.values()), [], TaskId("tmp_task_id"))
     scenario = Scenario("scenario", [task, tmp_task], {}, sequences={"foo": {}})
 
-    _TaskManager._set(task)
-    _TaskManager._set(tmp_task)
-    _ScenarioManager._set(scenario)
+    _TaskManager._repository._save(task)
+    _TaskManager._repository._save(tmp_task)
+    _ScenarioManager._repository._save(scenario)
 
     sequence_1 = scenario.sequences["foo"]
     sequence_2 = _SequenceManager._get(sequence_1)
 
-    # auto set & reload on tasks attribute
+    # auto update & reload on tasks attribute
     assert len(sequence_1.tasks) == 0
     assert len(sequence_2.tasks) == 0
     sequence_1.tasks = [tmp_task]
@@ -661,10 +661,10 @@ def test_auto_set_and_reload(task):
     assert not sequence_1._is_in_context
 
 
-def test_auto_set_and_reload_properties():
+def test_auto_update_and_reload_properties():
     scenario = Scenario("scenario", [], {}, sequences={"foo": {}})
 
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
 
     sequence_1 = scenario.sequences["foo"]
     sequence_2 = _SequenceManager._get(sequence_1)

@@ -52,7 +52,7 @@ class _JobManager(_Manager[Job], _VersionMixin):
             version=version,
         )
         job._on_status_change(*callbacks)
-        cls._set(job)
+        cls._repository._save(job)
 
         Notifier.publish(_make_event(job, EventOperation.CREATION))
 

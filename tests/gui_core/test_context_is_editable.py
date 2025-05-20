@@ -56,10 +56,10 @@ class MockState:
 class TestGuiCoreContext_is_editable:
     @pytest.fixture(scope="class", autouse=True)
     def set_entity(self):
-        _ScenarioManagerFactory._build_manager()._set(a_scenario)
-        _TaskManagerFactory._build_manager()._set(a_task)
-        _JobManagerFactory._build_manager()._set(a_job)
-        _DataManagerFactory._build_manager()._set(a_datanode)
+        _ScenarioManagerFactory._build_manager()._repository._save(a_scenario)
+        _TaskManagerFactory._build_manager()._repository._save(a_task)
+        _JobManagerFactory._build_manager()._repository._save(a_job)
+        _DataManagerFactory._build_manager()._repository._save(a_datanode)
 
     def test_crud_scenario(self):
         with patch("taipy.gui_core._context.core_get", side_effect=mock_core_get):
@@ -254,9 +254,7 @@ class TestGuiCoreContext_is_editable:
                 MockState(assign=assign),
                 "",
                 {
-                    "args": [{
-                        "id": a_datanode.id,
-                        "error_id": "error_var"}],
+                    "args": [{"id": a_datanode.id, "error_id": "error_var"}],
                 },
             )
             assign.assert_called()

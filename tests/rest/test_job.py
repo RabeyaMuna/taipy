@@ -13,6 +13,9 @@ from unittest import mock
 
 from flask import url_for
 
+from taipy.core._orchestrator._orchestrator_factory import _OrchestratorFactory
+from taipy.core.job._job_manager_factory import _JobManagerFactory
+
 
 def test_get_job(client, default_job):
     # test 404
@@ -34,8 +37,9 @@ def test_delete_job(client):
     rep = client.get(user_url)
     assert rep.status_code == 404
 
-    with mock.patch("taipy.core.job._job_manager._JobManager._delete"), mock.patch(
-        "taipy.core.job._job_manager._JobManager._get"
+    with (
+        mock.patch("taipy.core.job._job_manager._JobManager._delete"),
+        mock.patch("taipy.core.job._job_manager._JobManager._get"),
     ):
         # test get_job
         rep = client.delete(url_for("api.job_by_id", job_id="foo"))
@@ -66,10 +70,10 @@ def test_get_all_jobs(client, create_job_list):
 
 def test_cancel_job(client, default_job):
     # test 404
-    from taipy.core._orchestrator._orchestrator_factory import _OrchestratorFactory
-
     _OrchestratorFactory._build_orchestrator()
     _OrchestratorFactory._build_dispatcher()
+
+    _JobManagerFactory._build_manager()._repository._save(default_job)
 
     user_url = url_for("api.job_cancel", job_id="foo")
     rep = client.post(user_url)

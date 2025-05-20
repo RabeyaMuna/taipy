@@ -26,14 +26,14 @@ def create_job(id, status):
     t_cfg = Config.configure_task("no_output", nothing, [], [])
     t = _TaskManagerFactory._build_manager()._bulk_get_or_create([t_cfg])
     job = Job(JobId(id), t[0], "", "")
-    _JobManagerFactory._build_manager()._set(job)
+    _JobManagerFactory._build_manager()._repository._save(job)
     job.status = status
     return job
 
 
 def create_job_from_task(id, task):
     job = Job(JobId(id), task, "s", task.id)
-    _JobManagerFactory._build_manager()._set(job)
+    _JobManagerFactory._build_manager()._repository._save(job)
     return job
 
 

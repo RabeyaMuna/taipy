@@ -28,8 +28,15 @@ class OrchestratorServiceIsAlreadyRunning(Exception):
     """Raised if the Orchestrator service is already running."""
 
 
+class NonExistingEntity(Exception):
+    """Raised if a requested entity is not known by the Entity Manager."""
+
+    def __init__(self, entity_id: str):
+        self.message = f"Entity {entity_id} does not exist."
+
+
 class CycleAlreadyExists(Exception):
-    """Raised if it is trying to create a Cycle that has already exists."""
+    """Raised if a cycle creation is requested for a cycle that already exists."""
 
 
 class NonExistingCycle(Exception):

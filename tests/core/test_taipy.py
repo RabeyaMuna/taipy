@@ -54,24 +54,24 @@ def cb(s, j):
 
 
 class TestTaipy:
-    def test_set(self, scenario, cycle, sequence, data_node, task, submission):
-        with mock.patch("taipy.core.data._data_manager._DataManager._set") as mck:
-            tp.set(data_node)
+    def test_update(self, scenario, cycle, sequence, data_node, task, submission):
+        with mock.patch("taipy.core.data._data_manager._DataManager._update") as mck:
+            tp.update(data_node)
             mck.assert_called_once_with(data_node)
-        with mock.patch("taipy.core.task._task_manager._TaskManager._set") as mck:
-            tp.set(task)
+        with mock.patch("taipy.core.task._task_manager._TaskManager._update") as mck:
+            tp.update(task)
             mck.assert_called_once_with(task)
-        with mock.patch("taipy.core.sequence._sequence_manager._SequenceManager._set") as mck:
-            tp.set(sequence)
+        with mock.patch("taipy.core.sequence._sequence_manager._SequenceManager._update") as mck:
+            tp.update(sequence)
             mck.assert_called_once_with(sequence)
-        with mock.patch("taipy.core.scenario._scenario_manager._ScenarioManager._set") as mck:
-            tp.set(scenario)
+        with mock.patch("taipy.core.scenario._scenario_manager._ScenarioManager._update") as mck:
+            tp.update(scenario)
             mck.assert_called_once_with(scenario)
-        with mock.patch("taipy.core.cycle._cycle_manager._CycleManager._set") as mck:
-            tp.set(cycle)
+        with mock.patch("taipy.core.cycle._cycle_manager._CycleManager._update") as mck:
+            tp.update(cycle)
             mck.assert_called_once_with(cycle)
-        with mock.patch("taipy.core.submission._submission_manager._SubmissionManager._set") as mck:
-            tp.set(submission)
+        with mock.patch("taipy.core.submission._submission_manager._SubmissionManager._update") as mck:
+            tp.update(submission)
             mck.assert_called_once_with(submission)
 
     def test_is_editable_is_called(self, cycle, job, data_node):
@@ -150,12 +150,12 @@ class TestTaipy:
         job = Job(JobId("job_id"), task, "submit_id", scenario.id)
         dn = PickleDataNode(config_id="data_node_config_id", scope=Scope.SCENARIO)
         submission = Submission(scenario.id, scenario._ID_PREFIX, scenario.config_id, "submission_id")
-        _CycleManager._set(cycle)
-        _ScenarioManager._set(scenario)
-        _TaskManager._set(task)
-        _JobManager._set(job)
-        _DataManager._set(dn)
-        _SubmissionManager._set(submission)
+        _CycleManager._repository._save(cycle)
+        _ScenarioManager._repository._save(scenario)
+        _TaskManager._repository._save(task)
+        _JobManager._repository._save(job)
+        _DataManager._repository._save(dn)
+        _SubmissionManager._repository._save(submission)
         sequence = scenario.sequences["sequence"]
 
         assert tp.is_editable(scenario)
@@ -242,12 +242,12 @@ class TestTaipy:
         job = Job(JobId("a_job_id"), task, "submit_id", scenario.id)
         dn = PickleDataNode(config_id="a_data_node_config_id", scope=Scope.SCENARIO)
         submission = Submission(scenario.id, scenario._ID_PREFIX, scenario.config_id, "submission_id")
-        _CycleManager._set(cycle)
-        _ScenarioManager._set(scenario)
-        _TaskManager._set(task)
-        _JobManager._set(job)
-        _DataManager._set(dn)
-        _SubmissionManager._set(submission)
+        _CycleManager._repository._save(cycle)
+        _ScenarioManager._repository._save(scenario)
+        _TaskManager._repository._save(task)
+        _JobManager._repository._save(job)
+        _DataManager._repository._save(dn)
+        _SubmissionManager._repository._save(submission)
         sequence = scenario.sequences["sequence"]
 
         assert tp.is_readable(scenario)
@@ -297,11 +297,11 @@ class TestTaipy:
         job = Job(JobId("job_id"), task, "submit_id", ScenarioId(scenario.id))
         dn = PickleDataNode("data_node_config_id", Scope.SCENARIO)
 
-        _CycleManager._set(cycle)
-        _ScenarioManager._set(scenario)
-        _TaskManager._set(task)
-        _JobManager._set(job)
-        _DataManager._set(dn)
+        _CycleManager._repository._save(cycle)
+        _ScenarioManager._repository._save(scenario)
+        _TaskManager._repository._save(task)
+        _JobManager._repository._save(job)
+        _DataManager._repository._save(dn)
         sequence = scenario.sequences["sequence"]
 
         assert tp.is_submittable(scenario)
@@ -698,7 +698,7 @@ class TestTaipy:
     def test_create_global_data_node(self):
         dn_cfg_global = DataNodeConfig("id", "pickle", Scope.GLOBAL)
         dn_cfg_scenario = DataNodeConfig("id", "pickle", Scope.SCENARIO)
-        with mock.patch("taipy.core.data._data_manager._DataManager._create_and_set") as dn_create_mock:
+        with mock.patch("taipy.core.data._data_manager._DataManager._create") as dn_create_mock:
             with mock.patch("taipy.core.orchestrator.Orchestrator._manage_version_and_block_config") as mv_mock:
                 dn = tp.create_global_data_node(dn_cfg_global)
                 dn_create_mock.assert_called_once_with(dn_cfg_global, None, None)

@@ -56,7 +56,7 @@ class TestCSVDataNode:
         csv_dn_config = Config.configure_csv_data_node(
             id="foo_bar", default_path=default_path, has_header=False, name="super name"
         )
-        dn = _DataManagerFactory._build_manager()._create_and_set(csv_dn_config, None, None)
+        dn = _DataManagerFactory._build_manager()._create(csv_dn_config, None, None)
         assert isinstance(dn, CSVDataNode)
         assert dn.storage_type() == "csv"
         assert dn.config_id == "foo_bar"
@@ -74,7 +74,7 @@ class TestCSVDataNode:
         csv_dn_config = Config.configure_csv_data_node(
             id="foo", default_path=default_path, has_header=True, exposed_type=MyCustomObject
         )
-        dn = _DataManagerFactory._build_manager()._create_and_set(csv_dn_config, None, None)
+        dn = _DataManagerFactory._build_manager()._create(csv_dn_config, None, None)
         assert dn.storage_type() == "csv"
         assert dn.config_id == "foo"
         assert dn.properties["has_header"] is True
@@ -136,6 +136,7 @@ class TestCSVDataNode:
 
     def test_set_path(self):
         dn = CSVDataNode("foo", Scope.SCENARIO, properties={"default_path": "foo.csv"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         assert dn.path == "foo.csv"
         dn.path = "bar.csv"
         assert dn.path == "bar.csv"
@@ -144,6 +145,7 @@ class TestCSVDataNode:
         path = os.path.join(pathlib.Path(__file__).parent.resolve(), "data_sample/example.csv")
         new_path = os.path.join(pathlib.Path(__file__).parent.resolve(), "data_sample/temp.csv")
         dn = CSVDataNode("foo", Scope.SCENARIO, properties={"default_path": path})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         read_data = dn.read()
         assert read_data is not None
         dn.path = new_path
@@ -218,6 +220,7 @@ class TestCSVDataNode:
         temp_file_path = str(tmpdir_factory.mktemp("data").join("temp.csv"))
         pd.DataFrame([]).to_csv(temp_file_path)
         dn = CSVDataNode("foo", Scope.SCENARIO, properties={"path": temp_file_path, "exposed_type": "pandas"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
 
         dn.write(pd.DataFrame([1, 2, 3]))
         previous_edit_date = dn.last_edit_date
@@ -291,6 +294,7 @@ class TestCSVDataNode:
         old_data = pd.DataFrame([{"a": 0, "b": 1, "c": 2}, {"a": 3, "b": 4, "c": 5}])
 
         dn = CSVDataNode("foo", Scope.SCENARIO, properties={"path": old_csv_path, "exposed_type": "pandas"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(old_data)
         old_last_edit_date = dn.last_edit_date
 
@@ -308,6 +312,7 @@ class TestCSVDataNode:
         old_data = pd.DataFrame([{"a": 0, "b": 1, "c": 2}, {"a": 3, "b": 4, "c": 5}])
 
         dn = CSVDataNode("foo", Scope.SCENARIO, properties={"path": old_csv_path, "exposed_type": "pandas"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(old_data)
         upload_content = pd.read_csv(csv_file)
         dn.lock_edit("editor_id_1")
@@ -339,6 +344,7 @@ class TestCSVDataNode:
         old_data = pd.DataFrame([{"a": 0, "b": 1, "c": 2}, {"a": 3, "b": 4, "c": 5}])
 
         dn = CSVDataNode("foo", Scope.SCENARIO, properties={"path": old_csv_path, "exposed_type": "pandas"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(old_data)
         old_last_edit_date = dn.last_edit_date
 
@@ -389,6 +395,7 @@ class TestCSVDataNode:
         pd.DataFrame(new_data).to_csv(new_csv_path, index=False)
 
         dn = CSVDataNode("foo", Scope.SCENARIO, properties={"path": old_csv_path, "exposed_type": "numpy"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(old_data)
         old_last_edit_date = dn.last_edit_date
 

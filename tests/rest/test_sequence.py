@@ -60,7 +60,7 @@ def test_create_sequence(client, default_scenario):
     rep = client.post(sequences_url, json={"scenario_id": "SCENARIO_scenario_id", "sequence_name": "sequence"})
     assert rep.status_code == 404
 
-    _ScenarioManagerFactory._build_manager()._set(default_scenario)
+    _ScenarioManagerFactory._build_manager()._repository._save(default_scenario)
     with mock.patch("taipy.core.scenario._scenario_manager._ScenarioManager._get") as config_mock:
         config_mock.return_value = default_scenario
         sequences_url = url_for("api.sequences")
@@ -91,7 +91,7 @@ def test_execute_sequence(client, default_scenario):
     rep = client.post(user_url)
     assert rep.status_code == 404
 
-    _ScenarioManagerFactory._build_manager()._set(default_scenario)
+    _ScenarioManagerFactory._build_manager()._repository._save(default_scenario)
     with mock.patch("taipy.core.scenario._scenario_manager._ScenarioManager._get") as config_mock:
         config_mock.return_value = default_scenario
         sequences_url = url_for("api.sequences")

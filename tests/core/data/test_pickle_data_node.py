@@ -51,14 +51,14 @@ class TestPickleDataNodeEntity:
 
     def test_create_with_manager(self, pickle_file_path):
         parquet_dn_config = Config.configure_pickle_data_node(id="baz", default_path=pickle_file_path)
-        parquet_dn = _DataManagerFactory._build_manager()._create_and_set(parquet_dn_config, None, None)
+        parquet_dn = _DataManagerFactory._build_manager()._create(parquet_dn_config, None, None)
         assert isinstance(parquet_dn, PickleDataNode)
 
     def test_create(self):
         pickle_dn_config = Config.configure_pickle_data_node(
             id="foobar_bazxyxea", default_path="Data", default_data="Data"
         )
-        dn = _DataManagerFactory._build_manager()._create_and_set(pickle_dn_config, None, None)
+        dn = _DataManagerFactory._build_manager()._create(pickle_dn_config, None, None)
 
         assert isinstance(dn, PickleDataNode)
         assert dn.storage_type() == "pickle"
@@ -106,6 +106,7 @@ class TestPickleDataNodeEntity:
 
     def test_create_with_file_name(self):
         dn = PickleDataNode("foo", Scope.SCENARIO, properties={"default_data": "bar", "path": "foo.FILE.p"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         assert os.path.isfile("foo.FILE.p")
         assert dn.read() == "bar"
         dn.write("qux")
@@ -115,10 +116,14 @@ class TestPickleDataNodeEntity:
 
     def test_read_and_write(self):
         no_data_dn = PickleDataNode("foo", Scope.SCENARIO)
+        _DataManagerFactory._build_manager()._repository._save(no_data_dn)
+        assert no_data_dn.read() is None
         with pytest.raises(NoData):
-            assert no_data_dn.read() is None
+            _DataManagerFactory._build_manager()._read(no_data_dn)
+        with pytest.raises(NoData):
             no_data_dn.read_or_raise()
         pickle_str = PickleDataNode("foo", Scope.SCENARIO, properties={"default_data": "bar"})
+        _DataManagerFactory._build_manager()._repository._save(pickle_str)
         assert isinstance(pickle_str.read(), str)
         assert pickle_str.read() == "bar"
         pickle_str.properties["default_data"] = "baz"  # this modifies the default data value but not the data itself
@@ -147,16 +152,19 @@ class TestPickleDataNodeEntity:
                 "path": "bar.FILE.p",
             },
         )
+        _DataManagerFactory._build_manager()._repository._save(dn)
         assert dn.path == "bar.FILE.p"
 
     def test_set_path(self):
         dn = PickleDataNode("foo", Scope.SCENARIO, properties={"default_path": "foo.p"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         assert dn.path == "foo.p"
         dn.path = "bar.p"
         assert dn.path == "bar.p"
 
     def test_is_generated(self):
         dn = PickleDataNode("foo", Scope.SCENARIO, properties={})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         assert dn.is_generated
         dn.path = "bar.p"
         assert not dn.is_generated
@@ -165,6 +173,7 @@ class TestPickleDataNodeEntity:
         path = os.path.join(pathlib.Path(__file__).parent.resolve(), "data_sample/example.p")
         new_path = os.path.join(pathlib.Path(__file__).parent.resolve(), "data_sample/temp.p")
         dn = PickleDataNode("foo", Scope.SCENARIO, properties={"default_path": path})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         read_data = dn.read()
         assert read_data is not None
         dn.path = new_path
@@ -177,6 +186,7 @@ class TestPickleDataNodeEntity:
         temp_file_path = str(tmpdir_factory.mktemp("data").join("temp.pickle"))
         pd.DataFrame([]).to_pickle(temp_file_path)
         dn = PickleDataNode("foo", Scope.SCENARIO, properties={"path": temp_file_path, "exposed_type": "pandas"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
 
         dn.write(pd.DataFrame([1, 2, 3]))
         previous_edit_date = dn.last_edit_date
@@ -246,6 +256,7 @@ class TestPickleDataNodeEntity:
         old_data = pd.DataFrame([{"a": 0, "b": 1, "c": 2}, {"a": 3, "b": 4, "c": 5}])
 
         dn = PickleDataNode("foo", Scope.SCENARIO, properties={"path": old_pickle_path})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(old_data)
         old_last_edit_date = dn.last_edit_date
 
@@ -263,6 +274,7 @@ class TestPickleDataNodeEntity:
         old_data = pd.DataFrame([{"a": 0, "b": 1, "c": 2}, {"a": 3, "b": 4, "c": 5}])
 
         dn = PickleDataNode("foo", Scope.SCENARIO, properties={"path": old_pickle_path})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(old_data)
         old_last_edit_date = dn.last_edit_date
 

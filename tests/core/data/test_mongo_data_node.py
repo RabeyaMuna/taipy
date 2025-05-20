@@ -79,7 +79,7 @@ class TestMongoCollectionDataNode:
     @pytest.mark.parametrize("properties", __properties)
     def test_create(self, properties):
         mongo_dn_config = Config.configure_mongo_collection_data_node("foo_bar", **properties)
-        mongo_dn = _DataManagerFactory._build_manager()._create_and_set(mongo_dn_config, None, None)
+        mongo_dn = _DataManagerFactory._build_manager()._create(mongo_dn_config, None, None)
         assert isinstance(mongo_dn, MongoCollectionDataNode)
         assert mongo_dn.storage_type() == "mongo_collection"
         assert mongo_dn.config_id == "foo_bar"
@@ -201,6 +201,7 @@ class TestMongoCollectionDataNode:
             Scope.SCENARIO,
             properties=custom_properties,
         )
+        _DataManagerFactory._build_manager()._repository._save(mongo_dn)
         mongo_dn.write(data)
 
         with pytest.raises(TypeError):
@@ -217,6 +218,7 @@ class TestMongoCollectionDataNode:
     )
     def test_append(self, properties, data):
         mongo_dn = MongoCollectionDataNode("foo", Scope.SCENARIO, properties=properties)
+        _DataManagerFactory._build_manager()._repository._save(mongo_dn)
         mongo_dn.append(data)
 
         original_data = [{"foo": 1, "bar": 2}, {"foo": 3, "bar": 4}]
@@ -236,6 +238,7 @@ class TestMongoCollectionDataNode:
     )
     def test_write(self, properties, data, written_data):
         mongo_dn = MongoCollectionDataNode("foo", Scope.SCENARIO, properties=properties)
+        _DataManagerFactory._build_manager()._repository._save(mongo_dn)
         mongo_dn.write(data)
 
         read_objects = mongo_dn.read()
@@ -259,6 +262,7 @@ class TestMongoCollectionDataNode:
             Scope.SCENARIO,
             properties=properties,
         )
+        _DataManagerFactory._build_manager()._repository._save(mongo_dn)
         mongo_dn.write(data)
 
         assert len(mongo_dn.read()) == 0
@@ -277,6 +281,7 @@ class TestMongoCollectionDataNode:
         custom_properties = properties.copy()
         custom_properties["custom_document"] = CustomObjectWithCustomEncoder
         mongo_dn = MongoCollectionDataNode("foo", Scope.SCENARIO, properties=custom_properties)
+        _DataManagerFactory._build_manager()._repository._save(mongo_dn)
         data = [
             CustomObjectWithCustomEncoder("1", 1, "abc", datetime.now()),
             CustomObjectWithCustomEncoder("2", 2, "def", datetime.now()),
@@ -302,6 +307,7 @@ class TestMongoCollectionDataNode:
         custom_properties = properties.copy()
         custom_properties["custom_document"] = CustomObjectWithCustomEncoderDecoder
         mongo_dn = MongoCollectionDataNode("foo", Scope.SCENARIO, properties=custom_properties)
+        _DataManagerFactory._build_manager()._repository._save(mongo_dn)
         data = [
             CustomObjectWithCustomEncoderDecoder("1", 1, "abc", datetime.now()),
             CustomObjectWithCustomEncoderDecoder("2", 2, "def", datetime.now()),

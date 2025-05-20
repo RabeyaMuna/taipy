@@ -52,12 +52,6 @@ class _TaskManager(_Manager[Task], _VersionMixin):
         return _OrchestratorFactory._build_orchestrator()
 
     @classmethod
-    def _set(cls, task: Task) -> None:
-        cls.__save_data_nodes(task.input.values())
-        cls.__save_data_nodes(task.output.values())
-        super()._set(task)
-
-    @classmethod
     def _get_owner_id(
         cls, scope, cycle_id, scenario_id
     ) -> Union[Optional[SequenceId], Optional[ScenarioId], Optional[CycleId]]:
@@ -79,8 +73,8 @@ class _TaskManager(_Manager[Task], _VersionMixin):
         for task_config in task_configs:
             data_node_configs.update([Config.data_nodes[dnc.id] for dnc in task_config.input_configs])
             data_node_configs.update([Config.data_nodes[dnc.id] for dnc in task_config.output_configs])
-
-        data_nodes = _DataManagerFactory._build_manager()._bulk_get_or_create(
+        _data_manager = _DataManagerFactory._build_manager()
+        data_nodes = _data_manager._bulk_get_or_create(
             list(data_node_configs), cycle_id, scenario_id
         )
         tasks_configs_and_owner_id = []
@@ -101,6 +95,8 @@ class _TaskManager(_Manager[Task], _VersionMixin):
         tasks = []
         for task_config, owner_id in tasks_configs_and_owner_id:
             if task := tasks_by_config.get((task_config, owner_id)):
+                task._parent_ids.add(scenario_id)
+                cls._update(task)
                 tasks.append(task)
             else:
                 version = _VersionManagerFactory._build_manager()._get_latest_version()
@@ -121,13 +117,14 @@ class _TaskManager(_Manager[Task], _VersionMixin):
                     inputs,
                     outputs,
                     owner_id=owner_id,
-                    parent_ids=set(),
+                    parent_ids={scenario_id} if scenario_id else set(),
                     version=version,
                     skippable=skippable,
                 )
                 for dn in set(inputs + outputs):
-                    dn._parent_ids.update([task.id])
-                cls._set(task)
+                    dn._parent_ids.add(task.id)
+                    _data_manager._update(dn)
+                cls._repository._save(task)
                 Notifier.publish(_make_event(task, EventOperation.CREATION))
                 tasks.append(task)
         return tasks
@@ -139,12 +136,6 @@ class _TaskManager(_Manager[Task], _VersionMixin):
         """
         filters = cls._build_filters_with_version(version_number)
         return cls._repository._load_all(filters)
-
-    @classmethod
-    def __save_data_nodes(cls, data_nodes) -> None:
-        data_manager = _DataManagerFactory._build_manager()
-        for i in data_nodes:
-            data_manager._set(i)
 
     @classmethod
     def _hard_delete(cls, task_id: TaskId) -> None:

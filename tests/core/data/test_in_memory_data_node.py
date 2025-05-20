@@ -25,7 +25,7 @@ class TestInMemoryDataNodeEntity:
         in_memory_dn_config = Config.configure_in_memory_data_node(
             id="foobar_bazy", default_data="In memory Data Node", name="my name"
         )
-        dn = _DataManagerFactory._build_manager()._create_and_set(in_memory_dn_config, "owner_id", None)
+        dn = _DataManagerFactory._build_manager()._create(in_memory_dn_config, "owner_id", None)
         assert isinstance(dn, InMemoryDataNode)
         assert dn.storage_type() == "in_memory"
         assert dn.config_id == "foobar_bazy"
@@ -38,7 +38,7 @@ class TestInMemoryDataNodeEntity:
         assert dn.read() == "In memory Data Node"
 
         in_memory_dn_config_2 = Config.configure_in_memory_data_node(id="foo")
-        dn_2 = _DataManagerFactory._build_manager()._create_and_set(in_memory_dn_config_2, None, None)
+        dn_2 = _DataManagerFactory._build_manager()._create(in_memory_dn_config_2, None, None)
         assert dn_2.last_edit_date is None
         assert not dn_2.is_ready_for_reading
 
@@ -51,10 +51,14 @@ class TestInMemoryDataNodeEntity:
 
     def test_read_and_write(self):
         no_data_dn = InMemoryDataNode("foo", Scope.SCENARIO, DataNodeId("dn_id"))
+        _DataManagerFactory._build_manager()._repository._save(no_data_dn)
+        assert no_data_dn.read() is None
         with pytest.raises(NoData):
-            assert no_data_dn.read() is None
+            _DataManagerFactory._build_manager()._read(no_data_dn)
+        with pytest.raises(NoData):
             no_data_dn.read_or_raise()
         in_mem_dn = InMemoryDataNode("foo", Scope.SCENARIO, properties={"default_data": "bar"})
+        _DataManagerFactory._build_manager()._repository._save(in_mem_dn)
         assert isinstance(in_mem_dn.read(), str)
         assert in_mem_dn.read() == "bar"
         in_mem_dn.properties["default_data"] = "baz"  # this modifies the default data value but not the data itself

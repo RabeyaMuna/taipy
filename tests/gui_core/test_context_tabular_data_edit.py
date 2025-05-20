@@ -19,7 +19,7 @@ from taipy.core.data.pickle import PickleDataNode
 from taipy.core.reason import Reason, ReasonCollection
 from taipy.gui_core._context import _GuiCoreContext
 
-dn = PickleDataNode("dn_config_id", scope = Scope.GLOBAL)
+dn = PickleDataNode("dn_config_id", scope=Scope.GLOBAL)
 
 
 def core_get(entity_id):
@@ -35,6 +35,7 @@ def is_false(entity_id):
 def is_true(entity_id):
     return True
 
+
 def fails(**kwargs):
     raise Exception("Failed")
 
@@ -45,9 +46,8 @@ class MockState:
 
 
 class TestGuiCoreContext_update_data:
-
     def test_do_not_edit_tabular_data_if_not_readable(self):
-        _DataManagerFactory._build_manager()._set(dn)
+        _DataManagerFactory._build_manager()._repository._save(dn)
         with patch("taipy.gui_core._context.is_readable", side_effect=is_false):
             with patch("taipy.gui_core._context.core_get", side_effect=core_get) as mock_core_get:
                 with patch.object(DataNode, "write") as mock_write:
@@ -58,7 +58,7 @@ class TestGuiCoreContext_update_data:
                     assign.assert_called_once_with("error_var", f"Data node {dn.id} is not readable: foo.")
 
     def test_do_not_edit_tabular_data_if_not_editable(self):
-        _DataManagerFactory._build_manager()._set(dn)
+        _DataManagerFactory._build_manager()._repository._save(dn)
         with patch("taipy.gui_core._context.is_readable", side_effect=is_true):
             with patch("taipy.gui_core._context.is_editable", side_effect=is_false):
                 with patch("taipy.gui_core._context.core_get", side_effect=core_get) as mock_core_get:
@@ -122,7 +122,6 @@ class TestGuiCoreContext_update_data:
             with patch("taipy.gui_core._context.is_editable", side_effect=is_true):
                 with patch("taipy.gui_core._context.core_get", side_effect=core_get) as mock_core_get:
                     with patch.object(DataNode, "write") as mock_write:
-
                         assign = self.__call_update_data(col, idx, new_value)
 
                         mock_core_get.assert_called_once_with(dn.id)
@@ -233,8 +232,8 @@ class TestGuiCoreContext_update_data:
                         mock_core_get.assert_called_once_with(dn.id)
                         mock_write.assert_not_called()
                         assign.assert_called_once_with(
-                            "error_var",
-                            "Error updating data node tabular value. list assignment index out of range")
+                            "error_var", "Error updating data node tabular value. list assignment index out of range"
+                        )
 
     def test_edit_dict_wrong_col(self):
         data = {"a": [1, 2, 3], "b": [4, 5, 6]}
@@ -250,8 +249,8 @@ class TestGuiCoreContext_update_data:
                         mock_core_get.assert_called_once_with(dn.id)
                         mock_write.assert_not_called()
                         assign.assert_called_once_with(
-                            "error_var",
-                            "Error updating Data node: dict values must be list or tuple.")
+                            "error_var", "Error updating Data node: dict values must be list or tuple."
+                        )
 
     def test_edit_dict_of_tuples(self):
         data = {"a": (1, 2, 3), "b": (4, 5, 6)}
@@ -283,8 +282,8 @@ class TestGuiCoreContext_update_data:
                         mock_core_get.assert_called_once_with(dn.id)
                         mock_write.assert_not_called()
                         assign.assert_called_once_with(
-                            "error_var",
-                            "Error updating data node tabular value. list assignment index out of range")
+                            "error_var", "Error updating data node tabular value. list assignment index out of range"
+                        )
 
     def test_edit_dict_of_tuples_wrong_col(self):
         data = {"a": (1, 2, 3), "b": (4, 5, 6)}
@@ -300,8 +299,8 @@ class TestGuiCoreContext_update_data:
                         mock_core_get.assert_called_once_with(dn.id)
                         mock_write.assert_not_called()
                         assign.assert_called_once_with(
-                            "error_var",
-                            "Error updating Data node: dict values must be list or tuple.")
+                            "error_var", "Error updating Data node: dict values must be list or tuple."
+                        )
 
     def test_edit_wrong_dict(self):
         data = {"a": 1, "b": 2}
@@ -317,8 +316,8 @@ class TestGuiCoreContext_update_data:
                         mock_core_get.assert_called_once_with(dn.id)
                         mock_write.assert_not_called()
                         assign.assert_called_once_with(
-                            "error_var",
-                            "Error updating Data node: dict values must be list or tuple.")
+                            "error_var", "Error updating Data node: dict values must be list or tuple."
+                        )
 
     def test_edit_list(self):
         data = [[1, 2, 3], [4, 5, 6]]
@@ -350,8 +349,8 @@ class TestGuiCoreContext_update_data:
                         mock_core_get.assert_called_once_with(dn.id)
                         mock_write.assert_not_called()
                         assign.assert_called_once_with(
-                            "error_var",
-                            "Error updating data node tabular value. list index out of range")
+                            "error_var", "Error updating data node tabular value. list index out of range"
+                        )
 
     def test_edit_list_wrong_col(self):
         data = [[1, 2, 3], [4, 5, 6]]
@@ -367,8 +366,8 @@ class TestGuiCoreContext_update_data:
                         mock_core_get.assert_called_once_with(dn.id)
                         mock_write.assert_not_called()
                         assign.assert_called_once_with(
-                            "error_var",
-                            "Error updating data node tabular value. list assignment index out of range")
+                            "error_var", "Error updating data node tabular value. list assignment index out of range"
+                        )
 
     def test_edit_tuple(self):
         data = ([1, 2, 3], [4, 5, 6])

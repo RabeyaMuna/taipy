@@ -144,11 +144,11 @@ def test_raise_when_trying_to_delete_unfinished_job():
     lock = m.Lock()
     dnm = _DataManagerFactory._build_manager()
     dn_1 = InMemoryDataNode("dn_config_1", Scope.SCENARIO, properties={"default_data": 1})
-    dnm._set(dn_1)
+    dnm._repository._save(dn_1)
     dn_2 = InMemoryDataNode("dn_config_2", Scope.SCENARIO, properties={"default_data": 2})
-    dnm._set(dn_2)
+    dnm._repository._save(dn_2)
     dn_3 = InMemoryDataNode("dn_config_3", Scope.SCENARIO)
-    dnm._set(dn_3)
+    dnm._repository._save(dn_3)
     task = Task(
         "task_config_1", {}, partial(lock_multiply, lock), [dn_1, dn_2], [dn_3], id="raise_when_delete_unfinished"
     )
@@ -171,11 +171,11 @@ def test_force_deleting_unfinished_job():
     lock = m.Lock()
     dnm = _DataManagerFactory._build_manager()
     dn_1 = InMemoryDataNode("dn_config_1", Scope.SCENARIO, properties={"default_data": 1})
-    dnm._set(dn_1)
+    dnm._repository._save(dn_1)
     dn_2 = InMemoryDataNode("dn_config_2", Scope.SCENARIO, properties={"default_data": 2})
-    dnm._set(dn_2)
+    dnm._repository._save(dn_2)
     dn_3 = InMemoryDataNode("dn_config_3", Scope.SCENARIO)
-    dnm._set(dn_3)
+    dnm._repository._save(dn_3)
     task = Task(
         "task_config_1", {}, partial(lock_multiply, lock), [dn_1, dn_2], [dn_3], id="force_deleting_unfinished_job"
     )
@@ -289,11 +289,11 @@ def test_cancel_single_running_job():
     lock = m.Lock()
     dnm = _DataManagerFactory._build_manager()
     dn_1 = InMemoryDataNode("dn_config_1", Scope.SCENARIO, properties={"default_data": 1})
-    dnm._set(dn_1)
+    dnm._repository._save(dn_1)
     dn_2 = InMemoryDataNode("dn_config_2", Scope.SCENARIO, properties={"default_data": 2})
-    dnm._set(dn_2)
+    dnm._repository._save(dn_2)
     dn_3 = InMemoryDataNode("dn_config_3", Scope.SCENARIO)
-    dnm._set(dn_3)
+    dnm._repository._save(dn_3)
     task = Task("task_config_1", {}, partial(lock_multiply, lock), [dn_1, dn_2], [dn_3], id="cancel_single_job")
 
     dispatcher = cast(_StandaloneJobDispatcher, _OrchestratorFactory._build_dispatcher(force_restart=True))
@@ -332,10 +332,10 @@ def test_cancel_subsequent_jobs():
     submission_1 = submission_manager._create("scenario_id", Scenario._ID_PREFIX, "scenario_config_id")
     submission_2 = submission_manager._create("scenario_id", Scenario._ID_PREFIX, "scenario_config_id")
 
-    _DataManager._set(dn_1)
-    _DataManager._set(dn_2)
-    _DataManager._set(dn_3)
-    _DataManager._set(dn_4)
+    _DataManager._repository._save(dn_1)
+    _DataManager._repository._save(dn_2)
+    _DataManager._repository._save(dn_3)
+    _DataManager._repository._save(dn_4)
 
     with lock_0:
         job_1 = orchestrator._lock_dn_output_and_create_job(

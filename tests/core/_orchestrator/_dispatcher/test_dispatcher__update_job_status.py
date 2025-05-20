@@ -14,6 +14,7 @@ from taipy import Job, JobId, Scope, Status, Task
 from taipy.core._orchestrator._dispatcher import _JobDispatcher
 from taipy.core._orchestrator._orchestrator_factory import _OrchestratorFactory
 from taipy.core.data import InMemoryDataNode
+from taipy.core.data._data_manager_factory import _DataManagerFactory
 from taipy.core.data.data_node_id import EDIT_JOB_ID_KEY, EDIT_TIMESTAMP_KEY
 from taipy.core.job._job_manager_factory import _JobManagerFactory
 from taipy.core.task._task_manager_factory import _TaskManagerFactory
@@ -26,12 +27,14 @@ def nothing(*args):
 def _error():
     raise RuntimeError("Something bad has happened")
 
+
 def test_update_job_status_no_exception():
     output = InMemoryDataNode("data_node", scope=Scope.SCENARIO)
-    task = Task("config_id",  {}, nothing, output=[output])
-    _TaskManagerFactory._build_manager()._set(task)
+    _DataManagerFactory._build_manager()._repository._save(output)
+    task = Task("config_id", {}, nothing, output=[output])
+    _TaskManagerFactory._build_manager()._repository._save(task)
     job = Job(JobId("id"), task, "s_id", task.id)
-    _JobManagerFactory._build_manager()._set(job)
+    _JobManagerFactory._build_manager()._repository._save(job)
 
     _JobDispatcher(_OrchestratorFactory._orchestrator)._update_job_status(job, None)
 
@@ -49,9 +52,9 @@ def test_update_job_status_no_exception():
 
 def test_update_job_status_with_one_exception():
     task = Task("config_id", {}, nothing)
-    _TaskManagerFactory._build_manager()._set(task)
+    _TaskManagerFactory._build_manager()._repository._save(task)
     job = Job(JobId("id"), task, "s_id", task.id)
-    _JobManagerFactory._build_manager()._set(job)
+    _JobManagerFactory._build_manager()._repository._save(job)
     e = Exception("test")
     _JobDispatcher(_OrchestratorFactory._orchestrator)._update_job_status(job, [e])
 
@@ -62,9 +65,9 @@ def test_update_job_status_with_one_exception():
 
 def test_update_job_status_with_exceptions():
     task = Task("config_id", {}, nothing)
-    _TaskManagerFactory._build_manager()._set(task)
+    _TaskManagerFactory._build_manager()._repository._save(task)
     job = Job(JobId("id"), task, "s_id", task.id)
-    _JobManagerFactory._build_manager()._set(job)
+    _JobManagerFactory._build_manager()._repository._save(job)
     e_1 = Exception("test1")
     e_2 = Exception("test2")
     _JobDispatcher(_OrchestratorFactory._orchestrator)._update_job_status(job, [e_1, e_2])

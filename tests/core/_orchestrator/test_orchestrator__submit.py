@@ -492,13 +492,13 @@ def test_submit_submittable_generate_unique_submit_id():
     task_1 = Task("task_config_id_1", {}, print, [dn_1])
     task_2 = Task("task_config_id_2", {}, print, [dn_1], [dn_2])
 
-    _DataManager._set(dn_1)
-    _DataManager._set(dn_2)
-    _TaskManager._set(task_1)
-    _TaskManager._set(task_2)
+    _DataManager._repository._save(dn_1)
+    _DataManager._repository._save(dn_2)
+    _TaskManager._repository._save(task_1)
+    _TaskManager._repository._save(task_2)
 
     scenario = Scenario("scenario", {task_1, task_2}, {})
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
 
     jobs_1 = taipy.submit(scenario).jobs
     jobs_2 = taipy.submit(scenario).jobs
@@ -525,11 +525,11 @@ def test_submit_duration_development_mode():
     task_1 = Task("task_config_id_1", {}, task_sleep_1, [], [])
     task_2 = Task("task_config_id_2", {}, task_sleep_2, [], [])
 
-    _TaskManager._set(task_1)
-    _TaskManager._set(task_2)
+    _TaskManager._repository._save(task_1)
+    _TaskManager._repository._save(task_2)
 
     scenario = Scenario("scenario", {task_1, task_2}, {})
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
     submission = taipy.submit(scenario)
     jobs = submission.jobs
     orchestrator.stop()
@@ -557,11 +557,11 @@ def test_submit_duration_standalone_mode():
     task_1 = Task("task_config_id_1", {}, task_sleep_1, [], [])
     task_2 = Task("task_config_id_2", {}, task_sleep_2, [], [])
 
-    _TaskManager._set(task_1)
-    _TaskManager._set(task_2)
+    _TaskManager._repository._save(task_1)
+    _TaskManager._repository._save(task_2)
 
     scenario = Scenario("scenario", {task_1, task_2}, {})
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
     submission = taipy.submit(scenario)
 
     assert_true_after_time(lambda: all(job is not None and job.is_completed() for job in submission.jobs))

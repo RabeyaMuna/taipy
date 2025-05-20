@@ -29,7 +29,7 @@ def test_submission_equals(submission):
     submission_manager = _SubmissionManagerFactory()._build_manager()
 
     submission_id = submission.id
-    submission_manager._set(submission)
+    submission_manager._repository._save(submission)
 
     # To test if instance is same type
     task = Task("task", {}, print, [], [], submission_id)
@@ -122,6 +122,7 @@ def __test_update_submission_status(job_ids, expected_submission_status):
     }
 
     submission = Submission("submission_id", "ENTITY_TYPE", "entity_config_id")
+    _SubmissionManagerFactory._build_manager()._repository._save(submission)
     submission.jobs = [jobs[job_id] for job_id in job_ids]
     for job_id in job_ids:
         job = jobs[job_id]
@@ -279,16 +280,16 @@ def test_update_submission_status_with_wrong_case_abandoned_without_cancel_or_fa
     __test_update_submission_status(job_ids, expected_submission_status)
 
 
-def test_auto_set_and_reload():
+def test_auto_update_and_reload():
     task = Task(config_id="name_1", properties={}, function=print, id=TaskId("task_1"))
     submission_1 = Submission(task.id, task._ID_PREFIX, task.config_id, properties={})
     job_1 = Job("job_1", task, submission_1.id, submission_1.entity_id)
     job_2 = Job("job_2", task, submission_1.id, submission_1.entity_id)
 
-    _TaskManagerFactory._build_manager()._set(task)
-    _SubmissionManagerFactory._build_manager()._set(submission_1)
-    _JobManagerFactory._build_manager()._set(job_1)
-    _JobManagerFactory._build_manager()._set(job_2)
+    _TaskManagerFactory._build_manager()._repository._save(task)
+    _SubmissionManagerFactory._build_manager()._repository._save(submission_1)
+    _JobManagerFactory._build_manager()._repository._save(job_1)
+    _JobManagerFactory._build_manager()._repository._save(job_2)
 
     submission_2 = _SubmissionManagerFactory._build_manager()._get(submission_1)
 
@@ -369,12 +370,12 @@ def test_auto_set_and_reload():
     assert submission_2.submission_status == SubmissionStatus.PENDING
 
 
-def test_auto_set_and_reload_properties():
+def test_auto_update_and_reload_properties():
     task = Task(config_id="name_1", properties={}, function=print, id=TaskId("task_1"))
     submission_1 = Submission(task.id, task._ID_PREFIX, task.config_id, properties={})
 
-    _TaskManagerFactory._build_manager()._set(task)
-    _SubmissionManagerFactory._build_manager()._set(submission_1)
+    _TaskManagerFactory._build_manager()._repository._save(task)
+    _SubmissionManagerFactory._build_manager()._repository._save(submission_1)
 
     submission_2 = _SubmissionManagerFactory._build_manager()._get(submission_1)
 
@@ -475,7 +476,7 @@ def test_update_submission_status_with_single_job_completed(job_statuses, expect
 
     job = MockJob("job_id", Status.SUBMITTED)
     submission = Submission("submission_id", "ENTITY_TYPE", "entity_config_id")
-    submission_manager._set(submission)
+    submission_manager._repository._save(submission)
 
     assert submission.submission_status == SubmissionStatus.SUBMITTED
 
@@ -490,7 +491,7 @@ def __test_update_submission_status_with_two_jobs(job_ids, job_statuses, expecte
 
     jobs = {job_id: MockJob(job_id, Status.SUBMITTED) for job_id in job_ids}
     submission = Submission("submission_id", "ENTITY_TYPE", "entity_config_id")
-    submission_manager._set(submission)
+    submission_manager._repository._save(submission)
 
     assert submission.submission_status == SubmissionStatus.SUBMITTED
 
@@ -870,7 +871,7 @@ def test_is_finished():
     submission_manager = _SubmissionManagerFactory._build_manager()
 
     submission = Submission("entity_id", "entity_type", "entity_config_id", "submission_id")
-    submission_manager._set(submission)
+    submission_manager._repository._save(submission)
 
     assert len(submission_manager._get_all()) == 1
 
@@ -912,13 +913,13 @@ def test_execution_duration():
     job_1 = Job("job_1", task, submission.id, submission.entity_id)
     job_2 = Job("job_2", task, submission.id, submission.entity_id)
 
-    _TaskManagerFactory._build_manager()._set(task)
-    _SubmissionManagerFactory._build_manager()._set(submission)
-    _JobManagerFactory._build_manager()._set(job_1)
-    _JobManagerFactory._build_manager()._set(job_2)
+    _TaskManagerFactory._build_manager()._repository._save(task)
+    _SubmissionManagerFactory._build_manager()._repository._save(submission)
+    _JobManagerFactory._build_manager()._repository._save(job_1)
+    _JobManagerFactory._build_manager()._repository._save(job_2)
 
     submission.jobs = [job_1, job_2]
-    _SubmissionManagerFactory._build_manager()._set(submission)
+    _SubmissionManagerFactory._build_manager()._update(submission)
 
     with freezegun.freeze_time("2024-09-25 13:30:35"):
         job_1.running()

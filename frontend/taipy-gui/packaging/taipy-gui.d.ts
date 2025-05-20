@@ -350,7 +350,6 @@ export interface ColumnDesc {
     apply?: string;
     /** The flag that allows the user to aggregate the column. */
     groupBy?: boolean;
-    widthHint?: number;
     /** The list of values that can be used on edit. */
     lov?: string[];
     /** If true the user can enter any value besides the lov values. */
@@ -361,6 +360,8 @@ export interface ColumnDesc {
     headers?: string[];
     /** The index of the multi index if exists. */
     multi?: number;
+    /** If true or not set, line breaks are transformed into <BR>. */
+    lineBreak?: boolean;
 }
 /**
  * A cell value type.

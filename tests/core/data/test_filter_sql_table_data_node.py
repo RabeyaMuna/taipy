@@ -16,6 +16,7 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 
 from taipy import Scope
+from taipy.core.data._data_manager_factory import _DataManagerFactory
 from taipy.core.data.operator import JoinOperator, Operator
 from taipy.core.data.sql_table import SQLTableDataNode
 
@@ -40,6 +41,7 @@ class TestFilterSQLTableDataNode:
             "exposed_type": "pandas",
         }
         dn = SQLTableDataNode("foo", Scope.SCENARIO, properties=properties)
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(
             pd.DataFrame(
                 [
@@ -95,6 +97,7 @@ class TestFilterSQLTableDataNode:
             "exposed_type": "numpy",
         }
         dn = SQLTableDataNode("foo", Scope.SCENARIO, properties=properties)
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(
             pd.DataFrame(
                 [

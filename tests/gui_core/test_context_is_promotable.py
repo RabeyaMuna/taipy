@@ -55,10 +55,10 @@ class MockState:
 class TestGuiCoreContext_is_promotable:
     @pytest.fixture(scope="class", autouse=True)
     def set_entity(self):
-        _ScenarioManagerFactory._build_manager()._set(a_scenario)
-        _TaskManagerFactory._build_manager()._set(a_task)
-        _JobManagerFactory._build_manager()._set(a_job)
-        _DataManagerFactory._build_manager()._set(a_datanode)
+        _ScenarioManagerFactory._build_manager()._repository._save(a_scenario)
+        _TaskManagerFactory._build_manager()._repository._save(a_task)
+        _JobManagerFactory._build_manager()._repository._save(a_job)
+        _DataManagerFactory._build_manager()._repository._save(a_datanode)
 
     def test_edit_entity(self):
         with (

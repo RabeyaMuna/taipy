@@ -129,10 +129,10 @@ def test_datanode_config_ranks():
 
     # s1 additional: dn3
     # s1 dag:  dn1 -> dn2
-    Config.configure_scenario("s1", [task_config_1],[dn_config_3])
+    Config.configure_scenario("s1", [task_config_1], [dn_config_3])
     # s2 additional: dn4
     # s2 dag:  dn2 -> dn3
-    Config.configure_scenario("s2", [task_config_2],[dn_config_4])
+    Config.configure_scenario("s2", [task_config_2], [dn_config_4])
     # s3 additional: None
     # s3 dag:  dn1 -> dn2 -> dn3
     Config.configure_scenario("s3", [task_config_1, task_config_2])
@@ -228,7 +228,7 @@ def test_scenario_creation_no_duplication():
     assert len(Config.scenarios) == 2
 
 
-def test_scenario_get_set_and_remove_comparators():
+def test_scenario_add_get_and_remove_comparators():
     task_config_1 = Config.configure_task("task1", my_func)
     task_config_2 = Config.configure_task("task2", print)
     dn_config_1 = "dn_config_1"
@@ -361,6 +361,7 @@ def test_add_sequence():
     scenario_config.remove_sequences(["sequence2", "sequence3"])
     assert len(scenario_config.sequences) == 0
 
+
 @pytest.mark.skip(reason="Generates a png that must be visually verified.")
 def test_draw_1():
     dn_config_1 = Config.configure_data_node("dn1")
@@ -377,6 +378,7 @@ def test_draw_1():
         [dn_config_5],
     )
     scenario_cfg.draw()
+
 
 @pytest.mark.skip(reason="Generates a png that must be visually verified.")
 def test_draw_2():
@@ -403,6 +405,7 @@ def test_draw_2():
     #         0        1         2          3          4
     scenario_cfg.draw("draw_2")
 
+
 @pytest.mark.skip(reason="Generates a png that must be visually verified.")
 def test_draw_3():
     data_node_1 = Config.configure_data_node("s1")
@@ -419,7 +422,6 @@ def test_draw_3():
     task_4 = Config.configure_task("t4", print, None, output=[data_node_6])
     task_5 = Config.configure_task("t5", print, [data_node_7], None)
     scenario_cfg = Config.configure_scenario("scenario1", [task_5, task_3, task_4, task_2, task_1])
-
 
     #  12 |  s7 __
     #  11 |       \

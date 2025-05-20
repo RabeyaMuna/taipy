@@ -39,7 +39,7 @@ class _CycleManager(_Manager[Cycle]):
         cycle = Cycle(
             frequency, properties, creation_date=creation_date, start_date=start_date, end_date=end_date, name=name
         )
-        cls._set(cycle)
+        cls._repository._save(cycle)
         _publish_event(
             cls._EVENT_ENTITY_TYPE,
             EventOperation.CREATION,

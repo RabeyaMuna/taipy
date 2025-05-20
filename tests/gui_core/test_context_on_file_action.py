@@ -22,9 +22,8 @@ from taipy.core.data._file_datanode_mixin import _FileDataNodeMixin
 from taipy.core.reason import Reason, ReasonCollection
 from taipy.gui_core._context import _GuiCoreContext
 
-dn = PickleDataNode("dn_config_id",
-                    scope = Scope.GLOBAL,
-                    properties={"default_path": "pa/th"})
+dn = PickleDataNode("dn_config_id", scope=Scope.GLOBAL, properties={"default_path": "pa/th"})
+
 
 def core_get(entity_id):
     if entity_id == dn.id:
@@ -32,7 +31,7 @@ def core_get(entity_id):
     return None
 
 
-def not_downloadable ():
+def not_downloadable():
     return ReasonCollection()._add_reason(dn.id, Reason("foo"))
 
 
@@ -56,11 +55,11 @@ def check_fails(**kwargs):
     raise Exception("Failed")
 
 
-def upload_fails (a, b, editor_id, comment):
+def upload_fails(a, b, editor_id, comment):
     return ReasonCollection()._add_reason(dn.id, Reason("bar"))
 
 
-def download_fails (a, b, editor_id, comment):
+def download_fails(a, b, editor_id, comment):
     return ReasonCollection()._add_reason(dn.id, Reason("bar"))
 
 
@@ -70,10 +69,9 @@ class MockState:
 
 
 class TestGuiCoreContext_on_file_action:
-
     @pytest.fixture(scope="class", autouse=True)
     def set_entities(self):
-        _DataManagerFactory._build_manager()._set(dn)
+        _DataManagerFactory._build_manager()._repository._save(dn)
 
     def test_does_not_fail_if_wrong_args(self):
         gui_core_context = _GuiCoreContext(Mock(Gui))
@@ -112,11 +110,7 @@ class TestGuiCoreContext_on_file_action:
                         payload={"args": [{"id": dn.id, "error_id": "error_var", "path": "pa/th"}]},
                     )
                     mock_core_get.assert_called_once_with(dn.id)
-                    mock_upload.assert_called_once_with(
-                        "pa/th",
-                        None,
-                        editor_id="a_client_id",
-                        comment=None)
+                    mock_upload.assert_called_once_with("pa/th", None, editor_id="a_client_id", comment=None)
                     assign.assert_not_called()
 
     def test_upload_file_with_checker(self):
@@ -125,21 +119,25 @@ class TestGuiCoreContext_on_file_action:
                 with patch.object(_FileDataNodeMixin, "_upload") as mock_upload:
                     mockGui = Mock(Gui)
                     mockGui._get_client_id = lambda: "a_client_id"
-                    mockGui._get_user_function = lambda _ : _
+                    mockGui._get_user_function = lambda _: _
                     gui_core_context = _GuiCoreContext(mockGui)
                     assign = Mock()
                     gui_core_context.on_file_action(
                         state=MockState(assign=assign),
                         id="",
-                        payload={"args": [
-                            {"id": dn.id, "error_id": "error_var", "path": "pa/th", "upload_check": mock_checker}]},
+                        payload={
+                            "args": [
+                                {"id": dn.id, "error_id": "error_var", "path": "pa/th", "upload_check": mock_checker}
+                            ]
+                        },
                     )
                     mock_core_get.assert_called_once_with(dn.id)
                     mock_upload.assert_called_once_with(
                         "pa/th",
                         t.cast(t.Callable[[str, t.Any], bool], mock_checker),
                         editor_id="a_client_id",
-                        comment=None)
+                        comment=None,
+                    )
                     assign.assert_not_called()
 
     def test_upload_file_with_failing_checker(self):
@@ -148,21 +146,25 @@ class TestGuiCoreContext_on_file_action:
                 with patch.object(_FileDataNodeMixin, "_upload", side_effect=upload_fails) as mock_upload:
                     mockGui = Mock(Gui)
                     mockGui._get_client_id = lambda: "a_client_id"
-                    mockGui._get_user_function = lambda _ : _
+                    mockGui._get_user_function = lambda _: _
                     gui_core_context = _GuiCoreContext(mockGui)
                     assign = Mock()
                     gui_core_context.on_file_action(
                         state=MockState(assign=assign),
                         id="",
-                        payload={"args": [
-                            {"id": dn.id, "error_id": "error_var", "path": "pa/th", "upload_check": check_fails}]},
+                        payload={
+                            "args": [
+                                {"id": dn.id, "error_id": "error_var", "path": "pa/th", "upload_check": check_fails}
+                            ]
+                        },
                     )
                     mock_core_get.assert_called_once_with(dn.id)
                     mock_upload.assert_called_once_with(
                         "pa/th",
                         t.cast(t.Callable[[str, t.Any], bool], check_fails),
                         editor_id="a_client_id",
-                        comment=None)
+                        comment=None,
+                    )
                     assign.assert_called_once_with("error_var", "Data unavailable: bar.")
 
     def test_download_file_not_downloadable(self):
@@ -171,16 +173,13 @@ class TestGuiCoreContext_on_file_action:
                 with patch.object(_FileDataNodeMixin, "_get_downloadable_path") as mock_download:
                     mockGui = Mock(Gui)
                     mockGui._get_client_id = lambda: "a_client_id"
-                    mockGui._get_user_function = lambda _ : _
+                    mockGui._get_user_function = lambda _: _
                     gui_core_context = _GuiCoreContext(mockGui)
                     assign = Mock()
                     gui_core_context.on_file_action(
                         state=MockState(assign=assign),
                         id="",
-                        payload={"args": [
-                            {"id": dn.id,
-                             "action": "export",
-                             "error_id": "error_var"}]},
+                        payload={"args": [{"id": dn.id, "action": "export", "error_id": "error_var"}]},
                     )
                     mock_core_get.assert_called_once_with(dn.id)
                     mock_download.assert_not_called()
@@ -198,10 +197,7 @@ class TestGuiCoreContext_on_file_action:
                     gui_core_context.on_file_action(
                         state=MockState(assign=assign),
                         id="",
-                        payload={"args": [
-                            {"id": dn.id,
-                             "action": "export",
-                             "error_id": "error_var"}]},
+                        payload={"args": [{"id": dn.id, "action": "export", "error_id": "error_var"}]},
                     )
                     mock_core_get.assert_called_once_with(dn.id)
                     mock_download.assert_called_once()

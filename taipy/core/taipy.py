@@ -25,7 +25,7 @@ from .common._check_instance import (
     _is_submission,
     _is_task,
 )
-from .common._warnings import _warn_no_orchestrator_service
+from .common._warnings import _warn_deprecated, _warn_no_orchestrator_service
 from .common.scope import Scope
 from .config.data_node_config import DataNodeConfig
 from .config.scenario_config import ScenarioConfig
@@ -57,26 +57,32 @@ __logger = _TaipyLogger._get_logger()
 
 
 def set(entity: Union[DataNode, Task, Sequence, Scenario, Cycle, Submission]):
-    """Save or update an entity.
+    """Deprecated in favor of `update()` since 4.1.0."""
+    _warn_deprecated("set()", suggest="update()")
+    return update(entity)
 
-    This function allows you to save or update an entity in Taipy.
+
+def update(entity: Union[DataNode, Task, Sequence, Scenario, Cycle, Submission]):
+    """Update an entity.
+
+    This function allows you to update an entity in Taipy.
 
     Arguments:
         entity (Union[DataNode^, Task^, Sequence^, Scenario^, Cycle^, Submission^]): The
-            entity to save or update.
+            entity to update.
     """
     if isinstance(entity, Cycle):
-        return _CycleManagerFactory._build_manager()._set(entity)
+        return _CycleManagerFactory._build_manager()._update(entity)
     if isinstance(entity, Scenario):
-        return _ScenarioManagerFactory._build_manager()._set(entity)
+        return _ScenarioManagerFactory._build_manager()._update(entity)
     if isinstance(entity, Sequence):
-        return _SequenceManagerFactory._build_manager()._set(entity)
+        return _SequenceManagerFactory._build_manager()._update(entity)
     if isinstance(entity, Task):
-        return _TaskManagerFactory._build_manager()._set(entity)
+        return _TaskManagerFactory._build_manager()._update(entity)
     if isinstance(entity, DataNode):
-        return _DataManagerFactory._build_manager()._set(entity)
+        return _DataManagerFactory._build_manager()._update(entity)
     if isinstance(entity, Submission):
-        return _SubmissionManagerFactory._build_manager()._set(entity)
+        return _SubmissionManagerFactory._build_manager()._update(entity)
 
 
 def is_submittable(entity: Union[Scenario, ScenarioId, Sequence, SequenceId, Task, TaskId, str]) -> ReasonCollection:
@@ -904,7 +910,7 @@ def create_scenario(
         SystemExit: If the configuration check returns some errors.
 
     """
-    Orchestrator._manage_version_and_block_config()
+    Orchestrator()._manage_version_and_block_config()
 
     return _ScenarioManagerFactory._build_manager()._create(config, creation_date, name)
 
@@ -929,11 +935,11 @@ def create_global_data_node(config: DataNodeConfig) -> DataNode:
     if config.scope is not Scope.GLOBAL:
         raise DataNodeConfigIsNotGlobal(config.id)
 
-    Orchestrator._manage_version_and_block_config()
+    Orchestrator()._manage_version_and_block_config()
 
     if dns := _DataManagerFactory._build_manager()._get_by_config_id(config.id):
         return dns[0]
-    return _DataManagerFactory._build_manager()._create_and_set(config, None, None)
+    return _DataManagerFactory._build_manager()._create(config, None, None)
 
 
 def clean_all_entities(version_number: str) -> bool:
@@ -1051,7 +1057,7 @@ def get_cycles_scenarios() -> Dict[Optional[Cycle], List[Scenario]]:
 
 def get_entities_by_config_id(
     config_id: str,
-) -> Union[List, List[Task], List[DataNode], List[Sequence], List[Scenario]]:
+) -> Union[List, List[Task], List[DataNode], List[Scenario]]:
     """Get the entities by its config id.
 
     Arguments:
@@ -1085,7 +1091,7 @@ def duplicate_scenario(
     scenario: Scenario,
     new_creation_date: Optional[datetime] = None,
     new_name: Optional[str] = None,
-    data_to_duplicate: Union[Set[str], bool] = True
+    data_to_duplicate: Union[Set[str], bool] = True,
 ) -> Scenario:
     """Duplicate an existing scenario and return a new scenario.
 

@@ -15,7 +15,7 @@ from taipy.common.logger._taipy_logger import _TaipyLogger
 
 from .._entity._entity_ids import _EntityIds
 from .._repository._abstract_repository import _AbstractRepository
-from ..exceptions.exceptions import ModelNotFound
+from ..exceptions.exceptions import ModelNotFound, NonExistingEntity
 from ..notification import Event, EventOperation, Notifier
 from ..reason import EntityDoesNotExist, ReasonCollection
 
@@ -90,11 +90,14 @@ class _Manager(Generic[EntityType]):
             )
 
     @classmethod
-    def _set(cls, entity: EntityType):
+    def _update(cls, entity: EntityType):
         """
-        Save or update an entity.
+        Update an entity.
         """
-        cls._repository._save(entity)
+        if cls._repository._exists(entity.id):  # type: ignore[attr-defined]
+            cls._repository._save(entity)
+        else:
+            raise NonExistingEntity(entity.id)  # type: ignore[attr-defined]
 
     @classmethod
     def _get_all(cls, version_number: Optional[str] = "all") -> List[EntityType]:

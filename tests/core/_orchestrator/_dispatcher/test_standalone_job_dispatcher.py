@@ -32,7 +32,7 @@ def nothing(*args):
 
 def create_task():
     task = Task("config_id", {}, nothing, [], [])
-    _TaskManagerFactory._build_manager()._set(task)
+    _TaskManagerFactory._build_manager()._repository._save(task)
     return task
 
 
@@ -92,6 +92,7 @@ def test_can_execute():
 def test_update_job_status_from_future():
     task = create_task()
     job = Job(JobId("job"), task, "s_id", task.id)
+    _JobManagerFactory._build_manager()._repository._save(job)
     orchestrator = _OrchestratorFactory._build_orchestrator()
     dispatcher = _StandaloneJobDispatcher(orchestrator)
     ft = Future()
@@ -108,10 +109,10 @@ def test_run():
     job_2 = Job(JobId("job2"), task, "s_id", task.id)
     job_3 = Job(JobId("job3"), task, "s_id", task.id)
     job_4 = Job(JobId("job4"), task, "s_id", task.id)
-    _JobManagerFactory._build_manager()._set(job_1)
-    _JobManagerFactory._build_manager()._set(job_2)
-    _JobManagerFactory._build_manager()._set(job_3)
-    _JobManagerFactory._build_manager()._set(job_4)
+    _JobManagerFactory._build_manager()._repository._save(job_1)
+    _JobManagerFactory._build_manager()._repository._save(job_2)
+    _JobManagerFactory._build_manager()._repository._save(job_3)
+    _JobManagerFactory._build_manager()._repository._save(job_4)
     orchestrator = _OrchestratorFactory._build_orchestrator()
     orchestrator.jobs_to_run.put(job_1)
     orchestrator.jobs_to_run.put(job_2)

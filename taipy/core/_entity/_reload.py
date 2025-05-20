@@ -10,10 +10,11 @@
 # specific language governing permissions and limitations under the License.
 
 import functools
+import threading
 from typing import Dict, Type
 
+from ...common._check_dependencies import EnterpriseEditionUtils
 from .._manager._manager import _Manager
-from ..common._check_dependencies import EnterpriseEditionUtils
 from ..common._utils import _load_fct
 from ..notification import EventOperation, Notifier, _make_event
 
@@ -22,13 +23,15 @@ class _Reloader:
     """The _Reloader singleton class"""
 
     _instance = None
-    _no_reload_context = False
-
+    _lock = threading.RLock()
     _managers: Dict[str, Type[_Manager]] = {}
 
     def __new__(cls, *args, **kwargs):
-        if not isinstance(cls._instance, cls):
-            cls._instance = object.__new__(cls, *args, **kwargs)
+        with cls._lock:
+            if not isinstance(cls._instance, cls):
+                cls._instance = super().__new__(cls, *args, **kwargs)
+                cls._instance._no_reload_context = False  # Initialize once
+                cls._instance._context_depth = 0  # Track nested `with` usage
             cls._managers = cls._build_managers()
         return cls._instance
 
@@ -46,11 +49,16 @@ class _Reloader:
         return entity
 
     def __enter__(self):
-        self._no_reload_context = True
+        with self._lock:
+            self._context_depth += 1
+            self._no_reload_context = True
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        self._no_reload_context = False
+        with self._lock:
+            self._context_depth -= 1
+            if self._context_depth == 0:
+                self._no_reload_context = False
 
     @classmethod
     @functools.lru_cache
@@ -100,9 +108,9 @@ def _self_reload(manager: str):
 
 
 def _self_setter(manager):
-    def __set_entity(fct):
+    def __update_entity(fct):
         @functools.wraps(fct)
-        def _do_set_entity(self, *args, **kwargs):
+        def _do_update_entity(self, *args, **kwargs):
             fct(self, *args, **kwargs)
             value = args[0] if len(args) == 1 else args
             event = _make_event(
@@ -114,11 +122,11 @@ def _self_setter(manager):
             if not self._is_in_context:
                 entity = _Reloader()._reload(manager, self)
                 fct(entity, *args, **kwargs)
-                _Reloader._get_manager(manager)._set(entity)
+                _Reloader._get_manager(manager)._update(entity)
                 Notifier.publish(event)
             else:
                 self._in_context_attributes_changed_collector.append(event)
 
-        return _do_set_entity
+        return _do_update_entity
 
-    return __set_entity
+    return __update_entity

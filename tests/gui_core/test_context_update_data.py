@@ -35,6 +35,7 @@ def is_false(entity_id):
 def is_true(entity_id):
     return True
 
+
 def fails(**kwargs):
     raise Exception("Failed")
 
@@ -45,10 +46,9 @@ class MockState:
 
 
 class TestGuiCoreContext_update_data:
-
     @pytest.fixture(scope="class", autouse=True)
     def set_entities(self):
-        _DataManagerFactory._build_manager()._set(dn)
+        _DataManagerFactory._build_manager()._repository._save(dn)
 
     def test_does_not_fail_if_wrong_args(self):
         gui_core_context = _GuiCoreContext(Mock(Gui))
@@ -67,7 +67,7 @@ class TestGuiCoreContext_update_data:
                     gui_core_context.update_data(
                         state=MockState(assign=assign),
                         id="",
-                        payload={"args": [{"id": dn.id,"error_id": "error_var"}]},
+                        payload={"args": [{"id": dn.id, "error_id": "error_var"}]},
                     )
                     mock_core_get.assert_not_called()
                     mock_write.assert_not_called()
@@ -85,7 +85,7 @@ class TestGuiCoreContext_update_data:
                         gui_core_context.update_data(
                             state=MockState(assign=assign),
                             id="",
-                            payload={"args": [{"id": dn.id,"error_id": "error_var"}]},
+                            payload={"args": [{"id": dn.id, "error_id": "error_var"}]},
                         )
                         mock_core_get.assert_not_called()
                         mock_write.assert_not_called()
@@ -104,17 +104,20 @@ class TestGuiCoreContext_update_data:
                             state=MockState(assign=assign),
                             id="",
                             payload={
-                                "args": [{
-                                    "id": dn.id,
-                                    "value": "data to write",
-                                    "comment": "The comment",
-                                    "error_id": "error_var"}],
+                                "args": [
+                                    {
+                                        "id": dn.id,
+                                        "value": "data to write",
+                                        "comment": "The comment",
+                                        "error_id": "error_var",
+                                    }
+                                ],
                             },
                         )
                         mock_core_get.assert_called_once_with(dn.id)
-                        mock_write.assert_called_once_with("data to write",
-                                                           editor_id="a_client_id",
-                                                           comment="The comment")
+                        mock_write.assert_called_once_with(
+                            "data to write", editor_id="a_client_id", comment="The comment"
+                        )
                         assign.assert_called_once_with("error_var", "")
 
     def test_write_date_data_with_editor_and_comment(self):
@@ -137,14 +140,13 @@ class TestGuiCoreContext_update_data:
                                         "value": "2000-01-01 00:00:00",
                                         "type": "date",
                                         "comment": "The comment",
-                                        "error_id": "error_var"
-                                    }],
+                                        "error_id": "error_var",
+                                    }
+                                ],
                             },
                         )
                         mock_core_get.assert_called_once_with(dn.id)
-                        mock_write.assert_called_once_with(date,
-                                                           editor_id="a_client_id",
-                                                           comment="The comment")
+                        mock_write.assert_called_once_with(date, editor_id="a_client_id", comment="The comment")
                         assign.assert_called_once_with("error_var", "")
 
     def test_write_int_data_with_editor_and_comment(self):

@@ -62,7 +62,7 @@ def test_get_all_submission():
     submission_manager = _SubmissionManagerFactory._build_manager()
     version_manager = _VersionManagerFactory._build_manager()
 
-    submission_manager._set(
+    submission_manager._repository._save(
         Submission(
             "entity_id",
             "entity_type",
@@ -73,7 +73,7 @@ def test_get_all_submission():
     )
     for version_name in ["abc", "xyz"]:
         for i in range(10):
-            submission_manager._set(
+            submission_manager._repository._save(
                 Submission(
                     "entity_id",
                     "entity_type",
@@ -122,7 +122,7 @@ def test_delete_submission():
 
     submission = Submission("entity_id", "entity_type", "entity_config_id", "submission_id")
 
-    submission_manager._set(submission)
+    submission_manager._repository._save(submission)
 
     with pytest.raises(SubmissionNotDeletedException):
         submission_manager._delete(submission.id)
@@ -130,7 +130,9 @@ def test_delete_submission():
     submission.submission_status = SubmissionStatus.COMPLETED
 
     for i in range(10):
-        submission_manager._set(Submission("entity_id", "entity_type", "entity_config_id", f"submission_{i}"))
+        submission_manager._repository._save(
+            Submission("entity_id", "entity_type", "entity_config_id", f"submission_{i}")
+        )
 
     assert len(submission_manager._get_all()) == 11
     assert isinstance(submission_manager._get(submission.id), Submission)
@@ -147,7 +149,7 @@ def test_is_deletable():
     submission_manager = _SubmissionManagerFactory._build_manager()
 
     submission = Submission("entity_id", "entity_type", "entity_config_id", "submission_id")
-    submission_manager._set(submission)
+    submission_manager._repository._save(submission)
 
     assert len(submission_manager._get_all()) == 1
 
@@ -210,14 +212,15 @@ def test_hard_delete():
 
     task = Task("task_config_id", {}, print)
     submission = Submission(task.id, task._ID_PREFIX, task.config_id, "SUBMISSION_submission_id")
+    _SubmissionManagerFactory._build_manager()._repository._save(submission)
     job_1 = Job("JOB_job_id_1", task, submission.id, submission.entity_id)  # will be deleted with submission
     job_2 = Job("JOB_job_id_2", task, "SUBMISSION_submission_id_2", submission.entity_id)  # will not be deleted
     submission.jobs = [job_1]
 
-    task_manager._set(task)
-    submission_manager._set(submission)
-    job_manager._set(job_1)
-    job_manager._set(job_2)
+    task_manager._repository._save(task)
+    submission_manager._repository._save(submission)
+    job_manager._repository._save(job_1)
+    job_manager._repository._save(job_2)
 
     assert len(job_manager._get_all()) == 2
     assert len(submission_manager._get_all()) == 1

@@ -16,14 +16,14 @@ const path = require("path");
 const webpack = require("webpack");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin');
+const AddAssetHtmlPlugin = require("add-asset-html-webpack-plugin");
 const ESLintPlugin = require("eslint-webpack-plugin");
-const GenerateJsonPlugin = require('generate-json-webpack-plugin');
+const GenerateJsonPlugin = require("generate-json-webpack-plugin");
 
 const resolveApp = relativePath => path.resolve(__dirname, relativePath);
 
-const reactBundle = "taipy-gui-deps"
-const taipyBundle = "taipy-gui"
+const reactBundle = "taipy-gui-deps";
+const taipyBundle = "taipy-gui";
 
 const reactBundleName = "TaipyGuiDependencies"
 const taipyBundleName = "TaipyGui"
@@ -36,9 +36,9 @@ const taipyDllPath = resolveApp(basePath + "/" + taipyBundle + ".js")
 
 module.exports = (env, options) => {
     const envVariables = {
-        frontend_version: require(resolveApp('package.json')).version,
+        frontend_version: require(resolveApp("package.json")).version,
         frontend_build_date: new Date().toISOString(),
-        frontend_build_mode: options.mode
+        frontend_build_mode: options.mode,
     };
 
     return [{
@@ -69,7 +69,7 @@ module.exports = (env, options) => {
                 path: webAppPath,
                 library: {
                     name: taipyBundleName,
-                    type: "umd"
+                    type: "umd",
                 },
                 publicPath: "",
             },
@@ -94,7 +94,7 @@ module.exports = (env, options) => {
                             fullySpecified: false,
                         },
                     },
-                ]
+                ],
             },
             plugins: [
                 new ESLintPlugin({
@@ -104,9 +104,9 @@ module.exports = (env, options) => {
                 }),
                 new webpack.DllReferencePlugin({
                     name: reactBundleName,
-                    manifest: reactManifestPath
-                })
-            ]
+                    manifest: reactManifestPath,
+                }),
+            ],
         },
         {
             mode: options.mode, //'development', //'production',
@@ -118,7 +118,7 @@ module.exports = (env, options) => {
                 publicPath: "",
             },
             dependencies: [taipyBundleName, reactBundleName],
-            externals: {"taipy-gui": taipyBundleName},
+            externals: { "taipy-gui": taipyBundleName },
 
             // Enable sourcemaps for debugging webpack's output.
             devtool: options.mode === "development" && "inline-source-map",
@@ -134,20 +134,20 @@ module.exports = (env, options) => {
                         use: "ts-loader",
                         exclude: /node_modules/,
                     },
-                ]
+                ],
             },
 
             plugins: [
                 new CopyWebpackPlugin({
                     patterns: [
                         { from: "../public", filter: (name) => !name.endsWith(".html") },
-                        { from: "../packaging", filter: (name) => !name.includes(".gen.") }
+                        { from: "../packaging", filter: (name) => !name.includes(".gen.") },
                     ],
                 }),
                 new HtmlWebpackPlugin({
                     template: "../public/index.html",
                     hash: true,
-                    ...envVariables
+                    ...envVariables,
                 }),
                 new GenerateJsonPlugin("taipy.status.json", envVariables),
                 new ESLintPlugin({
@@ -157,14 +157,14 @@ module.exports = (env, options) => {
                 }),
                 new webpack.DllReferencePlugin({
                     name: reactBundleName,
-                    manifest: reactManifestPath
+                    manifest: reactManifestPath,
                 }),
                 new AddAssetHtmlPlugin([{
                     filepath: reactDllPath,
-                    hash: true
-                },{
+                    hash: true,
+                }, {
                     filepath: taipyDllPath,
-                    hash: true
+                    hash: true,
                 }]),
             ],
     }];

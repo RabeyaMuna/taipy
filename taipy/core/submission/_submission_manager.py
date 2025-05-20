@@ -48,7 +48,7 @@ class _SubmissionManager(_Manager[Submission], _VersionMixin):
         submission = Submission(
             entity_id=entity_id, entity_type=entity_type, entity_config_id=entity_config, properties=properties
         )
-        cls._set(submission)
+        cls._repository._save(submission)
 
         Notifier.publish(_make_event(submission, EventOperation.CREATION))
 
@@ -90,7 +90,7 @@ class _SubmissionManager(_Manager[Submission], _VersionMixin):
                 submission._running_jobs.discard(job.id)
                 submission._blocked_jobs.discard(job.id)
                 submission._pending_jobs.discard(job.id)
-            cls._set(submission)
+            cls._update(submission)
 
             # The submission_status is set later to make sure notification for updating
             # the submission_status attribute is triggered
@@ -119,7 +119,7 @@ class _SubmissionManager(_Manager[Submission], _VersionMixin):
         _current_submission_status = submission._submission_status
         submission._submission_status = new_submission_status
 
-        cls._set(submission)
+        cls._update(submission)
 
         if _current_submission_status != submission._submission_status:
             event = _make_event(

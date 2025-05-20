@@ -10,10 +10,11 @@
 # specific language governing permissions and limitations under the License.
 
 import os
-from typing import Dict, Iterable, List, Optional, Set, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Union
 
 from taipy.common.config import Config
 from taipy.common.config._config import _Config
+from taipy.core.job.job_id import JobId
 
 from .._manager._manager import _Manager
 from .._repository._abstract_repository import _AbstractRepository
@@ -21,7 +22,7 @@ from .._version._version_mixin import _VersionMixin
 from ..common.scope import Scope
 from ..config.data_node_config import DataNodeConfig
 from ..cycle.cycle_id import CycleId
-from ..exceptions.exceptions import InvalidDataNodeType
+from ..exceptions.exceptions import InvalidDataNodeType, NoData
 from ..notification import Event, EventEntityType, EventOperation, Notifier, _make_event
 from ..reason import EntityDoesNotExist, NotGlobalScope, ReasonCollection, WrongConfigType
 from ..reason.reason import DataIsNotDuplicable
@@ -66,7 +67,7 @@ class _DataManager(_Manager[DataNode], _VersionMixin):
             dn_configs_and_owner_id, cls._build_filters_with_version(None)
         )
         return {
-            dn_config: data_nodes.get((dn_config, owner_id)) or cls._create_and_set(dn_config, owner_id, None)
+            dn_config: data_nodes.get((dn_config, owner_id)) or cls._create(dn_config, owner_id, None)
             for dn_config, owner_id in dn_configs_and_owner_id
         }
 
@@ -84,16 +85,16 @@ class _DataManager(_Manager[DataNode], _VersionMixin):
         return reason_collection
 
     @classmethod
-    def _create_and_set(
+    def _create(
         cls, data_node_config: DataNodeConfig, owner_id: Optional[str], parent_ids: Optional[Set[str]]
     ) -> DataNode:
-        data_node = cls.__create(data_node_config, owner_id, parent_ids)
-        cls._set(data_node)
+        data_node = cls.__instantiate(data_node_config, owner_id, parent_ids)
+        cls._repository._save(data_node)
         Notifier.publish(_make_event(data_node, EventOperation.CREATION))
         return data_node
 
     @classmethod
-    def __create(
+    def __instantiate(
         cls, data_node_config: DataNodeConfig, owner_id: Optional[str], parent_ids: Optional[Set[str]]
     ) -> DataNode:
         try:
@@ -124,6 +125,45 @@ class _DataManager(_Manager[DataNode], _VersionMixin):
         """
         filters = cls._build_filters_with_version(version_number)
         return cls._repository._load_all(filters)
+
+    @classmethod
+    def _read(cls, data_node: DataNode) -> Any:
+        """Read the data referenced by this data node.
+
+        Returns:
+            The data referenced by this data node.
+
+        Raises:
+            NoData^: If the data has not been written yet.
+        """
+        if not data_node.last_edit_date:
+            raise NoData(f"Data node {data_node.id} from config {data_node.config_id} has not been written yet.")
+
+        return data_node._read()
+
+    @classmethod
+    def _append(
+        cls, data_node: DataNode, data, editor_id: Optional[str] = None, comment: Optional[str] = None, **kwargs: Any
+    ):
+        data_node._append(data)
+        data_node.track_edit(editor_id=editor_id, comment=comment, **kwargs)
+        data_node.unlock_edit()
+        cls._update(data_node)
+
+    @classmethod
+    def _write(
+        cls,
+        data_node: DataNode,
+        data,
+        job_id: Optional[JobId] = None,
+        editor_id: Optional[str] = None,
+        comment: Optional[str] = None,
+        **kwargs: Any,
+    ):
+        data_node._write(data)
+        data_node.track_edit(job_id=job_id, editor_id=editor_id, comment=comment, **kwargs)
+        data_node.unlock_edit()
+        cls._update(data_node)
 
     @classmethod
     def _clean_generated_file(cls, data_node: DataNode) -> None:

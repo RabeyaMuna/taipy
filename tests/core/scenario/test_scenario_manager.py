@@ -29,6 +29,7 @@ from taipy.core.common.scope import Scope
 from taipy.core.config.scenario_config import ScenarioConfig
 from taipy.core.cycle._cycle_manager import _CycleManager
 from taipy.core.data._data_manager import _DataManager
+from taipy.core.data._data_manager_factory import _DataManagerFactory
 from taipy.core.data.in_memory import InMemoryDataNode
 from taipy.core.exceptions.exceptions import (
     DeletingPrimaryScenario,
@@ -55,7 +56,7 @@ from taipy.core.task.task_id import TaskId
 from tests.core.utils.NotifyMock import NotifyMock
 
 
-def test_set_and_get_scenario(cycle):
+def test_save_and_get_scenario(cycle):
     scenario_id_1 = ScenarioId("scenario_id_1")
     scenario_1 = Scenario("scenario_name_1", [], {}, [], scenario_id_1)
 
@@ -100,7 +101,7 @@ def test_set_and_get_scenario(cycle):
     assert _ScenarioManager._get(scenario_2) is None
 
     # Save one scenario. We expect to have only one scenario stored
-    _ScenarioManager._set(scenario_1)
+    _ScenarioManager._repository._save(scenario_1)
     assert len(_ScenarioManager._get_all()) == 1
     assert _ScenarioManager._get(scenario_id_1).id == scenario_1.id
     assert _ScenarioManager._get(scenario_id_1).config_id == scenario_1.config_id
@@ -118,10 +119,12 @@ def test_set_and_get_scenario(cycle):
     assert _ScenarioManager._get(scenario_2) is None
 
     # Save a second scenario. Now, we expect to have a total of two scenarios stored
-    _TaskManager._set(task_2)
-    _CycleManager._set(cycle)
-    _ScenarioManager._set(scenario_2)
-    _DataManager._set(additional_dn_2)
+    _DataManagerFactory._build_manager()._repository._save(input_dn_2)
+    _DataManagerFactory._build_manager()._repository._save(output_dn_2)
+    _TaskManager._repository._save(task_2)
+    _CycleManager._repository._save(cycle)
+    _ScenarioManager._repository._save(scenario_2)
+    _DataManager._repository._save(additional_dn_2)
     assert len(_ScenarioManager._get_all()) == 2
     assert _ScenarioManager._get(scenario_id_1).id == scenario_1.id
     assert _ScenarioManager._get(scenario_id_1).config_id == scenario_1.config_id
@@ -153,7 +156,7 @@ def test_set_and_get_scenario(cycle):
     assert _CycleManager._get(cycle.id).id == cycle.id
 
     # We save the first scenario again. We expect nothing to change
-    _ScenarioManager._set(scenario_1)
+    _ScenarioManager._update(scenario_1)
     assert len(_ScenarioManager._get_all()) == 2
     assert _ScenarioManager._get(scenario_id_1).id == scenario_1.id
     assert _ScenarioManager._get(scenario_id_1).config_id == scenario_1.config_id
@@ -184,10 +187,10 @@ def test_set_and_get_scenario(cycle):
 
     # We save a third scenario with same id as the first one.
     # We expect the first scenario to be updated
-    _DataManager._set(additional_dn_3)
-    _TaskManager._set(task_3)
-    _TaskManager._set(scenario_2.tasks[task_name_2])
-    _ScenarioManager._set(scenario_3_with_same_id)
+    _DataManager._repository._save(additional_dn_3)
+    _TaskManager._repository._save(task_3)
+    _TaskManager._repository._save(scenario_2.tasks[task_name_2])
+    _ScenarioManager._repository._save(scenario_3_with_same_id)
     assert len(_ScenarioManager._get_all()) == 2
     assert _ScenarioManager._get(scenario_id_1).id == scenario_1.id
     assert _ScenarioManager._get(scenario_id_1).config_id == scenario_3_with_same_id.config_id
@@ -253,7 +256,7 @@ def test_get_all_on_multiple_versions_environment():
     # Only version 2.0 has the scenario with config_id = "config_id_6"
     for version in range(1, 3):
         for i in range(5):
-            _ScenarioManager._set(
+            _ScenarioManager._repository._save(
                 Scenario(f"config_id_{i+version}", [], {}, [], ScenarioId(f"id{i}_v{version}"), version=f"{version}.0")
             )
 
@@ -292,7 +295,7 @@ def test_create_scenario_does_not_modify_config():
     assert scenario.name == name_1
 
     scenario.properties["foo"] = "bar"
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._update(scenario)
     assert len(scenario_config.properties) == 0
     assert len(scenario.properties) == 2
     assert scenario.properties.get("foo") == "bar"
@@ -831,10 +834,10 @@ def test_get_set_primary_scenario():
     assert len(_ScenarioManager._get_all()) == 0
     assert len(_CycleManager._get_all()) == 0
 
-    _CycleManager._set(cycle_1)
+    _CycleManager._repository._save(cycle_1)
 
-    _ScenarioManager._set(scenario_1)
-    _ScenarioManager._set(scenario_2)
+    _ScenarioManager._repository._save(scenario_1)
+    _ScenarioManager._repository._save(scenario_2)
 
     assert len(_ScenarioManager._get_primary_scenarios()) == 0
     assert len(_ScenarioManager._get_all_by_cycle(cycle_1)) == 2
@@ -1120,7 +1123,7 @@ def test_submit():
 
         # scenario and sequence do exist, but tasks does not exist.
         # We expect an exception to be raised
-        _ScenarioManager._set(scenario)
+        _ScenarioManager._repository._save(scenario)
         with pytest.raises(NonExistingTask):
             _ScenarioManager._submit(scenario.id)
         with pytest.raises(NonExistingTask):
@@ -1129,11 +1132,19 @@ def test_submit():
         # scenario, sequence, and tasks do exist.
         # We expect all the tasks to be submitted once,
         # and respecting specific constraints on the order
-        _TaskManager._set(task_1)
-        _TaskManager._set(task_2)
-        _TaskManager._set(task_3)
-        _TaskManager._set(task_4)
-        _TaskManager._set(task_5)
+        _DataManager._repository._save(data_node_1)
+        _DataManager._repository._save(data_node_2)
+        _DataManager._repository._save(data_node_3)
+        _DataManager._repository._save(data_node_4)
+        _DataManager._repository._save(data_node_5)
+        _DataManager._repository._save(data_node_6)
+        _DataManager._repository._save(data_node_7)
+        _DataManager._repository._save(data_node_8)
+        _TaskManager._repository._save(task_1)
+        _TaskManager._repository._save(task_2)
+        _TaskManager._repository._save(task_3)
+        _TaskManager._repository._save(task_4)
+        _TaskManager._repository._save(task_5)
         _ScenarioManager._submit(scenario.id)
         submit_calls = _TaskManager._orchestrator().submit_calls
         assert len(submit_calls) == 5
@@ -1313,13 +1324,10 @@ def test_tags():
     assert scenario_2_tags.has_tag("fst")
     assert scenario_2_tags.has_tag("scd")
 
-    # test get and set serialize/deserialize tags
-    _CycleManager._set(cycle_1)
-    _CycleManager._set(cycle_2)
-    _CycleManager._set(cycle_3)
-    _ScenarioManager._set(scenario_no_tag)
-    _ScenarioManager._set(scenario_1_tag)
-    _ScenarioManager._set(scenario_2_tags)
+    # test get and update serialize/deserialize tags
+    _ScenarioManager._repository._save(scenario_no_tag)
+    _ScenarioManager._repository._save(scenario_1_tag)
+    _ScenarioManager._repository._save(scenario_2_tags)
 
     assert len(_ScenarioManager._get(ScenarioId("scenario_no_tag")).tags) == 0
     assert not _ScenarioManager._get(ScenarioId("scenario_no_tag")).has_tag("fst")
@@ -1355,9 +1363,7 @@ def test_tags():
     assert not scenario_2_tags.has_tag("thd")
 
     _ScenarioManager._untag(scenario_no_tag, "thd")
-    _ScenarioManager._set(scenario_no_tag)
     _ScenarioManager._tag(scenario_1_tag, "fst")
-    _ScenarioManager._set(scenario_1_tag)
 
     # test getters
     assert _ScenarioManager._get_all_by_cycle_tag(cycle_3, "fst") == []
@@ -1409,7 +1415,7 @@ def test_authorized_tags():
     scenario_2_cfg = Config.configure_scenario("scenario_2", [], [], Frequency.DAILY, authorized_tags=["foo", "bar"])
 
     scenario_2 = _ScenarioManager._create(scenario_2_cfg)
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
 
     assert len(scenario.tags) == 0
     assert len(scenario_2.tags) == 0
@@ -1579,7 +1585,7 @@ def test_can_duplicate_scenario():
 
 def test_duplicate_scenario():
     scenario = Scenario("config_id", set(), {}, set(), ScenarioId("scenario_id"))
-    with mock.patch.object(_ScenarioManager, "_can_duplicate", return_value= ReasonCollection()) as mock_can:
+    with mock.patch.object(_ScenarioManager, "_can_duplicate", return_value=ReasonCollection()) as mock_can:
         with mock.patch.object(_ScenarioDuplicator, "duplicate") as mock_duplicate:
             _ScenarioManager._duplicate(scenario)
             mock_can.assert_called_once_with(scenario)

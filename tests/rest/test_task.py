@@ -13,6 +13,8 @@ from unittest import mock
 
 from flask import url_for
 
+from taipy.core.task._task_manager_factory import _TaskManagerFactory
+
 
 def test_get_task(client, default_task):
     # test 404
@@ -76,6 +78,8 @@ def test_get_all_tasks(client, task_data, default_task_config_list):
 
 
 def test_execute_task(client, default_task):
+    _TaskManagerFactory._build_manager()._repository._save(default_task)
+
     # test 404
     user_url = url_for("api.task_submit", task_id="foo")
     rep = client.post(user_url)

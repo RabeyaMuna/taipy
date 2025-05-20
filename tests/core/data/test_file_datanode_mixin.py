@@ -25,10 +25,12 @@ def test_duplicate_data():
     copy = CSVDataNode("foo", Scope.SCENARIO, properties={"path": path, "exposed_type": "pandas"})
     copy_2 = CSVDataNode("foo", Scope.SCENARIO, properties={"path": path, "exposed_type": "pandas"})
     copy_copy = CSVDataNode("foo", Scope.SCENARIO, properties={"path": path, "exposed_type": "pandas"})
-    _DataManager._set(src)
+    _DataManager._repository._save(src)
+    _DataManager._repository._save(copy)
+    _DataManager._repository._save(copy_2)
+    _DataManager._repository._save(copy_copy)
 
     src._duplicate_file(copy)
-    _DataManager._set(copy)
     assert _normalize_path(src.path) == _normalize_path(path)
     assert _normalize_path(src.path) != _normalize_path(copy.path)
     assert filecmp.cmp(path, copy.path)
@@ -36,12 +38,10 @@ def test_duplicate_data():
     assert copy.path.count("DUPLICATE_OF") == 1
 
     src._duplicate_file(copy_2)
-    _DataManager._set(copy_2)
     assert _normalize_path(copy.path) != _normalize_path(copy_2.path)
     assert copy_2.path.count("DUPLICATE_OF") == 1
 
     copy._duplicate_file(copy_copy)
-    _DataManager._set(copy_copy)
     assert copy_copy.path.count("DUPLICATE_OF") == 2
 
     os.unlink(copy.path)

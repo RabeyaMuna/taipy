@@ -18,6 +18,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from taipy import Scope
+from taipy.core.data._data_manager_factory import _DataManagerFactory
 from taipy.core.data.csv import CSVDataNode
 from taipy.core.data.operator import JoinOperator, Operator
 
@@ -32,6 +33,7 @@ def cleanup():
 
 def test_filter_pandas_exposed_type(csv_file):
     dn = CSVDataNode("foo", Scope.SCENARIO, properties={"path": csv_file, "exposed_type": "pandas"})
+    _DataManagerFactory._build_manager()._repository._save(dn)
     dn.write(
         [
             {"foo": 1, "bar": 1},
@@ -82,6 +84,7 @@ def test_filter_pandas_exposed_type(csv_file):
 
 def test_filter_numpy_exposed_type(csv_file):
     dn = CSVDataNode("foo", Scope.SCENARIO, properties={"path": csv_file, "exposed_type": "numpy"})
+    _DataManagerFactory._build_manager()._repository._save(dn)
     dn.write(
         np.array(
             [

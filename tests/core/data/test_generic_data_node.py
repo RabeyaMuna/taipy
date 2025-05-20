@@ -59,7 +59,7 @@ class TestGenericDataNode:
         generic_dn_config = Config.configure_generic_data_node(
             id="foo_bar", read_fct=read_fct, write_fct=write_fct, name="super name"
         )
-        dn = data_manager._create_and_set(generic_dn_config, None, None)
+        dn = data_manager._create(generic_dn_config, None, None)
         assert isinstance(dn, GenericDataNode)
         assert dn.storage_type() == "generic"
         assert dn.config_id == "foo_bar"
@@ -79,7 +79,7 @@ class TestGenericDataNode:
     def test_create_with_read_fct_and_none_write_fct(self):
         data_manager = _DataManagerFactory._build_manager()
         generic_dn_config = Config.configure_generic_data_node(id="foo", read_fct=read_fct, write_fct=None, name="foo")
-        dn = data_manager._create_and_set(generic_dn_config, None, None)
+        dn = data_manager._create(generic_dn_config, None, None)
         assert isinstance(dn, GenericDataNode)
         assert dn.storage_type() == "generic"
         assert dn.config_id == "foo"
@@ -96,7 +96,7 @@ class TestGenericDataNode:
     def test_create_with_write_fct_and_none_read_fct(self):
         data_manager = _DataManagerFactory._build_manager()
         generic_dn_config = Config.configure_generic_data_node(id="xyz", read_fct=None, write_fct=write_fct, name="xyz")
-        dn = data_manager._create_and_set(generic_dn_config, None, None)
+        dn = data_manager._create(generic_dn_config, None, None)
         assert isinstance(dn, GenericDataNode)
         assert dn.storage_type() == "generic"
         assert dn.config_id == "xyz"
@@ -113,7 +113,7 @@ class TestGenericDataNode:
     def test_create_with_read_fct(self):
         data_manager = _DataManagerFactory._build_manager()
         generic_dn_config = Config.configure_generic_data_node(id="acb", read_fct=read_fct, name="acb")
-        dn = data_manager._create_and_set(generic_dn_config, None, None)
+        dn = data_manager._create(generic_dn_config, None, None)
         assert isinstance(dn, GenericDataNode)
         assert dn.storage_type() == "generic"
         assert dn.config_id == "acb"
@@ -130,7 +130,7 @@ class TestGenericDataNode:
     def test_create_with_write_fct(self):
         data_manager = _DataManagerFactory._build_manager()
         generic_dn_config = Config.configure_generic_data_node(id="mno", write_fct=write_fct, name="mno")
-        dn = data_manager._create_and_set(generic_dn_config, None, None)
+        dn = data_manager._create(generic_dn_config, None, None)
         assert isinstance(dn, GenericDataNode)
         assert dn.storage_type() == "generic"
         assert dn.config_id == "mno"
@@ -168,6 +168,7 @@ class TestGenericDataNode:
 
     def test_read_write_generic_datanode(self):
         generic_dn = GenericDataNode("foo", Scope.SCENARIO, properties={"read_fct": read_fct, "write_fct": write_fct})
+        _DataManagerFactory._build_manager()._repository._save(generic_dn)
 
         assert generic_dn.read() == self.data
         assert len(generic_dn.read()) == 10
@@ -185,6 +186,7 @@ class TestGenericDataNode:
             generic_dn_1.write(self.data)
 
         generic_dn_2 = GenericDataNode("xyz", Scope.SCENARIO, properties={"read_fct": None, "write_fct": write_fct})
+        _DataManagerFactory._build_manager()._repository._save(generic_dn_2)
 
         generic_dn_2.write(self.data)
         assert len(self.data) == 12
@@ -193,6 +195,7 @@ class TestGenericDataNode:
             generic_dn_2.read()
 
         generic_dn_3 = GenericDataNode("bar", Scope.SCENARIO, properties={"read_fct": None, "write_fct": None})
+        _DataManagerFactory._build_manager()._repository._save(generic_dn_3)
 
         with pytest.raises(MissingReadFunction):
             generic_dn_3.read()
@@ -212,6 +215,7 @@ class TestGenericDataNode:
                 "write_fct_args": [2],
             },
         )
+        _DataManagerFactory._build_manager()._repository._save(generic_dn)
 
         assert all(a + 1 == b for a, b in zip(self.data, generic_dn.read()))
         assert len(generic_dn.read()) == 10
@@ -232,6 +236,7 @@ class TestGenericDataNode:
                 "write_fct_args": 2,
             },
         )
+        _DataManagerFactory._build_manager()._repository._save(generic_dn)
 
         assert all(a + 1 == b for a, b in zip(self.data, generic_dn.read()))
         assert len(generic_dn.read()) == 10
@@ -245,6 +250,7 @@ class TestGenericDataNode:
         generic_dn = GenericDataNode(
             "foo", Scope.SCENARIO, properties={"read_fct": read_fct_modify_data_node_name, "write_fct": write_fct}
         )
+        _DataManagerFactory._build_manager()._repository._save(generic_dn)
         generic_dn._properties["read_fct_args"] = (generic_dn.id, "bar")
         generic_dn.read()
         assert generic_dn.name == "bar"

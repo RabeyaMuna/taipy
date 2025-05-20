@@ -19,6 +19,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from taipy import Scope
+from taipy.core.data._data_manager_factory import _DataManagerFactory
 from taipy.core.data.parquet import ParquetDataNode
 
 
@@ -60,6 +61,7 @@ class TestWriteParquetDataNode:
         path = os.path.join(pathlib.Path(__file__).parent.resolve(), "data_sample/example.parquet")
         new_path = os.path.join(pathlib.Path(__file__).parent.resolve(), "data_sample/temp.parquet")
         dn = ParquetDataNode("foo", Scope.SCENARIO, properties={"path": path, "engine": engine})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         read_data = dn.read()
         assert read_data is not None
         dn.path = new_path
@@ -71,6 +73,7 @@ class TestWriteParquetDataNode:
     def test_write_pandas(self, tmpdir_factory):
         temp_file_path = str(tmpdir_factory.mktemp("data").join("temp.parquet"))
         parquet_dn = ParquetDataNode("foo", Scope.SCENARIO, properties={"path": temp_file_path})
+        _DataManagerFactory._build_manager()._repository._save(parquet_dn)
 
         df = pd.DataFrame([{"a": 11, "b": 22, "c": 33}, {"a": 44, "b": 55, "c": 66}])
         parquet_dn.write(df)
@@ -97,6 +100,7 @@ class TestWriteParquetDataNode:
         parquet_dn = ParquetDataNode(
             "foo", Scope.SCENARIO, properties={"path": temp_file_path, "exposed_type": "numpy"}
         )
+        _DataManagerFactory._build_manager()._repository._save(parquet_dn)
 
         arr = np.array([[1], [2], [3], [4], [5]])
         parquet_dn.write(arr)
@@ -114,6 +118,7 @@ class TestWriteParquetDataNode:
         parquet_dn = ParquetDataNode(
             "foo", Scope.SCENARIO, properties={"path": temp_file_path, "exposed_type": MyCustomObject}
         )
+        _DataManagerFactory._build_manager()._repository._save(parquet_dn)
 
         data = [MyCustomObject(0, 1, "hi"), MyCustomObject(1, 2, "world"), MyCustomObject(2, 3, "text")]
         parquet_dn.write(data)
@@ -139,6 +144,7 @@ class TestWriteParquetDataNode:
         dn = ParquetDataNode(
             "foo", Scope.SCENARIO, properties={"path": temp_file_path, "engine": engine, "compression": comp3}
         )
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(df)
         df.to_parquet(path=temp_file_2_path, compression=comp3, engine=engine)
         with open(temp_file_2_path, "rb") as tf:
@@ -157,6 +163,7 @@ class TestWriteParquetDataNode:
                 "write_kwargs": {"compression": comp2},
             },
         )
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(df)
         df.to_parquet(path=temp_file_2_path, compression=comp2, engine=engine)
         with open(temp_file_2_path, "rb") as tf:
@@ -175,7 +182,8 @@ class TestWriteParquetDataNode:
                 "write_kwargs": {"compression": comp2},
             },
         )
-        dn._write_with_kwargs(df, compression=comp1)
+        _DataManagerFactory._build_manager()._repository._save(dn)
+        dn._write_to_path(temp_file_path, df, compression=comp1)
         df.to_parquet(path=temp_file_2_path, compression=comp1, engine=engine)
         with open(temp_file_2_path, "rb") as tf:
             with pathlib.Path(temp_file_path).open("rb") as f:
@@ -190,6 +198,7 @@ class TestWriteParquetDataNode:
             Scope.SCENARIO,
             properties={"path": temp_file_path, "engine": engine, "read_kwargs": {"columns": cols2}},
         )
+        _DataManagerFactory._build_manager()._repository._save(dn)
         assert set(dn.read().columns) == set(cols2)
 
         # 1
@@ -206,6 +215,7 @@ class TestWriteParquetDataNode:
 
         write_kwargs = {"partition_cols": ["a", "b"]}
         dn = ParquetDataNode("foo", Scope.SCENARIO, properties={"path": temp_dir_path, "write_kwargs": write_kwargs})  # type: ignore
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(default_data_frame)
 
         assert pathlib.Path(temp_dir_path).is_dir()
@@ -227,6 +237,7 @@ class TestWriteParquetDataNode:
     )
     def test_append_pandas(self, parquet_file_path, default_data_frame, content):
         dn = ParquetDataNode("foo", Scope.SCENARIO, properties={"path": parquet_file_path})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         assert_frame_equal(dn.read(), default_data_frame)
 
         dn.append(content)

@@ -19,6 +19,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from taipy import Scope
+from taipy.core.data._data_manager_factory import _DataManagerFactory
 from taipy.core.data.excel import ExcelDataNode
 from taipy.core.exceptions.exceptions import SheetNameLengthMismatch
 
@@ -62,6 +63,7 @@ sheet_names = ["Sheet1", "Sheet2"]
 
 def test_write_with_header_multiple_sheet_pandas_with_sheet_name(tmp_excel_file):
     excel_dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"path": tmp_excel_file, "sheet_name": sheet_names})
+    _DataManagerFactory._build_manager()._repository._save(excel_dn)
 
     df_1 = pd.DataFrame([{"a": 1, "b": 2, "c": 3}])
     df_2 = pd.DataFrame([{"a": 4, "b": 5, "c": 6}])
@@ -91,6 +93,7 @@ def test_write_with_header_multiple_sheet_pandas_with_sheet_name(tmp_excel_file)
 
 def test_write_with_header_multiple_sheet_pandas_without_sheet_name(tmp_excel_file):
     excel_dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"path": tmp_excel_file})
+    _DataManagerFactory._build_manager()._repository._save(excel_dn)
 
     df_1 = pd.DataFrame([{"a": 1, "b": 2, "c": 3}])
     df_2 = pd.DataFrame([{"a": 4, "b": 5, "c": 6}])
@@ -122,6 +125,7 @@ def test_write_with_header_multiple_sheet_numpy_with_sheet_name(tmp_excel_file):
     excel_dn = ExcelDataNode(
         "foo", Scope.SCENARIO, properties={"path": tmp_excel_file, "sheet_name": sheet_names, "exposed_type": "numpy"}
     )
+    _DataManagerFactory._build_manager()._repository._save(excel_dn)
 
     arr_1 = np.array([[1], [2], [3]])
     arr_2 = np.array([[4], [5], [6]])
@@ -146,6 +150,7 @@ def test_write_with_header_multiple_sheet_numpy_with_sheet_name(tmp_excel_file):
 
 def test_write_with_header_multiple_sheet_numpy_without_sheet_name(tmp_excel_file):
     excel_dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"path": tmp_excel_file, "exposed_type": "numpy"})
+    _DataManagerFactory._build_manager()._repository._save(excel_dn)
 
     arr_1 = np.array([[1], [2], [3]])
     arr_2 = np.array([[4], [5], [6]])
@@ -174,6 +179,7 @@ def test_write_with_header_multiple_sheet_custom_exposed_type_with_sheet_name(tm
         Scope.SCENARIO,
         properties={"path": tmp_excel_file, "sheet_name": sheet_names, "exposed_type": MyCustomObject},
     )
+    _DataManagerFactory._build_manager()._repository._save(excel_dn)
     row_1 = [MyCustomObject(0, 1, "hi"), MyCustomObject(1, 2, "world"), MyCustomObject(2, 3, "text")]
     row_2 = [MyCustomObject(0, 4, "hello"), MyCustomObject(1, 5, "abc"), MyCustomObject(2, 6, ".")]
     sheet_data = {"Sheet1": row_1, "Sheet2": row_2}
@@ -187,6 +193,7 @@ def test_write_with_header_multiple_sheet_custom_exposed_type_with_sheet_name(tm
 
 def test_write_with_header_multiple_sheet_custom_exposed_type_without_sheet_name(tmp_excel_file):
     excel_dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"path": tmp_excel_file, "exposed_type": MyCustomObject})
+    _DataManagerFactory._build_manager()._repository._save(excel_dn)
 
     row_1 = [MyCustomObject(0, 1, "hi"), MyCustomObject(1, 2, "world"), MyCustomObject(2, 3, "text")]
     row_2 = [MyCustomObject(0, 4, "hello"), MyCustomObject(1, 5, "abc"), MyCustomObject(2, 6, ".")]
@@ -203,6 +210,7 @@ def test_write_without_header_multiple_sheet_pandas_with_sheet_name(tmp_excel_fi
     excel_dn = ExcelDataNode(
         "foo", Scope.SCENARIO, properties={"path": tmp_excel_file, "sheet_name": sheet_names, "has_header": False}
     )
+    _DataManagerFactory._build_manager()._repository._save(excel_dn)
 
     df_1 = pd.DataFrame([*zip([1, 2, 3])])
     df_2 = pd.DataFrame([*zip([4, 5, 6])])
@@ -232,6 +240,7 @@ def test_write_without_header_multiple_sheet_pandas_with_sheet_name(tmp_excel_fi
 
 def test_write_without_header_multiple_sheet_pandas_without_sheet_name(tmp_excel_file):
     excel_dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"path": tmp_excel_file, "has_header": False})
+    _DataManagerFactory._build_manager()._repository._save(excel_dn)
 
     df_1 = pd.DataFrame([*zip([1, 2, 3])])
     df_2 = pd.DataFrame([*zip([4, 5, 6])])
@@ -265,6 +274,7 @@ def test_write_without_header_multiple_sheet_numpy_with_sheet_name(tmp_excel_fil
         Scope.SCENARIO,
         properties={"path": tmp_excel_file, "sheet_name": sheet_names, "exposed_type": "numpy", "has_header": False},
     )
+    _DataManagerFactory._build_manager()._repository._save(excel_dn)
 
     arr_1 = np.array([[1], [2], [3]])
     arr_2 = np.array([[4], [5], [6]])
@@ -291,6 +301,7 @@ def test_write_without_header_multiple_sheet_numpy_without_sheet_name(tmp_excel_
     excel_dn = ExcelDataNode(
         "foo", Scope.SCENARIO, properties={"path": tmp_excel_file, "exposed_type": "numpy", "has_header": False}
     )
+    _DataManagerFactory._build_manager()._repository._save(excel_dn)
 
     arr_1 = np.array([[1], [2], [3]])
     arr_2 = np.array([[4], [5], [6]])
@@ -324,6 +335,7 @@ def test_write_without_header_multiple_sheet_custom_exposed_type_with_sheet_name
             "has_header": False,
         },
     )
+    _DataManagerFactory._build_manager()._repository._save(excel_dn)
 
     row_1 = [MyCustomObject(0, 1, "hi"), MyCustomObject(1, 2, "world"), MyCustomObject(2, 3, "text")]
     row_2 = [MyCustomObject(0, 4, "hello"), MyCustomObject(1, 5, "abc"), MyCustomObject(2, 6, ".")]
@@ -340,6 +352,7 @@ def test_write_without_header_multiple_sheet_custom_exposed_type_without_sheet_n
     excel_dn = ExcelDataNode(
         "foo", Scope.SCENARIO, properties={"path": tmp_excel_file, "exposed_type": MyCustomObject, "has_header": False}
     )
+    _DataManagerFactory._build_manager()._repository._save(excel_dn)
 
     row_1 = [MyCustomObject(0, 1, "hi"), MyCustomObject(1, 2, "world"), MyCustomObject(2, 3, "text")]
     row_2 = [MyCustomObject(0, 4, "hello"), MyCustomObject(1, 5, "abc"), MyCustomObject(2, 6, ".")]
@@ -354,6 +367,7 @@ def test_write_without_header_multiple_sheet_custom_exposed_type_without_sheet_n
 
 def test_write_empty_multiple_sheet_without_sheet_name(tmp_excel_file):
     excel_dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"path": tmp_excel_file})
+    _DataManagerFactory._build_manager()._repository._save(excel_dn)
 
     excel_dn.write(None)
     assert len(excel_dn.read()) == 1
@@ -370,6 +384,7 @@ def test_write_empty_multiple_sheet_without_sheet_name(tmp_excel_file):
 
 def test_write_empty_multiple_sheet_with_sheet_name(tmp_excel_file):
     excel_dn = ExcelDataNode("foo", Scope.SCENARIO, properties={"path": tmp_excel_file, "sheet_name": sheet_names})
+    _DataManagerFactory._build_manager()._repository._save(excel_dn)
 
     # Multisheet excel dn can only be written with a dictionary of data
     with pytest.raises(SheetNameLengthMismatch):
@@ -408,6 +423,7 @@ def test_append_pandas_multisheet(excel_file_with_multi_sheet, default_multi_she
     dn = ExcelDataNode(
         "foo", Scope.SCENARIO, properties={"path": excel_file_with_multi_sheet, "sheet_name": ["Sheet1", "Sheet2"]}
     )
+    _DataManagerFactory._build_manager()._repository._save(dn)
     assert_frame_equal(dn.read()["Sheet1"], default_multi_sheet_data_frame["Sheet1"])
     assert_frame_equal(dn.read()["Sheet2"], default_multi_sheet_data_frame["Sheet2"])
 

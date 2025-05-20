@@ -71,7 +71,7 @@ def test_skippable_compatibility_with_no_output():
 
 def test_skippable_compatibility_with_one_output():
     manager = _DataManagerFactory._build_manager()
-    manager._set(InMemoryDataNode("cfg_id", Scope.SCENARIO, id="dn_id"))
+    manager._repository._save(InMemoryDataNode("cfg_id", Scope.SCENARIO, id="dn_id"))
 
     model = _TaskModel.from_dict(
         {
@@ -92,8 +92,8 @@ def test_skippable_compatibility_with_one_output():
 
 def test_skippable_compatibility_with_many_outputs():
     manager = _DataManagerFactory._build_manager()
-    manager._set(InMemoryDataNode("cfg_id", Scope.SCENARIO, id="dn_id"))
-    manager._set(InMemoryDataNode("cfg_id_2", Scope.SCENARIO, id="dn_2_id"))
+    manager._repository._save(InMemoryDataNode("cfg_id", Scope.SCENARIO, id="dn_id"))
+    manager._repository._save(InMemoryDataNode("cfg_id_2", Scope.SCENARIO, id="dn_2_id"))
     model = _TaskModel.from_dict(
         {
             "id": "id",

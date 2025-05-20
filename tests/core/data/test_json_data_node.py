@@ -93,7 +93,7 @@ class TestJSONDataNode:
     def test_create(self):
         path = "data/node/path"
         json_dn_config = Config.configure_json_data_node(id="foo_bar", default_path=path, name="super name")
-        dn_1 = _DataManagerFactory._build_manager()._create_and_set(json_dn_config, None, None)
+        dn_1 = _DataManagerFactory._build_manager()._create(json_dn_config, None, None)
         assert isinstance(dn_1, JSONDataNode)
         assert dn_1.storage_type() == "json"
         assert dn_1.config_id == "foo_bar"
@@ -107,7 +107,7 @@ class TestJSONDataNode:
         assert dn_1.path == path
 
         json_dn_config_2 = Config.configure_json_data_node(id="foo", default_path=path, encoding="utf-16")
-        dn_2 = _DataManagerFactory._build_manager()._create_and_set(json_dn_config_2, None, None)
+        dn_2 = _DataManagerFactory._build_manager()._create(json_dn_config_2, None, None)
         assert isinstance(dn_2, JSONDataNode)
         assert dn_2.storage_type() == "json"
         assert dn_2.properties["encoding"] == "utf-16"
@@ -115,7 +115,7 @@ class TestJSONDataNode:
         json_dn_config_3 = Config.configure_json_data_node(
             id="foo", default_path=path, encoder=MyCustomEncoder, decoder=MyCustomDecoder
         )
-        dn_3 = _DataManagerFactory._build_manager()._create_and_set(json_dn_config_3, None, None)
+        dn_3 = _DataManagerFactory._build_manager()._create(json_dn_config_3, None, None)
         assert isinstance(dn_3, JSONDataNode)
         assert dn_3.storage_type() == "json"
         assert dn_3.properties["encoder"] == MyCustomEncoder
@@ -162,8 +162,10 @@ class TestJSONDataNode:
 
     def test_read_non_existing_json(self):
         not_existing_json = JSONDataNode("foo", Scope.SCENARIO, properties={"default_path": "WRONG.json"})
+        assert not_existing_json.read() is None
         with pytest.raises(NoData):
-            assert not_existing_json.read() is None
+            _DataManagerFactory._build_manager()._read(not_existing_json)
+        with pytest.raises(NoData):
             not_existing_json.read_or_raise()
 
     def test_read(self):
@@ -198,6 +200,7 @@ class TestJSONDataNode:
 
     def test_append_to_list(self, json_file):
         json_dn = JSONDataNode("foo", Scope.SCENARIO, properties={"default_path": json_file})
+        _DataManagerFactory._build_manager()._repository._save(json_dn)
         original_data = json_dn.read()
 
         # Append a dictionary
@@ -212,6 +215,7 @@ class TestJSONDataNode:
 
     def test_append_to_a_dictionary(self, json_file):
         json_dn = JSONDataNode("foo", Scope.SCENARIO, properties={"default_path": json_file})
+        _DataManagerFactory._build_manager()._repository._save(json_dn)
         original_data = {"a": 1, "b": 2, "c": 3}
         json_dn.write(original_data)
 
@@ -227,6 +231,7 @@ class TestJSONDataNode:
 
     def test_write(self, json_file):
         json_dn = JSONDataNode("foo", Scope.SCENARIO, properties={"default_path": json_file})
+        _DataManagerFactory._build_manager()._repository._save(json_dn)
         data = {"a": 1, "b": 2, "c": 3}
         json_dn.write(data)
         assert np.array_equal(json_dn.read(), data)
@@ -235,9 +240,11 @@ class TestJSONDataNode:
         data = {"≥a": 1, "b": 2}
 
         utf8_dn = JSONDataNode("utf8_dn", Scope.SCENARIO, properties={"default_path": json_file})
+        _DataManagerFactory._build_manager()._repository._save(utf8_dn)
         utf16_dn = JSONDataNode(
             "utf16_dn", Scope.SCENARIO, properties={"default_path": json_file, "encoding": "utf-16"}
         )
+        _DataManagerFactory._build_manager()._repository._save(utf16_dn)
 
         # If a file is written with utf-8 encoding, it can only be read with utf-8, not utf-16 encoding
         utf8_dn.write(data)
@@ -259,6 +266,7 @@ class TestJSONDataNode:
 
     def test_write_date(self, json_file):
         json_dn = JSONDataNode("foo", Scope.SCENARIO, properties={"default_path": json_file})
+        _DataManagerFactory._build_manager()._repository._save(json_dn)
         now = datetime.datetime.now()
         data = {"date": now}
         json_dn.write(data)
@@ -267,6 +275,7 @@ class TestJSONDataNode:
 
     def test_write_enum(self, json_file):
         json_dn = JSONDataNode("foo", Scope.SCENARIO, properties={"default_path": json_file})
+        _DataManagerFactory._build_manager()._repository._save(json_dn)
         data = [MyEnum.A, MyEnum.B, MyEnum.C]
         json_dn.write(data)
         read_data = json_dn.read()
@@ -274,6 +283,7 @@ class TestJSONDataNode:
 
     def test_write_dataclass(self, json_file):
         json_dn = JSONDataNode("foo", Scope.SCENARIO, properties={"default_path": json_file})
+        _DataManagerFactory._build_manager()._repository._save(json_dn)
         json_dn.write(CustomDataclass(integer=1, string="foo"))
         read_data = json_dn.read()
         assert read_data.integer == 1
@@ -283,6 +293,7 @@ class TestJSONDataNode:
         json_dn = JSONDataNode(
             "foo", Scope.SCENARIO, properties={"default_path": json_file, "encoder": MyCustomEncoder}
         )
+        _DataManagerFactory._build_manager()._repository._save(json_dn)
         data = [MyCustomObject("1", 1, "abc"), 100]
         json_dn.write(data)
         read_data = json_dn.read()
@@ -298,6 +309,7 @@ class TestJSONDataNode:
             Scope.SCENARIO,
             properties={"default_path": json_file, "encoder": MyCustomEncoder, "decoder": MyCustomDecoder},
         )
+        _DataManagerFactory._build_manager()._repository._save(json_dn)
         data = [MyCustomObject("1", 1, "abc"), 100]
         json_dn.write(data)
         read_data = json_dn.read()
@@ -309,6 +321,7 @@ class TestJSONDataNode:
 
     def test_filter(self, json_file):
         json_dn = JSONDataNode("foo", Scope.SCENARIO, properties={"default_path": json_file})
+        _DataManagerFactory._build_manager()._repository._save(json_dn)
         json_dn.write(
             [
                 {"foo": 1, "bar": 1},
@@ -343,6 +356,7 @@ class TestJSONDataNode:
 
     def test_set_path(self):
         dn = JSONDataNode("foo", Scope.SCENARIO, properties={"default_path": "foo.json"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         assert dn.path == "foo.json"
         dn.path = "bar.json"
         assert dn.path == "bar.json"
@@ -351,6 +365,7 @@ class TestJSONDataNode:
         path = os.path.join(pathlib.Path(__file__).parent.resolve(), "data_sample/json/example_dict.json")
         new_path = os.path.join(pathlib.Path(__file__).parent.resolve(), "data_sample/temp.json")
         dn = JSONDataNode("foo", Scope.SCENARIO, properties={"default_path": path})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         read_data = dn.read()
         assert read_data is not None
         dn.path = new_path
@@ -363,6 +378,7 @@ class TestJSONDataNode:
         temp_file_path = str(tmpdir_factory.mktemp("data").join("temp.json"))
         pd.DataFrame([]).to_json(temp_file_path)
         dn = JSONDataNode("foo", Scope.SCENARIO, properties={"path": temp_file_path})
+        _DataManagerFactory._build_manager()._repository._save(dn)
 
         dn.write([1, 2, 3])
         previous_edit_date = dn.last_edit_date
@@ -431,6 +447,7 @@ class TestJSONDataNode:
         old_data = [{"a": 0, "b": 1, "c": 2}, {"a": 3, "b": 4, "c": 5}]
 
         dn = JSONDataNode("foo", Scope.SCENARIO, properties={"path": old_json_path})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(old_data)
         old_last_edit_date = dn.last_edit_date
 
@@ -449,6 +466,7 @@ class TestJSONDataNode:
         old_data = [{"a": 0, "b": 1, "c": 2}, {"a": 3, "b": 4, "c": 5}]
 
         dn = JSONDataNode("foo", Scope.SCENARIO, properties={"path": old_json_path})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(old_data)
         old_last_edit_date = dn.last_edit_date
 

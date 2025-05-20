@@ -110,7 +110,7 @@ class TestSQLDataNode:
     @pytest.mark.parametrize("properties", __sql_properties)
     def test_create(self, properties):
         sql_dn_config = Config.configure_sql_data_node(id="foo_bar", **properties)
-        dn = _DataManagerFactory._build_manager()._create_and_set(sql_dn_config, None, None)
+        dn = _DataManagerFactory._build_manager()._create(sql_dn_config, None, None)
         assert isinstance(dn, SQLDataNode)
         assert dn.storage_type() == "sql"
         assert dn.config_id == "foo_bar"
@@ -129,7 +129,7 @@ class TestSQLDataNode:
             append_query_builder=my_append_query_builder_with_pandas,
             exposed_type=MyCustomObject,
         )
-        dn_1 = _DataManagerFactory._build_manager()._create_and_set(sql_dn_config_1, None, None)
+        dn_1 = _DataManagerFactory._build_manager()._create(sql_dn_config_1, None, None)
         assert isinstance(dn, SQLDataNode)
         assert dn_1.properties["exposed_type"] == MyCustomObject
         assert dn_1.properties["append_query_builder"] == my_append_query_builder_with_pandas
@@ -199,6 +199,7 @@ class TestSQLDataNode:
         custom_properties = properties.copy()
         custom_properties.pop("db_extra_args")
         dn = SQLDataNode("foo_bar", Scope.SCENARIO, properties=custom_properties)
+        _DataManagerFactory._build_manager()._repository._save(dn)
         with patch("sqlalchemy.engine.Engine.connect") as engine_mock:
             # mock connection execute
             dn.write(pd.DataFrame({"foo": [1, 2, 3], "bar": [4, 5, 6]}))
@@ -214,6 +215,7 @@ class TestSQLDataNode:
 
         custom_properties["write_query_builder"] = single_write_query_builder
         dn = SQLDataNode("foo_bar", Scope.SCENARIO, properties=custom_properties)
+        _DataManagerFactory._build_manager()._repository._save(dn)
 
         with patch("sqlalchemy.engine.Engine.connect") as engine_mock:
             # mock connection execute
@@ -257,6 +259,7 @@ class TestSQLDataNode:
         }
 
         dn = SQLDataNode("sqlite_dn", Scope.SCENARIO, properties=properties)
+        _DataManagerFactory._build_manager()._repository._save(dn)
         original_data = pd.DataFrame([{"foo": 1, "bar": 2}, {"foo": 3, "bar": 4}])
         data = dn.read()
         assert_frame_equal(data, original_data)
@@ -292,6 +295,7 @@ class TestSQLDataNode:
             "exposed_type": "pandas",
         }
         dn = SQLDataNode("foo", Scope.SCENARIO, properties=properties)
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(
             pd.DataFrame(
                 [
@@ -348,6 +352,7 @@ class TestSQLDataNode:
             "exposed_type": "numpy",
         }
         dn = SQLDataNode("foo", Scope.SCENARIO, properties=properties)
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(
             pd.DataFrame(
                 [

@@ -75,7 +75,7 @@ class TestParquetDataNode:
         parquet_dn_config = Config.configure_parquet_data_node(
             id="foo_bar", default_path=path, compression=compression, name="super name"
         )
-        dn = _DataManagerFactory._build_manager()._create_and_set(parquet_dn_config, None, None)
+        dn = _DataManagerFactory._build_manager()._create(parquet_dn_config, None, None)
         assert isinstance(dn, ParquetDataNode)
         assert dn.storage_type() == "parquet"
         assert dn.config_id == "foo_bar"
@@ -94,21 +94,21 @@ class TestParquetDataNode:
         parquet_dn_config_1 = Config.configure_parquet_data_node(
             id="bar", default_path=path, compression=compression, exposed_type=MyCustomObject
         )
-        dn_1 = _DataManagerFactory._build_manager()._create_and_set(parquet_dn_config_1, None, None)
+        dn_1 = _DataManagerFactory._build_manager()._create(parquet_dn_config_1, None, None)
         assert isinstance(dn_1, ParquetDataNode)
         assert dn_1.properties["exposed_type"] == MyCustomObject
 
         parquet_dn_config_2 = Config.configure_parquet_data_node(
             id="bar", default_path=path, compression=compression, exposed_type=np.ndarray
         )
-        dn_2 = _DataManagerFactory._build_manager()._create_and_set(parquet_dn_config_2, None, None)
+        dn_2 = _DataManagerFactory._build_manager()._create(parquet_dn_config_2, None, None)
         assert isinstance(dn_2, ParquetDataNode)
         assert dn_2.properties["exposed_type"] == np.ndarray
 
         parquet_dn_config_3 = Config.configure_parquet_data_node(
             id="bar", default_path=path, compression=compression, exposed_type=pd.DataFrame
         )
-        dn_3 = _DataManagerFactory._build_manager()._create_and_set(parquet_dn_config_3, None, None)
+        dn_3 = _DataManagerFactory._build_manager()._create(parquet_dn_config_3, None, None)
         assert isinstance(dn_3, ParquetDataNode)
         assert dn_3.properties["exposed_type"] == pd.DataFrame
 
@@ -172,6 +172,7 @@ class TestParquetDataNode:
 
     def test_set_path(self):
         dn = ParquetDataNode("foo", Scope.SCENARIO, properties={"path": "foo.parquet"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         assert dn.path == "foo.parquet"
         dn.path = "bar.parquet"
         assert dn.path == "bar.parquet"
@@ -195,6 +196,7 @@ class TestParquetDataNode:
         temp_file_path = str(tmpdir_factory.mktemp("data").join("temp.parquet"))
         pd.DataFrame([]).to_parquet(temp_file_path)
         dn = ParquetDataNode("foo", Scope.SCENARIO, properties={"path": temp_file_path, "exposed_type": "pandas"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
 
         dn.write(pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]}))
         previous_edit_date = dn.last_edit_date
@@ -219,6 +221,7 @@ class TestParquetDataNode:
         pd.DataFrame([]).to_parquet(temp_file_path)
 
         dn = ParquetDataNode("foo", Scope.SCENARIO, properties={"path": temp_folder_path})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         initial_edit_date = dn.last_edit_date
 
         # Sleep so that the file can be created successfully on Ubuntu
@@ -293,6 +296,7 @@ class TestParquetDataNode:
         old_data = pd.DataFrame([{"a": 0, "b": 1, "c": 2}, {"a": 3, "b": 4, "c": 5}])
 
         dn = ParquetDataNode("foo", Scope.SCENARIO, properties={"path": old_parquet_path, "exposed_type": "pandas"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(old_data)
         old_last_edit_date = dn.last_edit_date
 
@@ -310,6 +314,7 @@ class TestParquetDataNode:
         old_data = pd.DataFrame([{"a": 0, "b": 1, "c": 2}, {"a": 3, "b": 4, "c": 5}])
 
         dn = ParquetDataNode("foo", Scope.SCENARIO, properties={"path": old_parquet_path, "exposed_type": "pandas"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(old_data)
         old_last_edit_date = dn.last_edit_date
 
@@ -362,6 +367,7 @@ class TestParquetDataNode:
         pd.DataFrame(new_data, columns=["a", "b", "c"]).to_parquet(new_parquet_path, index=False)
 
         dn = ParquetDataNode("foo", Scope.SCENARIO, properties={"path": old_parquet_path, "exposed_type": "numpy"})
+        _DataManagerFactory._build_manager()._repository._save(dn)
         dn.write(old_data)
         old_last_edit_date = dn.last_edit_date
 

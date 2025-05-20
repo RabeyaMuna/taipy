@@ -19,6 +19,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from taipy import Scope
+from taipy.core.data._data_manager_factory import _DataManagerFactory
 from taipy.core.data.csv import CSVDataNode
 
 
@@ -60,6 +61,7 @@ class MyCustomObject:
 )
 def test_append(csv_file, default_data_frame, content):
     csv_dn = CSVDataNode("foo", Scope.SCENARIO, properties={"path": csv_file})
+    _DataManagerFactory._build_manager()._repository._save(csv_dn)
     assert_frame_equal(csv_dn.read(), default_data_frame)
 
     csv_dn.append(content)
@@ -71,6 +73,7 @@ def test_append(csv_file, default_data_frame, content):
 
 def test_write_with_header_pandas(tmp_csv_file):
     csv_dn = CSVDataNode("foo", Scope.SCENARIO, properties={"path": tmp_csv_file})
+    _DataManagerFactory._build_manager()._repository._save(csv_dn)
 
     df = pd.DataFrame([{"a": 1, "b": 2, "c": 3}, {"a": 4, "b": 5, "c": 6}])
     csv_dn.write(df)
@@ -89,6 +92,7 @@ def test_write_with_header_pandas(tmp_csv_file):
 
 def test_write_with_header_numpy(tmp_csv_file):
     csv_dn = CSVDataNode("bar", Scope.SCENARIO, properties={"path": tmp_csv_file, "exposed_type": "numpy"})
+    _DataManagerFactory._build_manager()._repository._save(csv_dn)
 
     arr = np.array([[1], [2], [3], [4], [5]])
     csv_dn.write(arr)
@@ -104,6 +108,7 @@ def test_write_with_header_numpy(tmp_csv_file):
 
 def test_write_with_header_custom_exposed_type(tmp_csv_file):
     csv_dn = CSVDataNode("bar", Scope.SCENARIO, properties={"path": tmp_csv_file, "exposed_type": MyCustomObject})
+    _DataManagerFactory._build_manager()._repository._save(csv_dn)
 
     data = [MyCustomObject(0, 1, "hi"), MyCustomObject(1, 2, "world"), MyCustomObject(2, 3, "text")]
     csv_dn.write(data)
@@ -115,6 +120,7 @@ def test_write_with_header_custom_exposed_type(tmp_csv_file):
 
 def test_write_without_header_pandas(tmp_csv_file):
     csv_dn = CSVDataNode("foo", Scope.SCENARIO, properties={"path": tmp_csv_file, "has_header": False})
+    _DataManagerFactory._build_manager()._repository._save(csv_dn)
 
     df = pd.DataFrame([*zip([1, 2, 3], [4, 5, 6])])
     csv_dn.write(df)
@@ -135,6 +141,7 @@ def test_write_without_header_numpy(tmp_csv_file):
     csv_dn = CSVDataNode(
         "bar", Scope.SCENARIO, properties={"path": tmp_csv_file, "exposed_type": "numpy", "has_header": False}
     )
+    _DataManagerFactory._build_manager()._repository._save(csv_dn)
 
     arr = np.array([[1], [2], [3], [4], [5]])
     csv_dn.write(arr)
@@ -152,6 +159,7 @@ def test_write_without_header_custom_exposed_type(tmp_csv_file):
     csv_dn = CSVDataNode(
         "bar", Scope.SCENARIO, properties={"path": tmp_csv_file, "exposed_type": MyCustomObject, "has_header": False}
     )
+    _DataManagerFactory._build_manager()._repository._save(csv_dn)
 
     data = [MyCustomObject(0, 1, "hi"), MyCustomObject(1, 2, "world"), MyCustomObject(2, 3, "text")]
     csv_dn.write(data)
@@ -166,6 +174,8 @@ def test_write_with_different_encoding(csv_file):
 
     utf8_dn = CSVDataNode("utf8_dn", Scope.SCENARIO, properties={"default_path": csv_file})
     utf16_dn = CSVDataNode("utf16_dn", Scope.SCENARIO, properties={"default_path": csv_file, "encoding": "utf-16"})
+    _DataManagerFactory._build_manager()._repository._save(utf8_dn)
+    _DataManagerFactory._build_manager()._repository._save(utf16_dn)
 
     # If a file is written with utf-8 encoding, it can only be read with utf-8, not utf-16 encoding
     utf8_dn.write(data)
@@ -185,6 +195,7 @@ def test_write_with_column_names(tmp_csv_file):
     columns = ["e", "f", "g"]
 
     csv_dn = CSVDataNode("foo", Scope.SCENARIO, properties={"path": tmp_csv_file})
+    _DataManagerFactory._build_manager()._repository._save(csv_dn)
     csv_dn.write_with_column_names(data, columns)
     df = pd.DataFrame(data, columns=columns)
     assert pd.DataFrame.equals(df, csv_dn.read())

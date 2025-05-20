@@ -11,7 +11,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-import React, { useCallback, useMemo, useState, MouseEvent, CSSProperties } from "react";
+import React, { useCallback, useMemo, useState, MouseEvent, CSSProperties,useEffect } from "react";
 import MenuIco from "@mui/icons-material/Menu";
 import ListItemButton from "@mui/material/ListItemButton";
 import Drawer from "@mui/material/Drawer";
@@ -36,9 +36,12 @@ const avatarSx = { bgcolor: (theme: Theme) => theme.palette.text.primary };
 const baseTitleProps = { noWrap: true, variant: "h6" } as const;
 
 const Menu = (props: MenuProps) => {
-    const { label, onAction = "", lov, width, inactiveIds = emptyArray, active = true } = props;
+    const { label, onAction = "", lov, width, inactiveIds = emptyArray, active = true, expanded = false } = props;
     const [selectedValue, setSelectedValue] = useState<string>("");
-    const [opened, setOpened] = useState(false);
+    const [opened, setOpened] = useState(expanded);
+    useEffect(() => {
+        setOpened(expanded);
+    }, [expanded]);
     const dispatch = useDispatch();
     const theme = useTheme();
     const module = useModule();
@@ -71,7 +74,7 @@ const Menu = (props: MenuProps) => {
         return selected;
     }, [props.selected, selectedValue]);
 
-    const [drawerSx, titleProps] = useMemo(() => {
+    const [drawerSx, slotTitleProps] = useMemo(() => {
         const drawerWidth = opened ? width : `calc(${theme.spacing(9)} + 1px)`;
         const titleWidth = opened ? `calc(${width} - ${theme.spacing(10)})` : undefined;
         return [
@@ -85,7 +88,7 @@ const Menu = (props: MenuProps) => {
                 },
                 transition: "width 0.3s",
             },
-            { ...baseTitleProps, width: titleWidth },
+            {title: { ...baseTitleProps, width: titleWidth }},
         ];
     }, [opened, width, theme]);
 
@@ -110,7 +113,7 @@ const Menu = (props: MenuProps) => {
                                     </Tooltip>
                                 }
                                 title={label}
-                                titleTypographyProps={titleProps}
+                                slotProps={slotTitleProps}
                             />
                         </ListItemAvatar>
                     </ListItemButton>
@@ -123,7 +126,7 @@ const Menu = (props: MenuProps) => {
                             clickHandler={clickHandler}
                             disabled={!active || inactiveIds.includes(elt.id)}
                             withAvatar={true}
-                            titleTypographyProps={titleProps}
+                            slotProps={slotTitleProps}
                         />
                     ))}
                 </List>

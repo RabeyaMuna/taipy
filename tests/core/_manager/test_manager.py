@@ -110,19 +110,19 @@ class MockManager(_Manager[MockEntity]):
 class TestManager:
     def test_save_and_fetch_model(self):
         m = MockEntity("uuid", "foo")
-        MockManager._set(m)
+        MockManager._repository._save(m)
 
         fetched_model = MockManager._get(m.id)
         assert m == fetched_model
 
     def test_exists(self):
         m = MockEntity("uuid", "foo")
-        MockManager._set(m)
+        MockManager._repository._save(m)
         assert MockManager._exists(m.id)
 
     def test_get(self):
         m = MockEntity("uuid", "foo")
-        MockManager._set(m)
+        MockManager._repository._save(m)
         assert MockManager._get(m.id) == m
 
     def test_get_all(self):
@@ -132,14 +132,14 @@ class TestManager:
         for i in range(5):
             m = MockEntity(f"uuid-{i}", f"Foo{i}")
             objs.append(m)
-            MockManager._set(m)
+            MockManager._repository._save(m)
         _objs = MockManager._get_all()
 
         assert len(_objs) == 5
 
     def test_delete(self):
         m = MockEntity("uuid", "foo")
-        MockManager._set(m)
+        MockManager._repository._save(m)
         MockManager._delete(m.id)
         assert MockManager._get(m.id) is None
 
@@ -148,7 +148,7 @@ class TestManager:
         for i in range(5):
             m = MockEntity(f"uuid-{i}", f"Foo{i}")
             objs.append(m)
-            MockManager._set(m)
+            MockManager._repository._save(m)
         MockManager._delete_all()
         assert MockManager._get_all() == []
 
@@ -157,13 +157,13 @@ class TestManager:
         for i in range(5):
             m = MockEntity(f"uuid-{i}", f"Foo{i}")
             objs.append(m)
-            MockManager._set(m)
+            MockManager._repository._save(m)
         MockManager._delete_many(["uuid-0", "uuid-1"])
         assert len(MockManager._get_all()) == 3
 
     def test_is_editable(self):
         m = MockEntity("uuid", "Foo")
-        MockManager._set(m)
+        MockManager._repository._save(m)
         assert MockManager._is_editable(m)
 
         rc = MockManager._is_editable("some_entity")
@@ -172,7 +172,7 @@ class TestManager:
 
     def test_is_readable(self):
         m = MockEntity("uuid", "Foo")
-        MockManager._set(m)
+        MockManager._repository._save(m)
         assert MockManager._is_readable(m)
 
         rc = MockManager._is_editable("some_entity")

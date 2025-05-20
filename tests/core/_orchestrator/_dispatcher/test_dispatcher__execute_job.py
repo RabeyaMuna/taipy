@@ -38,7 +38,7 @@ def test_execute_job():
     scenario.t1.skippable = True  # make the job skippable
     scenario.dn.lock_edit()  # lock output edit
     job = Job(JobId("id"), scenario.t1, "submit_id", TaskId("id"))
-    _JobManagerFactory._build_manager()._set(job)
+    _JobManagerFactory._build_manager()._repository._save(job)
     with mock.patch("taipy.core._orchestrator._dispatcher._job_dispatcher._JobDispatcher._dispatch") as mck_1:
         with mock.patch("taipy.core._orchestrator._dispatcher._job_dispatcher._JobDispatcher._needs_to_run") as mck_2:
             mck_2.return_value = True
@@ -56,7 +56,7 @@ def test_execute_job_to_skip():
     scenario.t1.skippable = True  # make the job skippable
     scenario.dn.lock_edit()  # lock output edit
     job = Job(JobId("id"), scenario.t1, "submit_id", TaskId("id"))
-    _JobManagerFactory._build_manager()._set(job)
+    _JobManagerFactory._build_manager()._repository._save(job)
 
     with mock.patch("taipy.core._orchestrator._dispatcher._job_dispatcher._JobDispatcher._dispatch") as mck_1:
         with mock.patch("taipy.core._orchestrator._dispatcher._job_dispatcher._JobDispatcher._needs_to_run") as mck_2:
@@ -74,7 +74,7 @@ def test_execute_job_skippable_with_force():
     scenario.t1.skippable = True  # make the job skippable
     scenario.dn.lock_edit()  # lock output edit
     job = Job(JobId("id"), scenario.t1, "submit_id", TaskId("id"), force=True)
-    _JobManagerFactory._build_manager()._set(job)
+    _JobManagerFactory._build_manager()._repository._save(job)
 
     with mock.patch("taipy.core._orchestrator._dispatcher._job_dispatcher._JobDispatcher._dispatch") as mck_1:
         with mock.patch("taipy.core._orchestrator._dispatcher._job_dispatcher._JobDispatcher._needs_to_run") as mck_2:
@@ -90,11 +90,11 @@ def test_execute_job_skippable_with_force():
 
 def test_execute_jobs_synchronously():
     task = Task("config_id", {}, nothing, [], [])
-    _TaskManagerFactory._build_manager()._set(task)
+    _TaskManagerFactory._build_manager()._repository._save(task)
     job_1 = Job(JobId("job1"), task, "s_id", task.id)
     job_2 = Job(JobId("job2"), task, "s_id", task.id)
-    _JobManagerFactory._build_manager()._set(job_1)
-    _JobManagerFactory._build_manager()._set(job_2)
+    _JobManagerFactory._build_manager()._repository._save(job_1)
+    _JobManagerFactory._build_manager()._repository._save(job_2)
     orchestrator = _OrchestratorFactory._build_orchestrator()
     orchestrator.jobs_to_run.put(job_1)
     orchestrator.jobs_to_run.put(job_2)

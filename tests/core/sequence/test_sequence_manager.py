@@ -65,20 +65,22 @@ def test_breakdown_sequence_id():
 def test_raise_sequence_does_not_belong_to_scenario():
     with pytest.raises(SequenceBelongsToNonExistingScenario):
         sequence = Sequence({"name": "sequence_name"}, [], "SEQUENCE_sequence_name_SCENARIO_scenario_id")
-        _SequenceManager._set(sequence)
+        _SequenceManager._update(sequence)
 
 
 def __init():
     input_dn = InMemoryDataNode("foo", Scope.SCENARIO)
     output_dn = InMemoryDataNode("foo", Scope.SCENARIO)
+    _DataManager._repository._save(input_dn)
+    _DataManager._repository._save(output_dn)
     task = Task("task", {}, print, [input_dn], [output_dn], TaskId("Task_task_id"))
-    _TaskManager._set(task)
+    _TaskManager._repository._save(task)
     scenario = Scenario("scenario", {task}, {}, set())
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
     return scenario, task
 
 
-def test_set_and_get_sequence_no_existing_sequence():
+def test_save_and_get_sequence_no_existing_sequence():
     scenario, _ = __init()
     sequence_name_1 = "p1"
     sequence_id_1 = SequenceId(f"SEQUENCE_{sequence_name_1}_{scenario.id}")
@@ -90,7 +92,7 @@ def test_set_and_get_sequence_no_existing_sequence():
     assert _SequenceManager._get("sequence") is None
 
 
-def test_set_and_get():
+def test_save_and_get():
     scenario, task = __init()
     sequence_name_1 = "p1"
     sequence_id_1 = SequenceId(f"SEQUENCE_{sequence_name_1}_{scenario.id}")
@@ -106,7 +108,6 @@ def test_set_and_get():
     assert _SequenceManager._get(sequence_id_2) is None
 
     # Save a second sequence. Now, we expect to have a total of two sequences stored
-    _TaskManager._set(task)
     scenario.add_sequences({sequence_name_2: [task]})
     sequence_2 = scenario.sequences[sequence_name_2]
     assert _SequenceManager._get(sequence_id_1).id == sequence_1.id
@@ -138,11 +139,11 @@ def test_task_parent_id_set_only_when_create():
     scenario, task = __init()
     sequence_name_1 = "p1"
 
-    with mock.patch("taipy.core.task._task_manager._TaskManager._set") as mck:
+    with mock.patch("taipy.core.task._task_manager._TaskManager._update") as mck:
         scenario.add_sequences({sequence_name_1: [task]})
         mck.assert_called_once()
 
-    with mock.patch("taipy.core.task._task_manager._TaskManager._set") as mck:
+    with mock.patch("taipy.core.task._task_manager._TaskManager._update") as mck:
         scenario.sequences[sequence_name_1]
         mck.assert_not_called()
 
@@ -151,7 +152,7 @@ def test_get_all_on_multiple_versions_environment():
     # Create 5 sequences from Scenario with 2 versions each
     for version in range(1, 3):
         for i in range(5):
-            _ScenarioManager._set(
+            _ScenarioManager._repository._save(
                 Scenario(
                     f"config_id_{i+version}",
                     [],
@@ -202,9 +203,11 @@ def test_get_all_on_multiple_versions_environment():
 
 def test_is_submittable():
     dn = InMemoryDataNode("dn", Scope.SCENARIO, properties={"default_data": 10})
+    _DataManager._repository._save(dn)
     task = Task("task", {}, print, [dn])
+    _TaskManager._repository._save(task)
     scenario = Scenario("scenario", {task}, {}, set())
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
 
     rc = _SequenceManager._is_submittable("some_sequence")
     assert not rc
@@ -236,6 +239,13 @@ def test_submit():
     data_node_5 = InMemoryDataNode("quux", Scope.SCENARIO, "s5")
     data_node_6 = InMemoryDataNode("quuz", Scope.SCENARIO, "s6")
     data_node_7 = InMemoryDataNode("corge", Scope.SCENARIO, "s7")
+    _DataManager._repository._save(data_node_1)
+    _DataManager._repository._save(data_node_2)
+    _DataManager._repository._save(data_node_3)
+    _DataManager._repository._save(data_node_4)
+    _DataManager._repository._save(data_node_5)
+    _DataManager._repository._save(data_node_6)
+    _DataManager._repository._save(data_node_7)
     task_1 = Task(
         "grault",
         {},
@@ -247,6 +257,10 @@ def test_submit():
     task_2 = Task("garply", {}, print, [data_node_3], [data_node_5], TaskId("t2"))
     task_3 = Task("waldo", {}, print, [data_node_5, data_node_4], [data_node_6], TaskId("t3"))
     task_4 = Task("fred", {}, print, [data_node_4], [data_node_7], TaskId("t4"))
+    _TaskManager._repository._save(task_1)
+    _TaskManager._repository._save(task_2)
+    _TaskManager._repository._save(task_3)
+    _TaskManager._repository._save(task_4)
     scenario = Scenario("sce", {task_1, task_2, task_3, task_4}, {})
 
     sequence_name = "sequence"
@@ -272,15 +286,11 @@ def test_submit():
         with pytest.raises(NonExistingSequence):
             _SequenceManager._submit(sequence_id)
 
-        _ScenarioManager._set(scenario)
+        _ScenarioManager._repository._save(scenario)
         scenario.add_sequences({sequence_name: [task_4, task_2, task_1, task_3]})
 
         # sequence, and tasks does exist. We expect the tasks to be submitted
         # in a specific order
-        _TaskManager._set(task_1)
-        _TaskManager._set(task_2)
-        _TaskManager._set(task_3)
-        _TaskManager._set(task_4)
         sequence = scenario.sequences[sequence_name]
 
         _SequenceManager._submit(sequence.id)
@@ -341,8 +351,8 @@ def test_submit_sequence_from_tasks_with_one_or_no_input_output():
     task_no_input_no_output = Task("task_no_input_no_output", {}, mock_function_no_input_no_output)
     scenario_1 = Scenario("scenario_1", {task_no_input_no_output}, {})
 
-    _TaskManager._set(task_no_input_no_output)
-    _ScenarioManager._set(scenario_1)
+    _TaskManager._repository._save(task_no_input_no_output)
+    _ScenarioManager._repository._save(scenario_1)
 
     scenario_1.add_sequences({"my_sequence_1": [task_no_input_no_output]})
     sequence_1 = scenario_1.sequences["my_sequence_1"]
@@ -359,11 +369,11 @@ def test_submit_sequence_from_tasks_with_one_or_no_input_output():
     )
     scenario_2 = Scenario("scenario_2", {task_one_input_no_output}, {})
 
-    _DataManager._set(data_node_input)
+    _DataManager._repository._save(data_node_input)
     data_node_input.unlock_edit()
 
-    _TaskManager._set(task_one_input_no_output)
-    _ScenarioManager._set(scenario_2)
+    _TaskManager._repository._save(task_one_input_no_output)
+    _ScenarioManager._repository._save(scenario_2)
 
     scenario_2.add_sequences({"my_sequence_2": [task_one_input_no_output]})
     sequence_2 = scenario_2.sequences["my_sequence_2"]
@@ -379,10 +389,10 @@ def test_submit_sequence_from_tasks_with_one_or_no_input_output():
     )
     scenario_3 = Scenario("scenario_3", {task_no_input_one_output}, {})
 
-    _DataManager._set(data_node_output)
+    _DataManager._repository._save(data_node_output)
     assert data_node_output.read() is None
-    _TaskManager._set(task_no_input_one_output)
-    _ScenarioManager._set(scenario_3)
+    _TaskManager._repository._save(task_no_input_one_output)
+    _ScenarioManager._repository._save(scenario_3)
 
     scenario_3.add_sequences({"my_sequence_3": [task_no_input_one_output]})
     sequence_3 = scenario_3.sequences["my_sequence_3"]
@@ -472,7 +482,7 @@ def test_sequence_notification_subscribe(mocker):
 
     tasks = _TaskManager._bulk_get_or_create(task_configs=task_configs)
     scenario = Scenario("scenario", set(tasks), {}, sequences={"by_1": {"tasks": tasks}})
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
 
     sequence = scenario.sequences["by_1"]
 
@@ -526,7 +536,7 @@ def test_sequence_notification_subscribe_multi_param(mocker):
 
     tasks = _TaskManager._bulk_get_or_create(task_configs)
     scenario = Scenario("scenario", set(tasks), {}, sequences={"by_6": {"tasks": tasks}})
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
 
     sequence = scenario.sequences["by_6"]
     notify = mocker.Mock()
@@ -557,7 +567,7 @@ def test_sequence_notification_unsubscribe(mocker):
 
     tasks = _TaskManager._bulk_get_or_create(task_configs)
     scenario = Scenario("scenario", set(tasks), {}, sequences={"by_6": {"tasks": tasks}})
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
 
     sequence = scenario.sequences["by_6"]
 
@@ -586,7 +596,7 @@ def test_sequence_notification_unsubscribe_multi_param():
 
     tasks = _TaskManager._bulk_get_or_create(task_configs)
     scenario = Scenario("scenario", tasks, {}, sequences={"by_6": {"tasks": tasks}})
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
 
     sequence = scenario.sequences["by_6"]
 
@@ -620,7 +630,7 @@ def test_sequence_notification_subscribe_all():
 
     tasks = _TaskManager._bulk_get_or_create(task_configs)
     scenario = Scenario("scenario", tasks, {}, sequences={"by_6": {"tasks": tasks}, "other_sequence": {"tasks": tasks}})
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
 
     sequence = scenario.sequences["by_6"]
     other_sequence = scenario.sequences["other_sequence"]
@@ -640,8 +650,8 @@ def test_delete():
 
     scenario_1 = Scenario("scenario_1", set(), {}, scenario_id="SCENARIO_scenario_id_1")
     scenario_2 = Scenario("scenario_2", set(), {}, scenario_id="SCENARIO_scenario_id_2")
-    _ScenarioManager._set(scenario_1)
-    _ScenarioManager._set(scenario_2)
+    _ScenarioManager._repository._save(scenario_1)
+    _ScenarioManager._repository._save(scenario_2)
     with pytest.raises(ModelNotFound):
         _SequenceManager._delete(SequenceId(sequence_id))
 
@@ -698,8 +708,8 @@ def test_delete_version():
         version="1.1",
         sequences={"sequence_1": {}, "sequence_2": {}},
     )
-    _ScenarioManager._set(scenario_1_0)
-    _ScenarioManager._set(scenario_1_1)
+    _ScenarioManager._repository._save(scenario_1_0)
+    _ScenarioManager._repository._save(scenario_1_1)
 
     _VersionManager._set_experiment_version("1.1")
     assert len(_ScenarioManager._get_all()) == 1
@@ -727,7 +737,7 @@ def test_delete_version():
 
 def test_exists():
     scenario = Scenario("scenario", [], {}, scenario_id="SCENARIO_scenario", sequences={"sequence": {}})
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
     assert len(_ScenarioManager._get_all()) == 1
     assert len(_SequenceManager._get_all()) == 1
     assert not _SequenceManager._exists("SEQUENCE_sequence_not_exist_SCENARIO_scenario")
@@ -743,7 +753,7 @@ def test_hard_delete_one_single_sequence_with_scenario_data_nodes():
 
     tasks = _TaskManager._bulk_get_or_create([task_config])
     scenario = Scenario("scenario", tasks, {}, sequences={"sequence": {"tasks": tasks}})
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
 
     sequence = scenario.sequences["sequence"]
     sequence.submit()
@@ -768,7 +778,7 @@ def test_hard_delete_one_single_sequence_with_cycle_data_nodes():
 
     tasks = _TaskManager._bulk_get_or_create([task_config])
     scenario = Scenario("scenario", tasks, {}, sequences={"sequence": {"tasks": tasks}})
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
 
     sequence = scenario.sequences["sequence"]
     sequence.submit()
@@ -787,19 +797,20 @@ def test_hard_delete_one_single_sequence_with_cycle_data_nodes():
 
 
 def test_hard_delete_shared_entities():
-    input_dn = Config.configure_data_node("my_input", "in_memory", scope=Scope.SCENARIO, default_data="testing")
-    intermediate_dn = Config.configure_data_node("my_inter", "in_memory", scope=Scope.GLOBAL, default_data="testing")
-    output_dn = Config.configure_data_node("my_output", "in_memory", scope=Scope.GLOBAL, default_data="testing")
+    input_dn = Config.configure_data_node("my_input", "in_memory", default_data="testing")
+    intermediate_dn = Config.configure_data_node("my_inter", "in_memory")
+    output_dn = Config.configure_data_node("my_output", "in_memory")
     task_1 = Config.configure_task("task_1", print, input_dn, intermediate_dn)
     task_2 = Config.configure_task("task_2", print, intermediate_dn, output_dn)
 
-    tasks_scenario_1 = _TaskManager._bulk_get_or_create([task_1, task_2], scenario_id="scenario_id_1")
-    tasks_scenario_2 = _TaskManager._bulk_get_or_create([task_1, task_2], scenario_id="scenario_id_2")
+    scenario_config = Config.configure_scenario("sc", [task_1, task_2])
+    import taipy as tp
 
-    scenario_1 = Scenario("scenario_1", tasks_scenario_1, {}, sequences={"sequence": {"tasks": tasks_scenario_1}})
-    scenario_2 = Scenario("scenario_2", tasks_scenario_2, {}, sequences={"sequence": {"tasks": tasks_scenario_2}})
-    _ScenarioManager._set(scenario_1)
-    _ScenarioManager._set(scenario_2)
+    scenario_1 = tp.create_scenario(scenario_config, name="scenario_1")
+    scenario_1.add_sequence("sequence", [scenario_1.task_1, scenario_1.task_2])
+    scenario_2 = tp.create_scenario(scenario_config, name="scenario_2")
+    scenario_2.add_sequence("sequence", [scenario_2.task_1, scenario_2.task_2])
+
     sequence_1 = scenario_1.sequences["sequence"]
     sequence_2 = scenario_2.sequences["sequence"]
 
@@ -808,14 +819,14 @@ def test_hard_delete_shared_entities():
 
     assert len(_ScenarioManager._get_all()) == 2
     assert len(_SequenceManager._get_all()) == 2
-    assert len(_TaskManager._get_all()) == 3
-    assert len(_DataManager._get_all()) == 4
+    assert len(_TaskManager._get_all()) == 4
+    assert len(_DataManager._get_all()) == 6
     assert len(_JobManager._get_all()) == 4
     _SequenceManager._hard_delete(sequence_1.id)
     assert len(_ScenarioManager._get_all()) == 2
     assert len(_SequenceManager._get_all()) == 1
-    assert len(_TaskManager._get_all()) == 3
-    assert len(_DataManager._get_all()) == 4
+    assert len(_TaskManager._get_all()) == 4
+    assert len(_DataManager._get_all()) == 6
     assert len(_JobManager._get_all()) == 4
 
 
@@ -833,7 +844,7 @@ def test_submit_task_with_input_dn_wrong_file_path(caplog):
 
     tasks = _TaskManager._bulk_get_or_create([task_cfg, task_2_cfg])
     scenario = Scenario("scenario", tasks, {}, sequences={"sequence": {"tasks": tasks}})
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
     sequence = scenario.sequences["sequence"]
 
     pip_manager = _SequenceManagerFactory._build_manager()
@@ -865,7 +876,7 @@ def test_submit_task_with_one_input_dn_wrong_file_path(caplog):
 
     tasks = _TaskManager._bulk_get_or_create([task_cfg, task_2_cfg])
     scenario = Scenario("scenario", tasks, {}, sequences={"sequence": {"tasks": tasks}})
-    _ScenarioManager._set(scenario)
+    _ScenarioManager._repository._save(scenario)
     sequence = scenario.sequences["sequence"]
 
     pip_manager = _SequenceManagerFactory._build_manager()

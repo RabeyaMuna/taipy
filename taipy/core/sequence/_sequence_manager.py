@@ -92,7 +92,7 @@ class _SequenceManager(_Manager[Sequence], _VersionMixin):
                 scenario = scenario_manager._get(scenario_id)
                 for sequence_name in sequence_names:
                     del scenario._sequences[sequence_name]
-                scenario_manager._set(scenario)
+                scenario_manager._update(scenario)
 
             if hasattr(cls, "_EVENT_ENTITY_TYPE"):
                 for sequence_id in sequence_ids:
@@ -117,9 +117,9 @@ class _SequenceManager(_Manager[Sequence], _VersionMixin):
         cls._delete_entities_of_multiple_types(entity_ids_to_delete)
 
     @classmethod
-    def _set(cls, sequence: Sequence) -> None:
+    def _update(cls, sequence: Sequence) -> None:
         """
-        Save or update a Sequence.
+        Update a Sequence.
         """
         sequence_name, scenario_id = cls._breakdown_sequence_id(sequence.id)
         scenario_manager = _ScenarioManagerFactory._build_manager()
@@ -131,7 +131,7 @@ class _SequenceManager(_Manager[Sequence], _VersionMixin):
                 Scenario._SEQUENCE_PROPERTIES_KEY: sequence._properties.data,
             }
             scenario._sequences[sequence_name] = sequence_data
-            scenario_manager._set(scenario)
+            scenario_manager._update(scenario)
         else:
             cls._logger.error(f"Sequence {sequence.id} belongs to a non-existing Scenario {scenario_id}.")
             raise SequenceBelongsToNonExistingScenario(sequence.id, scenario_id)
@@ -214,7 +214,7 @@ class _SequenceManager(_Manager[Sequence], _VersionMixin):
         for task in _tasks:
             if sequence_id not in task._parent_ids:
                 task._parent_ids.update([sequence_id])
-                task_manager._set(task)
+                task_manager._update(task)
 
         if not sequence._is_consistent():
             raise InvalidSequence(sequence_id)

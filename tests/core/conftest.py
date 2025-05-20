@@ -225,7 +225,9 @@ def data_node_model():
 
 @pytest.fixture(scope="function")
 def task(data_node):
+    _DataManagerFactory._build_manager()._repository._save(data_node)
     dn = InMemoryDataNode("dn_config_id", Scope.SCENARIO, version="random_version_number")
+    _DataManagerFactory._build_manager()._repository._save(dn)
     return Task("task_config_id", {}, print, [data_node], [dn], TaskId("TASK_task_id"))
 
 
@@ -320,7 +322,7 @@ def cleanup_files():
 
 
 @pytest.fixture(scope="function", autouse=True)
-def clean_repository(init_config, init_managers, init_orchestrator, init_notifier, clean_argparser):
+def clean_core(init_config, init_managers, init_orchestrator, init_notifier, clean_argparser):
     clean_argparser()
     close_all_sessions()
     init_config()

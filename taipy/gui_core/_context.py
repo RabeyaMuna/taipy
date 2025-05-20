@@ -52,8 +52,8 @@ from taipy.core import get as core_get
 from taipy.core import submit as core_submit
 from taipy.core.data._file_datanode_mixin import _FileDataNodeMixin
 from taipy.core.data.data_node_id import EDIT_COMMENT_KEY, EDIT_EDITOR_ID_KEY, EDIT_JOB_ID_KEY, EDIT_TIMESTAMP_KEY
-from taipy.core.notification import CoreEventConsumerBase, EventEntityType
-from taipy.core.notification.event import Event, EventOperation
+from taipy.core.notification._core_event_consumer import _CoreEventConsumerBase
+from taipy.core.notification.event import Event, EventEntityType, EventOperation
 from taipy.core.notification.notifier import Notifier
 from taipy.core.reason import ReasonCollection
 from taipy.core.submission.submission_status import SubmissionStatus
@@ -73,7 +73,7 @@ from ._utils import _ClientStatus
 from .filters import CustomScenarioFilter, ParamType
 
 
-class _GuiCoreContext(CoreEventConsumerBase):
+class _GuiCoreContext(_CoreEventConsumerBase):
     __PROP_ENTITY_ID = "id"
     __PROP_ENTITY_COMMENT = "comment"
     __PROP_CONFIG_ID = "config"
@@ -116,17 +116,15 @@ class _GuiCoreContext(CoreEventConsumerBase):
 
     def process_event(self, event: Event):
         self.__lazy_start()
-        if event.entity_type is EventEntityType.SCENARIO:
-            with self.gui._get_authorization(system=True): # type: ignore
+        with self.gui._get_authorization(system=True): # type: ignore
+            if event.entity_type is EventEntityType.SCENARIO:
                 self.scenario_refresh(
                     event.entity_id
                     if event.operation is EventOperation.DELETION or is_readable(t.cast(ScenarioId, event.entity_id))
                     else None
                 )
-        elif event.entity_type is EventEntityType.SEQUENCE and event.entity_id:
-            sequence = None
-            try:
-                with self.gui._get_authorization(system=True): # type: ignore
+            elif event.entity_type is EventEntityType.SEQUENCE and event.entity_id:
+                try:
                     sequence = (
                         core_get(event.entity_id)
                         if event.operation is not EventOperation.DELETION
@@ -135,22 +133,22 @@ class _GuiCoreContext(CoreEventConsumerBase):
                     )
                     if sequence and hasattr(sequence, "parent_ids") and sequence.parent_ids:  # type: ignore
                         self.broadcast_core_changed({"scenario": list(sequence.parent_ids)})  # type: ignore
-            except Exception as e:
-                _warn(f"Access to sequence {event.entity_id} failed", e)
-        elif event.entity_type is EventEntityType.JOB:
-            with self.lock:
-                self.jobs_list = None
-            # no broadcast because the submission status will do the job
-            if event.operation is EventOperation.DELETION:
-                self.broadcast_core_changed({"jobs": True})
-        elif event.entity_type is EventEntityType.SUBMISSION:
-            self.submission_status_callback(event.entity_id, event)
-        elif event.entity_type is EventEntityType.DATA_NODE:
-            with self.lock:
-                self.data_nodes_by_owner = None
-            self.broadcast_core_changed(
-                {"datanode": event.entity_id if event.operation != EventOperation.DELETION else True}
-            )
+                except Exception as e:
+                    _warn(f"Access to sequence '{event.entity_id}' failed", e)
+            elif event.entity_type is EventEntityType.JOB:
+                with self.lock:
+                    self.jobs_list = None
+                # no broadcast because the submission status will do the job
+                if event.operation is EventOperation.DELETION:
+                    self.broadcast_core_changed({"jobs": True})
+            elif event.entity_type is EventEntityType.SUBMISSION:
+                self.submission_status_callback(event.entity_id, event)
+            elif event.entity_type is EventEntityType.DATA_NODE:
+                with self.lock:
+                    self.data_nodes_by_owner = None
+                self.broadcast_core_changed(
+                    {"datanode": event.entity_id if event.operation != EventOperation.DELETION else True}
+                )
 
     def broadcast_core_changed(self, payload: t.Dict[str, t.Any], client_id: t.Optional[str] = None):
         self.gui._broadcast(_GuiCoreContext._CORE_CHANGED_NAME, payload, client_id) # type: ignore
