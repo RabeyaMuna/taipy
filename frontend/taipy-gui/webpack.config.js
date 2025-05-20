@@ -27,14 +27,12 @@ const taipyBundle = "taipy-gui"
 
 const reactBundleName = "TaipyGuiDependencies"
 const taipyBundleName = "TaipyGui"
-const taipyGuiBaseBundleName = "TaipyGuiBase"
 
 const basePath = "../../taipy/gui/webapp";
 const webAppPath = resolveApp(basePath);
 const reactManifestPath = resolveApp(basePath + "/" + reactBundle + "-manifest.json");
 const reactDllPath = resolveApp(basePath + "/" + reactBundle + ".dll.js")
 const taipyDllPath = resolveApp(basePath + "/" + taipyBundle + ".js")
-const taipyGuiBaseExportPath = resolveApp(basePath + "/taipy-gui-base-export");
 
 module.exports = (env, options) => {
     const envVariables = {
@@ -169,58 +167,5 @@ module.exports = (env, options) => {
                     hash: true
                 }]),
             ],
-    },
-    {
-        entry: "./base/src/exports.ts",
-        output: {
-            filename: "taipy-gui-base.js",
-            path: taipyGuiBaseExportPath,
-            library: {
-                name: taipyGuiBaseBundleName,
-                type: "umd",
-            },
-            publicPath: "",
-        },
-        module: {
-            rules: [
-                {
-                    test: /\.tsx?$/,
-                    use: "ts-loader",
-                    exclude: /node_modules/,
-                },
-                {
-                    test: /\.css$/,
-                    use: ["style-loader", "css-loader"],
-                },
-                {
-                    test: /\.json$/,
-                    type: 'json',
-                },
-            ],
-        },
-        resolve: {
-            extensions: [".tsx", ".ts", ".js", ".tsx"],
-        },
-        plugins: [
-            new CopyWebpackPlugin({
-                patterns: [
-                    { from: "./base/src/packaging", to: taipyGuiBaseExportPath },
-                ],
-            }),
-        ],
-        externals: {
-            "react": {
-                commonjs: "react",
-                commonjs2: "react",
-                amd: "react",
-                root: "_",
-            },
-            "react-dom": {
-                commonjs: "react-dom",
-                commonjs2: "react-dom",
-                amd: "react-dom",
-                root: "_",
-            },
-        },
     }];
 };

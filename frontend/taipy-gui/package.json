@@ -44,18 +44,17 @@
     "inst": "npm i",
     "start": "echo no start see python",
     "build:dev": "webpack --mode development",
-    "build": "webpack --mode production && npm run pack-base",
-    "build-base": "webpack --mode production --config ./base/webpack.config.js && npm run pack-base",
+    "build": "webpack --mode production",
     "test": "cross-env TZ=UTC jest",
     "lint": "eslint --ext .ts,.tsx",
     "lint:fix": "npm run lint -- --fix",
     "coverage": "npm test -- --coverage",
     "types": "dts-bundle-generator -o packaging/taipy-gui.gen.d.ts src/extensions/exports.ts",
-    "types-base": "dts-bundle-generator -o base/src/packaging/taipy-gui-base.gen.d.ts base/src/exports.ts",
+    "types-custom": "dts-bundle-generator -o packaging-customfe/taipy-gui.gen.d.ts src/customfe/exports.ts",
     "doc": "typedoc --plugin typedoc-plugin-markdown --excludeNotDocumented --disableSources src/extensions/exports.ts",
     "doc.json": "typedoc --json docs/taipy-gui.json src/extensions/exports.ts",
     "mkdocs": "typedoc --options typedoc-mkdocs.json",
-    "pack-base": "cd ../../taipy/gui/webapp/taipy-gui-base-export && npm pack && mv taipy-gui-base-4.1.0.tgz ../taipy-gui-base.tgz"
+    "pack-custom": "cd ../../taipy/gui/webapp/taipy-gui-base-export && npm pack"
   },
   "husky": {
     "hooks": {
