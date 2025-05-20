@@ -127,7 +127,7 @@ def test_notification_on_close(gui: Gui, helpers):
 
     cid = helpers.create_scope_and_get_sid(gui)
     flask_client.get(f"/taipy-jsx/test?client_id={cid}")
-    
+
     with gui.get_flask_app().test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
         g.client_id = cid
 
@@ -145,7 +145,7 @@ def test_notification_on_close(gui: Gui, helpers):
 
     helpers.assert_outward_ws_simple_message(
         received_messages[0],
-        "AL",  
+        "AL",
         {
             "nType": "warning",
             "message": "This is a test notification!",
@@ -156,4 +156,3 @@ def test_notification_on_close(gui: Gui, helpers):
             "onClose": "on_notification_closed",
         }
     )
-    

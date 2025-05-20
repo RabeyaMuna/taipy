@@ -1457,7 +1457,12 @@ class Gui:
         )
 
     def __send_ws_notification(
-        self, type: str, message: str, system_notification: bool, duration: int, notification_id: t.Optional[str] = None, reason: t.Optional[str] = None, on_close_str: t.Optional[str] = None
+            self, type: str, message: str,
+            system_notification: bool,
+            duration: int,
+            notification_id: t.Optional[str] = None,
+            reason: t.Optional[str] = None,
+            on_close_str: t.Optional[str] = None
     ) -> None:
         payload = {
             "type": _WsType.ALERT.value,

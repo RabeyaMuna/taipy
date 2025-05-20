@@ -103,7 +103,9 @@ def notify(
     displayed, but the in-app notification will still function.
     """
     if state and isinstance(state._gui, Gui):
-        return state._gui._notify(notification_type, message, system_notification, duration, id, on_close)  # type: ignore[attr-defined]
+        return state._gui._notify(notification_type, message,
+                                  system_notification, duration, id,
+                                  on_close)  # type: ignore[attr-defined]
     else:
         _warn("'notify()' must be called in the context of a callback.")
         return None
