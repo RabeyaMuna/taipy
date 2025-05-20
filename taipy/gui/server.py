@@ -28,10 +28,7 @@ from flask import (
     Flask,
     json,
     jsonify,
-    make_response,
     render_template,
-    render_template_string,
-    request,
     send_from_directory,
 )
 from flask_cors import CORS
@@ -45,7 +42,6 @@ from taipy.common.logger._taipy_logger import _TaipyLogger
 
 from ._renderers.json import _TaipyJsonProvider
 from .config import ServerConfig
-from .custom._page import _ExternalResourceHandlerManager
 from .utils import _is_in_notebook, _is_port_open, _RuntimeManager
 from .utils._css import get_style
 
@@ -58,7 +54,6 @@ class _Server:
     __RE_CLOSING_CURLY = re.compile(r"(\})([^\"])")
     __OPENING_CURLY = r"\1&#x7B;"
     __CLOSING_CURLY = r"&#x7D;\2"
-    _RESOURCE_HANDLER_ARG = "tprh"
 
     def __init__(
         self,
@@ -166,28 +161,13 @@ class _Server:
         @taipy_bp.route("/", defaults={"path": ""})
         @taipy_bp.route("/<path:path>")
         def my_index(path):
-            resource_handler_id = request.cookies.get(_Server._RESOURCE_HANDLER_ARG, None)
-            if resource_handler_id is not None:
-                resource_handler = _ExternalResourceHandlerManager().get(resource_handler_id)
-                if resource_handler is None:
-                    reload_html = "<html><head><style>body {background-color: black; margin: 0;}</style></head><body><script>location.reload();</script></body></html>"  # noqa: E501
-                    response = make_response(render_template_string(reload_html), 400)
-                    response.set_cookie(
-                        _Server._RESOURCE_HANDLER_ARG, "", secure=request.is_secure, httponly=True, expires=0, path="/"
-                    )
-                    return response
-                try:
-                    config = {
-                        "base_url": base_url,
-                        "taipy_resource_path": static_folder,
-                        "config": client_config,
-                        "css_vars": css_vars,
-                        "scripts": scripts,
-                        "styles": styles,
-                    }
-                    return resource_handler.get_resources(path, config)
-                except Exception as e:
-                    raise RuntimeError("Can't get resources from custom resource handler") from e
+            from ._hook import _Hooks
+
+            custom_page_resource = _Hooks()._resolve_custom_page_resource_handler(
+                path, base_url, static_folder, client_config, css_vars, scripts, styles
+            )
+            if custom_page_resource is not None:
+                return custom_page_resource
             if path == "" or path == "index.html" or "." not in path:
                 try:
                     return render_template(

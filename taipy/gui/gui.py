@@ -27,7 +27,7 @@ from importlib.util import find_spec
 from inspect import currentframe, getabsfile, iscoroutinefunction, ismethod, ismodule
 from pathlib import Path
 from threading import Thread, Timer
-from types import FrameType, FunctionType, LambdaType, ModuleType, SimpleNamespace
+from types import FrameType, LambdaType, SimpleNamespace
 from urllib.parse import unquote, urlencode, urlparse
 
 import markdown as md_lib
@@ -36,7 +36,6 @@ from flask import (
     Blueprint,
     Flask,
     g,
-    has_app_context,
     jsonify,
     request,
     send_file,
@@ -62,8 +61,6 @@ from ._renderers.utils import _get_columns_dict
 from ._warnings import TaipyGuiWarning, _warn
 from .builder._api_generator import _ElementApiGenerator
 from .config import Config, ConfigParameter, _Config
-from .custom import Page as CustomPage
-from .custom.utils import get_current_resource_handler, is_in_custom_page_context
 from .data.content_accessor import _ContentAccessor
 from .data.data_accessor import _DataAccessors
 from .data.data_format import _DataFormat
@@ -728,14 +725,8 @@ class Gui:
                         self.__request_data_update(str(message.get("name")), message.get("payload"))
                     elif msg_type == _WsType.REQUEST_UPDATE.value:
                         self.__request_var_update(message.get("payload"))
-                    elif msg_type == _WsType.GET_MODULE_CONTEXT.value:
-                        self.__handle_ws_get_module_context(payload)
-                    elif msg_type == _WsType.GET_DATA_TREE.value:
-                        self.__handle_ws_get_data_tree()
                     elif msg_type == _WsType.APP_ID.value:
                         self.__handle_ws_app_id(message)
-                    elif msg_type == _WsType.GET_ROUTES.value:
-                        self.__handle_ws_get_routes()
                     elif msg_type == _WsType.LOCAL_STORAGE.value:
                         self.__handle_ws_local_storage(message)
                     else:
@@ -1119,7 +1110,7 @@ class Gui:
         front_var: t.Optional[str] = None,
     ):
         ws_dict = {}
-        is_custom_page = is_in_custom_page_context()
+        is_custom_page = _Hooks()._is_in_custom_page_context()
         values = {v: _getscopeattr_drill(self, v) for v in modified_vars if is_custom_page or _is_moduled_variable(v)}  # type: ignore[arg-type]
         if not values:
             return
@@ -1130,9 +1121,8 @@ class Gui:
                 modified_vars.remove(k)
         for _var in modified_vars:
             newvalue = values.get(_var)
-            resource_handler = get_current_resource_handler()
-            custom_page_filtered_types = resource_handler.data_layer_supported_types if resource_handler else ()
-            if isinstance(newvalue, (_TaipyData)) or isinstance(newvalue, custom_page_filtered_types):
+            custom_page_filtered_types = _Hooks()._get_resource_handler_data_layer_supported_types()
+            if isinstance(newvalue, (_TaipyData)) or isinstance(newvalue, custom_page_filtered_types):  # type: ignore
                 newvalue = {"__taipy_refresh": True}
             else:
                 if isinstance(newvalue, (_TaipyContent, _TaipyContentImage)):
@@ -1154,7 +1144,7 @@ class Gui:
                 elif isinstance(newvalue, _TaipyBase):
                     newvalue = newvalue.get()
                 # Skip in taipy-gui, available in custom frontend
-                if isinstance(newvalue, (dict, _MapDict)) and not is_in_custom_page_context():
+                if isinstance(newvalue, (dict, _MapDict)) and not _Hooks()._is_in_custom_page_context():
                     continue
                 if isinstance(newvalue, float) and math.isnan(newvalue):
                     # do not let NaN go through json, it is not handle well (dies silently through websocket)
@@ -1225,9 +1215,8 @@ class Gui:
     def __request_data_update(self, var_name: str, payload: t.Any) -> None:
         # Use custom attrgetter function to allow value binding for _MapDict
         newvalue = _getscopeattr_drill(self, var_name)  # type: ignore[arg-type]
-        resource_handler = get_current_resource_handler()
-        custom_page_filtered_types = resource_handler.data_layer_supported_types if resource_handler else ()
-        if not isinstance(newvalue, _TaipyData) and isinstance(newvalue, custom_page_filtered_types):
+        custom_page_filtered_types = _Hooks()._get_resource_handler_data_layer_supported_types()
+        if not isinstance(newvalue, _TaipyData) and isinstance(newvalue, custom_page_filtered_types):  # type: ignore
             newvalue = _TaipyData(newvalue, "")
         if isinstance(newvalue, _TaipyData):
             ret_payload = None
@@ -1267,80 +1256,6 @@ class Gui:
                     )
             self.__send_var_list_update(payload["names"])
 
-    def __handle_ws_get_module_context(self, payload: t.Any):
-        if isinstance(payload, dict):
-            page_path = str(payload.get("path"))
-            if page_path in {"/", ""}:
-                page_path = Gui.__root_page_name
-            # Get Module Context
-            if mc := self._get_page_context(page_path):
-                page_renderer = t.cast(_Page, self._get_page(page_path))._renderer
-                self._bind_custom_page_variables(t.cast(t.Any, page_renderer), self._get_client_id())
-                # get metadata if there is one
-                metadata: t.Dict[str, t.Any] = {}
-                if hasattr(page_renderer, "_metadata"):
-                    metadata = getattr(page_renderer, "_metadata", {})
-                meta_return = json.dumps(metadata, cls=_TaipyJsonEncoder) if metadata else None
-                self.__send_ws(
-                    {
-                        "type": _WsType.GET_MODULE_CONTEXT.value,
-                        "payload": {"context": mc, "metadata": meta_return},
-                    },
-                    send_back_only=True,
-                )
-
-    def __get_variable_tree(self, data: t.Dict[str, t.Any]):
-        # Module Context -> Variable -> Variable data (name, type, initial_value)
-        variable_tree: t.Dict[str, t.Dict[str, t.Dict[str, t.Any]]] = {}
-        # Types of data to be handled by the data layer and filtered out here
-        resource_handler = get_current_resource_handler()
-        filtered_value_types = resource_handler.data_layer_supported_types if resource_handler else ()
-        for k, v in data.items():
-            if isinstance(v, _TaipyBase):
-                data[k] = v.get()
-            var_name, var_module_name = _variable_decode(k)
-            if var_module_name == "" or var_module_name is None:
-                var_module_name = "__main__"
-            if var_module_name not in variable_tree:
-                variable_tree[var_module_name] = {}
-            data_update = isinstance(v, filtered_value_types)
-            value = None if data_update else data[k]
-            # if _is_moduled_variable(k):
-            variable_tree[var_module_name][var_name] = {
-                "type": type(v).__name__,
-                "value": value,
-                "encoded_name": k,
-                "data_update": data_update,
-            }
-        return variable_tree
-
-    def __handle_ws_get_data_tree(self):
-        # Get Variables
-        self.__pre_render_pages()
-        data = {
-            k: v
-            for k, v in vars(self._get_data_scope()).items()
-            if not k.startswith("_")
-            and not callable(v)
-            and "TpExPr" not in k
-            and not isinstance(v, (ModuleType, FunctionType, LambdaType, type, Page))
-        }
-        function_data = {
-            k: v
-            for k, v in vars(self._get_data_scope()).items()
-            if not k.startswith("_") and "TpExPr" not in k and isinstance(v, (FunctionType, LambdaType))
-        }
-        self.__send_ws(
-            {
-                "type": _WsType.GET_DATA_TREE.value,
-                "payload": {
-                    "variable": self.__get_variable_tree(data),
-                    "function": self.__get_variable_tree(function_data),
-                },
-            },
-            send_back_only=True,
-        )
-
     def __handle_ws_app_id(self, message: t.Any):
         if not isinstance(message, dict):
             return
@@ -1353,25 +1268,6 @@ class Gui:
             {
                 "type": _WsType.APP_ID.value,
                 "payload": {"name": name, "id": app_id},
-            },
-            send_back_only=True,
-        )
-
-    def __handle_ws_get_routes(self):
-        routes = (
-            [[self._config.root_page._route, t.cast(t.Any, self._config.root_page._renderer).page_type]]
-            if self._config.root_page
-            else []
-        )
-        routes += [
-            [page._route, t.cast(t.Any, page._renderer).page_type]
-            for page in self._config.pages
-            if page._route != Gui.__root_page_name
-        ]
-        self.__send_ws(
-            {
-                "type": _WsType.GET_ROUTES.value,
-                "payload": routes,
             },
             send_back_only=True,
         )
@@ -2528,16 +2424,16 @@ class Gui:
         for page in self._config.pages:
             if page is not None:
                 with contextlib.suppress(Exception):
-                    if isinstance(page._renderer, CustomPage):
-                        self._bind_custom_page_variables(page._renderer, self._get_client_id())
+                    if page._renderer is not None and isinstance(page._renderer, _Hooks()._get_custom_page_type()):  # type: ignore[arg-type]
+                        _Hooks()._bind_custom_page_variables(self, page._renderer, self._get_client_id())
                     else:
                         page.render(self, silent=True)  # type: ignore[arg-type]
         if additional_pages := _Hooks()._get_additional_pages():
             for page in additional_pages:
                 if isinstance(page, Page):
                     with contextlib.suppress(Exception):
-                        if isinstance(page, CustomPage):
-                            self._bind_custom_page_variables(page, self._get_client_id())
+                        if page._renderer is not None and isinstance(page, _Hooks()._get_custom_page_type()):  # type: ignore[arg-type]
+                            _Hooks()._bind_custom_page_variables(self, page, self._get_client_id())
                         else:
                             new_page = _Page()
                             new_page._renderer = page
@@ -2585,21 +2481,6 @@ class Gui:
     def _get_page(self, page_name: str):
         return next((page_i for page_i in self._config.pages if page_i._route == page_name), None)
 
-    def _bind_custom_page_variables(self, page: CustomPage, client_id: t.Optional[str]):
-        """Handle the bindings of custom page variables"""
-        if not isinstance(page, CustomPage):
-            return
-        with self.get_flask_app().app_context() if has_app_context() else contextlib.nullcontext():  # type: ignore[attr-defined]
-            self.__set_client_id_in_context(client_id)
-            with self._set_locals_context(page._get_module_name()):
-                for k, v in self._get_locals_bind().items():
-                    if (
-                        (not page._binding_variables or k in page._binding_variables)
-                        and not k.startswith("_")
-                        and not isinstance(v, ModuleType)
-                    ):
-                        self._bind_var(k)
-
     def __render_page(self, page_name: str) -> t.Any:
         self.__set_client_id_in_context()
         nav_page = self._get_navigated_page(page_name)
@@ -2617,17 +2498,8 @@ class Gui:
                 {"Content-Type": "application/json; charset=utf-8"},
             )
         # Handle custom pages
-        if (pr := page._renderer) is not None and isinstance(pr, CustomPage):
-            if self._navigate(
-                to=page_name,
-                params={
-                    _Server._RESOURCE_HANDLER_ARG: pr._resource_handler.get_id(),
-                },
-            ):
-                # Proactively handle the bindings of custom page variables
-                self._bind_custom_page_variables(pr, self._get_client_id())
-                return ("Successfully redirect to custom resource handler", 200)
-            return ("Failed to navigate to custom resource handler", 500)
+        if (pr := page._renderer) is not None and isinstance(pr, _Hooks()._get_custom_page_type()):  # type: ignore[arg-type]
+            return _Hooks()._handle_custom_page_render(self, page_name, pr)
         # Handle page rendering
         context = page.render(self)  # type: ignore[arg-type]
         if (
@@ -2659,17 +2531,6 @@ class Gui:
                 "blockUI": self._is_ui_blocked(),
             }
         )
-
-    def __render_element(self) -> t.Any:
-        self.__set_client_id_in_context()
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "No element data provided"}), 400
-        with self._set_locals_context(data.get("context")):
-            el = _Factory.call_builder(self, data.get("type"), data.get("properties"), True)
-        if el is None:
-            return jsonify({"error": f"Failed to generate element of type '{data.type}'"}), 400
-        return {"jsx": _Server._render_jsx_fragment(f"{el[0]}</{el[1]}>")}
 
     def get_flask_app(self) -> Flask:
         """Get the internal Flask application.
@@ -2800,7 +2661,7 @@ class Gui:
             if additional_pages := _Hooks()._get_additional_pages():
                 # add page context for additional pages so that they can be managed by the variable directory
                 for page in additional_pages:
-                    if isinstance(page, Page) and not isinstance(page, CustomPage):
+                    if isinstance(page, Page) and not isinstance(page, _Hooks()._get_custom_page_type()):  # type: ignore[arg-type]
                         self._add_page_context(page)
             self.__var_dir.process_imported_var()
             # bind on_* function if available
@@ -2891,8 +2752,6 @@ class Gui:
 
         # server URL Rule for flask rendered react-router
         pages_bp.add_url_rule(f"/{Gui.__INIT_URL}", view_func=self.__init_route)
-
-        pages_bp.add_url_rule("/taipy-element-jsx", view_func=self.__render_element, methods=["POST"])
 
         _Hooks()._add_external_blueprint(self, __name__)
 

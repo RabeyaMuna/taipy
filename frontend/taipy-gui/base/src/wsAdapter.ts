@@ -1,7 +1,7 @@
 import merge from "lodash/merge";
 import { TaipyApp } from "./app";
 import { IdMessage, storeClientId } from "../../src/context/utils";
-import { WsMessage } from "../../src/context/wsUtils";
+import { WsMessage, WsMessageType } from "../../src/context/wsUtils";
 import { DataManager, getRequestedDataKey, ModuleData } from "./dataManager";
 
 export abstract class WsAdapter {
@@ -61,7 +61,7 @@ export class TaipyWsAdapter extends WsAdapter {
                 taipyApp.clientId = id;
                 taipyApp.initApp();
                 taipyApp.updateContext(taipyApp.path);
-            } else if (message.type === "GMC") {
+            } else if (message.type === ("GMC" as WsMessageType)) {
                 const payload = message.payload as Record<string, unknown>;
                 taipyApp.context = payload.context as string;
                 if (payload?.metadata) {
@@ -71,7 +71,7 @@ export class TaipyWsAdapter extends WsAdapter {
                         console.error("Error parsing metadata from Taipy Designer", e);
                     }
                 }
-            } else if (message.type === "GDT") {
+            } else if (message.type === ("GDT" as WsMessageType)) {
                 const payload = message.payload as Record<string, ModuleData>;
                 const variableData = payload.variable;
                 const functionData = payload.function;
@@ -94,7 +94,7 @@ export class TaipyWsAdapter extends WsAdapter {
                     return true;
                 }
                 taipyApp.appId = payload.id as string;
-            } else if (message.type === "GR") {
+            } else if (message.type === ("GR" as WsMessageType)) {
                 const payload = message.payload as [string, string][];
                 taipyApp.routes = payload;
             } else if (message.type === "AL") {

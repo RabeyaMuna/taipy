@@ -18,10 +18,7 @@ export type WsMessageType =
     | "DF"
     | "PR"
     | "ACK"
-    | "GMC"
-    | "GDT"
     | "AID"
-    | "GR"
     | "FV"
     | "BC"
     | "LS";

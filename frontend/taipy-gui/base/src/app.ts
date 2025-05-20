@@ -56,7 +56,7 @@ export class TaipyApp {
         onChange: OnChangeHandler | undefined = undefined,
         path: string | undefined = undefined,
         socket: Socket | undefined = undefined,
-        handleCookie: boolean = true,
+        handleCookie: boolean = true
     ) {
         socket = socket || io("/", { autoConnect: false, path: `${this.getBaseUrl()}socket.io` });
         this.onInit = onInit;
@@ -202,11 +202,11 @@ export class TaipyApp {
         this.sendWsMessage("GR", "", "");
     }
 
-    sendWsMessage(type: WsMessageType, id: string, payload: unknown, context: string | undefined = undefined) {
+    sendWsMessage(type: WsMessageType | string, id: string, payload: unknown, context: string | undefined = undefined) {
         if (context === undefined) {
             context = this.context;
         }
-        const ackId = sendWsMessage(this.socket, type, id, payload, this.clientId, context);
+        const ackId = sendWsMessage(this.socket, type as WsMessageType, id, payload, this.clientId, context);
         if (ackId) {
             this.ackList.push(ackId);
             this.onWsStatusUpdateEvent(this.ackList);
@@ -319,7 +319,7 @@ export class TaipyApp {
         canvasDomElement: HTMLElement,
         canvasEditModeCanvas?: HTMLElement,
         propertyEditorElement?: HTMLElement,
-        styleHandler?: (id: string, styles: Record<string, unknown>) => void,
+        styleHandler?: (id: string, styles: Record<string, unknown>) => void
     ) {
         this.elementManager.init(canvasDomElement, canvasEditModeCanvas, propertyEditorElement, styleHandler);
     }
@@ -330,7 +330,7 @@ export class TaipyApp {
         rootId: string,
         wrapper: CanvasRenderConfig["wrapper"],
         properties: Element["properties"] | undefined = undefined,
-        styles: Element["styles"] | undefined = undefined,
+        styles: Element["styles"] | undefined = undefined
     ) {
         this.elementManager.addElement(type, id, rootId, wrapper, properties, styles);
     }
@@ -373,7 +373,7 @@ export const createApp = (
     onChange?: OnChangeHandler,
     path?: string,
     socket?: Socket,
-    handleCookie?: boolean,
+    handleCookie?: boolean
 ) => {
     return new TaipyApp(onInit, onChange, path, socket, handleCookie);
 };
