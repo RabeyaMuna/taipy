@@ -90,15 +90,18 @@ def test__get_valid_adapter_result(gui: Gui):
         assert isinstance(res, tuple)
         assert res[0] == "id"
 
-def test_on_action_call(gui:Gui):
+
+def test_on_action_call(gui: Gui):
     an_id = "my_id"
 
     a_non_action_payload = {"a": "b"}
+
     def on_action(state, id, payload):
         assert id == an_id
         assert payload is a_non_action_payload
 
     an_action_payload = {"action": "on_an_action"}
+
     def on_an_action(state, id, payload):
         assert id == an_id
         assert payload is an_action_payload
@@ -108,8 +111,8 @@ def test_on_action_call(gui:Gui):
 
     gui.run(run_server=False)
     with gui.get_flask_app().app_context():
-        gui._Gui__on_action(an_id, a_non_action_payload) # type: ignore[attr-defined]
-        gui._Gui__on_action(an_id, an_action_payload) # type: ignore[attr-defined]
+        gui._Gui__on_action(an_id, a_non_action_payload)  # type: ignore[attr-defined]
+        gui._Gui__on_action(an_id, an_action_payload)  # type: ignore[attr-defined]
 
 
 def test_notification_on_close(gui: Gui, helpers):
@@ -141,7 +144,6 @@ def test_notification_on_close(gui: Gui, helpers):
         )
 
     received_messages = ws_client.get_received()
-    print(received_messages)
 
     helpers.assert_outward_ws_simple_message(
         received_messages[0],
@@ -154,5 +156,5 @@ def test_notification_on_close(gui: Gui, helpers):
             "notificationId": notification_id,
             "reason": None,
             "onClose": "on_notification_closed",
-        }
+        },
     )
