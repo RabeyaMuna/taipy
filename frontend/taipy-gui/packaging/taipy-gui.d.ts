@@ -11,6 +11,8 @@
  * specific language governing permissions and limitations under the License.
  */
 
+import * as React from "react"
+
 import { PaletteMode } from "@mui/material";
 import { Theme } from "@mui/material/styles";
 import { ComponentType, Dispatch, ReactNode } from "react";
@@ -350,6 +352,7 @@ export interface ColumnDesc {
     apply?: string;
     /** The flag that allows the user to aggregate the column. */
     groupBy?: boolean;
+    widthHint?: number;
     /** The list of values that can be used on edit. */
     lov?: string[];
     /** If true the user can enter any value besides the lov values. */
@@ -360,8 +363,6 @@ export interface ColumnDesc {
     headers?: string[];
     /** The index of the multi index if exists. */
     multi?: number;
-    /** If true or not set, line breaks are transformed into <BR>. */
-    lineBreak?: boolean;
 }
 /**
  * A cell value type.
@@ -435,7 +436,7 @@ export interface ChartProp extends TaipyActiveProps, TaipyChangeProps {
     dataVarNames?: string;
 }
 export type TraceValueType = Record<string, (string | number)[]>;
-export declare const Chart: (props: ChartProp) => import("react/jsx-runtime").JSX.Element | null;
+export declare const Chart: (props: ChartProp) => React.JSX.Element | null;
 export interface DialogProps extends TaipyActiveProps {
     title: string;
     onAction?: string;
@@ -453,7 +454,7 @@ export interface DialogProps extends TaipyActiveProps {
     defaultRefId?: string;
     popup?: boolean;
 }
-export declare const Dialog: (props: DialogProps) => import("react/jsx-runtime").JSX.Element;
+export declare const Dialog: (props: DialogProps) => React.JSX.Element;
 export interface FileSelectorProps extends TaipyActiveProps {
     onAction?: string;
     defaultLabel?: string;
@@ -469,7 +470,7 @@ export interface FileSelectorProps extends TaipyActiveProps {
     onUploadAction?: string;
     uploadData?: string;
 }
-export declare const FileSelector: (props: FileSelectorProps) => import("react/jsx-runtime").JSX.Element;
+export declare const FileSelector: (props: FileSelectorProps) => React.JSX.Element;
 export interface LoginProps extends TaipyBaseProps {
     title?: string;
     onAction?: string;
@@ -477,12 +478,12 @@ export interface LoginProps extends TaipyBaseProps {
     message?: string;
     labels?: string;
 }
-export declare const Login: (props: LoginProps) => import("react/jsx-runtime").JSX.Element | null;
-export declare const Router: () => import("react/jsx-runtime").JSX.Element;
+export declare const Login: (props: LoginProps) => React.JSX.Element | null;
+export declare const Router: () => React.JSX.Element;
 export interface TableProps extends TaipyPaginatedTableProps {
     autoLoading?: boolean;
 }
-export declare const Table: ({ autoLoading, ...rest }: TableProps) => import("react/jsx-runtime").JSX.Element;
+export declare const Table: ({ autoLoading, ...rest }: TableProps) => React.JSX.Element;
 export interface FilterColumnDesc extends ColumnDesc {
     params?: number[];
 }
@@ -496,7 +497,7 @@ export interface TableFilterProps {
     className?: string;
     filteredCount: number;
 }
-export declare const TableFilter: (props: TableFilterProps) => import("react/jsx-runtime").JSX.Element;
+export declare const TableFilter: (props: TableFilterProps) => React.JSX.Element;
 export interface SortDesc {
     col: string;
     order: boolean;
@@ -514,7 +515,7 @@ export interface TableSortProps {
     appliedSorts?: Array<SortDesc>;
     className?: string;
 }
-export declare const TableSort: (props: TableSortProps) => import("react/jsx-runtime").JSX.Element;
+export declare const TableSort: (props: TableSortProps) => React.JSX.Element;
 /**
  * A function that retrieves the dynamic className associated
  * to an instance of component through the style property
@@ -549,7 +550,7 @@ export interface MetricProps extends TaipyBaseProps, TaipyHoverProps {
     template_Dark_?: string;
     template_Light_?: string;
 }
-export declare const Metric: (props: MetricProps) => import("react/jsx-runtime").JSX.Element;
+export declare const Metric: (props: MetricProps) => React.JSX.Element;
 /**
  * A LoV (list of value) element.
  *
@@ -583,11 +584,11 @@ interface TaipyStore {
  *
  * The type of this variable is `React.Context<Store>`.
  */
-export declare const TaipyContext: import("react").Context<TaipyStore>;
+export declare const TaipyContext: React.Context<TaipyStore>;
 export interface PageStore {
     module?: string;
 }
-export declare const PageContext: import("react").Context<PageStore>;
+export declare const PageContext: React.Context<PageStore>;
 /**
  * A React hook to manage a dynamic scalar property.
  *
@@ -677,10 +678,10 @@ export interface ErrorFallBackProps {
     error: Error;
     resetErrorBoundary: () => void;
 }
-export declare const ErrorFallback: (props: ErrorFallBackProps) => import("react/jsx-runtime").JSX.Element;
+export declare const ErrorFallback: (props: ErrorFallBackProps) => React.JSX.Element;
 export declare const getRegisteredComponents: () => Record<string, ComponentType<object>>;
-export declare const unregisteredRender: (tagName?: string, error?: string) => import("react/jsx-runtime").JSX.Element;
-export declare const renderError: (props: { error: string }) => import("react/jsx-runtime").JSX.Element;
+export declare const unregisteredRender: (tagName?: string, error?: string) => React.JSX.Element;
+export declare const renderError: (props: { error: string }) => React.JSX.Element;
 
 export { TaipyBaseAction as Action, TaipyContext as Context, TaipyState as State, TaipyStore as Store };
 
