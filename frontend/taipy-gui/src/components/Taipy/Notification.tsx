@@ -54,13 +54,13 @@ const TaipyNotification = ({ notifications: notificationProps }: NotificationPro
     const notificationClosed = useCallback(
         (event: SyntheticEvent | null, reason: CloseReason, key?: SnackbarKey, callback?: string) => {
             if (callback) {
-                dispatch(createSendActionNameAction(notification?.notificationId, module, callback, reason === "timeout" ? "timeout" : "forced"));               
+                dispatch(createSendActionNameAction(notification?.notificationId, module, callback, reason === "timeout" ? "timeout" : "forced"));
             }
             snackbarIds.current = Object.fromEntries(
                 Object.entries(snackbarIds.current).filter(([id]) => id !== key)
             );
         },
-        [dispatch, module, notification?.notificationId] 
+        [dispatch, module, notification?.notificationId]
     );
 
     const faviconUrl = useMemo(() => {
