@@ -910,7 +910,7 @@ def create_scenario(
         SystemExit: If the configuration check returns some errors.
 
     """
-    Orchestrator._manage_version_and_block_config()
+    Orchestrator()._manage_version_and_block_config()
 
     return _ScenarioManagerFactory._build_manager()._create(config, creation_date, name)
 
@@ -935,7 +935,7 @@ def create_global_data_node(config: DataNodeConfig) -> DataNode:
     if config.scope is not Scope.GLOBAL:
         raise DataNodeConfigIsNotGlobal(config.id)
 
-    Orchestrator._manage_version_and_block_config()
+    Orchestrator()._manage_version_and_block_config()
 
     if dns := _DataManagerFactory._build_manager()._get_by_config_id(config.id):
         return dns[0]

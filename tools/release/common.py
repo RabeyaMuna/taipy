@@ -20,7 +20,7 @@ import typing as t
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from functools import total_ordering
+
 import requests
 
 
@@ -65,7 +65,7 @@ class Version:
     def from_string(cls, version: str):
         """Creates a Version from a string.
 
-        Parameters:
+        Arguments:
             version: a version name as a string.<br/>
               The format should be "<major>.<minor>[.<patch>[.<extension>]] where
 
@@ -138,7 +138,7 @@ class Version:
             package-1.2.3.extA is NOT compatible with any sub-package-1.2.*.extB if extA != extB,
                independently of a potential extension index.
 
-        Parameters:
+        Arguments:
             version: the version to check compatibility against.
 
         Returns:
