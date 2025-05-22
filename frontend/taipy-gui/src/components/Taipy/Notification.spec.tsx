@@ -142,14 +142,14 @@ describe("Notifications", () => {
             notificationId: "nId",
             snackbarId: "nId",
         };
-        const notifications = [ baseNotification ];
+        const notifications = [baseNotification];
         const { rerender } = render(
             <SnackbarProvider>
                 <TaipyNotification notifications={notifications} />
             </SnackbarProvider>
         );
         await screen.findByRole("button", { name: /close/i });
-        const newNotifications = [ { ...baseNotification, nType: "" }];
+        const newNotifications = [{ ...baseNotification, nType: "" }];
         rerender(
             <SnackbarProvider>
                 <TaipyNotification notifications={newNotifications} />
@@ -240,12 +240,12 @@ describe("Notifications", () => {
         expect(linkElement?.getAttribute("href")).toBe("/test-shortcut-icon.png");
         document.head.removeChild(link);
     });
-    
+
     it("dispatches the correct actions when a notification closes due to timeout", async () => {
         jest.spyOn(hooks, "useModule").mockReturnValue("testModule");
-        const mockDispatch = jest.fn(); 
+        const mockDispatch = jest.fn();
         const state: TaipyState = INITIAL_STATE;
-    
+
         const notification = {
             notificationId: "test-id",
             snackbarId: "test-snackbar",
@@ -255,20 +255,20 @@ describe("Notifications", () => {
             onClose: "onCloseCallback",
             system: false,
         };
-    
-        const wrapper = render(
+
+        render(
             <SnackbarProvider>
                 <TaipyContext.Provider value={{ state, dispatch: mockDispatch }}>
                     <TaipyNotification notifications={[notification]} />
                 </TaipyContext.Provider>
             </SnackbarProvider>
         );
-    
+
         await waitFor(() => {
             const notificationElement = screen.queryByText("Test message");
-            expect(notificationElement).not.toBeInTheDocument(); 
+            expect(notificationElement).not.toBeInTheDocument();
         });
-    
+
         expect(mockDispatch).toHaveBeenCalledWith(
             expect.objectContaining({
                 type: "DELETE_NOTIFICATION",
@@ -279,11 +279,11 @@ describe("Notifications", () => {
         expect(mockDispatch).toHaveBeenCalledWith(
             expect.objectContaining({
                 type: "SEND_ACTION_ACTION",
-                context: "testModule", 
-                name: "test-id", 
+                context: "testModule",
+                name: "test-id",
                 payload: {
-                    action: "onCloseCallback", 
-                    args: ["timeout"], 
+                    action: "onCloseCallback",
+                    args: ["timeout"],
                 },
             })
         );
