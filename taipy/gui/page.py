@@ -56,7 +56,7 @@ class Page:
             self._frame = kwargs.get("frame")
         elif self._renderer:
             self._frame = self._renderer._frame
-        elif isinstance(self, _Hooks()._get_custom_page_type()):  # type: ignore[union-attr]
+        elif _Hooks()._get_custom_page_type() and isinstance(self, _Hooks()._get_custom_page_type()):  # type: ignore[union-attr]
             _Hooks()._assign_custom_page_frame(self)
         elif len(inspect.stack()) < 4:
             raise RuntimeError(f"Can't resolve module. Page '{type(self).__name__}' is not registered.")

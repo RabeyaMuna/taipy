@@ -2423,7 +2423,11 @@ class Gui:
         for page in self._config.pages:
             if page is not None:
                 with contextlib.suppress(Exception):
-                    if page._renderer is not None and isinstance(page._renderer, _Hooks()._get_custom_page_type()):  # type: ignore[arg-type]
+                    if (
+                        page._renderer is not None
+                        and _Hooks()._get_custom_page_type()
+                        and isinstance(page._renderer, _Hooks()._get_custom_page_type())  # type: ignore[arg-type]
+                    ):
                         _Hooks()._bind_custom_page_variables(self, page._renderer, self._get_client_id())
                     else:
                         page.render(self, silent=True)  # type: ignore[arg-type]
@@ -2431,7 +2435,11 @@ class Gui:
             for page in additional_pages:
                 if isinstance(page, Page):
                     with contextlib.suppress(Exception):
-                        if page._renderer is not None and isinstance(page, _Hooks()._get_custom_page_type()):  # type: ignore[arg-type]
+                        if (
+                            page._renderer is not None
+                            and _Hooks()._get_custom_page_type()
+                            and isinstance(page, _Hooks()._get_custom_page_type())  # type: ignore[arg-type]
+                        ):
                             _Hooks()._bind_custom_page_variables(self, page, self._get_client_id())
                         else:
                             new_page = _Page()
@@ -2497,7 +2505,11 @@ class Gui:
                 {"Content-Type": "application/json; charset=utf-8"},
             )
         # Handle custom pages
-        if (pr := page._renderer) is not None and isinstance(pr, _Hooks()._get_custom_page_type()):  # type: ignore[arg-type]
+        if (
+            (pr := page._renderer) is not None
+            and _Hooks()._get_custom_page_type()
+            and isinstance(pr, _Hooks()._get_custom_page_type())  # type: ignore[arg-type]
+        ):
             return _Hooks()._handle_custom_page_render(self, page_name, pr)
         # Handle page rendering
         context = page.render(self)  # type: ignore[arg-type]
@@ -2660,7 +2672,9 @@ class Gui:
             if additional_pages := _Hooks()._get_additional_pages():
                 # add page context for additional pages so that they can be managed by the variable directory
                 for page in additional_pages:
-                    if isinstance(page, Page) and not isinstance(page, _Hooks()._get_custom_page_type()):  # type: ignore[arg-type]
+                    if isinstance(page, Page) and not (
+                        _Hooks()._get_custom_page_type() and isinstance(page, _Hooks()._get_custom_page_type())  # type: ignore[arg-type]
+                    ):
                         self._add_page_context(page)
             self.__var_dir.process_imported_var()
             # bind on_* function if available
