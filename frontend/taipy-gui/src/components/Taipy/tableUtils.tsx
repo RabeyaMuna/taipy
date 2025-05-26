@@ -54,7 +54,7 @@ import { TaipyActiveProps, TaipyMultiSelectProps, getSuffixedClassNames } from "
 export const generateHeaderClassName = (columnName: string | undefined): string => {
     // logic for the css header classname
     if (!columnName) {
-        // return an empty string if columname is undefined or empty
+        // return an empty string if columnName is undefined or empty
         return "";
     }
     return "-" + columnName.replace(/\W+/g, "-").replace(/-+/g, "-").toLowerCase();
