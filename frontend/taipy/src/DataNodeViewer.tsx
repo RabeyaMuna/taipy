@@ -50,7 +50,7 @@ import CheckCircle from "@mui/icons-material/CheckCircle";
 import Download from "@mui/icons-material/Download";
 import Launch from "@mui/icons-material/Launch";
 import LockOutlined from "@mui/icons-material/LockOutlined";
-import Upload from "@mui/icons-material/Upload";
+import {Upload} from "@mui/icons-material";
 
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { BaseDateTimePickerSlotProps } from "@mui/x-date-pickers/DateTimePicker/shared";
