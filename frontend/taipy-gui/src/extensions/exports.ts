@@ -26,7 +26,7 @@ import { useLovListMemo, LoV, LoVElt } from "../components/Taipy/lovUtils";
 import { LovItem } from "../utils/lov";
 import { getUpdateVar, getSuffixedClassNames } from "../components/Taipy/utils";
 import { ColumnDesc, RowType, RowValue } from "../components/Taipy/tableUtils";
-import { TaipyContext, TaipyStore } from "../context/taipyContext";
+import { TaipyContext, TaipyStore, PageContext } from "../context/taipyContext";
 import { TaipyBaseAction, TaipyState } from "../context/taipyReducers";
 import {
     useClassNames,
@@ -85,3 +85,43 @@ export type {
     TaipyState as State,
     TaipyBaseAction as Action,
 };
+
+// For Taipy Custom Package (Designer)
+
+import { sendWsMessage, TAIPY_CLIENT_ID } from "../context/wsUtils";
+import { uploadFile } from "../workers/fileupload";
+import { WsMessage, WsMessageType } from "../context/wsUtils";
+import { IdMessage, storeClientId, getLocalStorageValue } from "../context/utils";
+
+import { emptyArray } from "../utils";
+import ErrorFallback from "../utils/ErrorBoundary";
+import { getRegisteredComponents } from "../components/Taipy";
+import { renderError, unregisteredRender } from "../components/Taipy/Unregistered";
+import {
+    createRefreshThemesAction,
+    INITIAL_STATE,
+    initializeWebSocket,
+    taipyInitialize,
+    taipyReducer,
+} from "../context/taipyReducers";
+
+export {
+    getLocalStorageValue,
+    sendWsMessage,
+    TAIPY_CLIENT_ID,
+    uploadFile,
+    storeClientId,
+    PageContext,
+    TaipyContext,
+    emptyArray,
+    ErrorFallback,
+    getRegisteredComponents,
+    renderError,
+    unregisteredRender,
+    createRefreshThemesAction,
+    INITIAL_STATE,
+    initializeWebSocket,
+    taipyInitialize,
+    taipyReducer,
+};
+export type { WsMessage, WsMessageType, IdMessage };

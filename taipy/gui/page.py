@@ -40,7 +40,7 @@ class Page:
     page_type: str = "Taipy"
 
     def __init__(self, **kwargs) -> None:
-        from .custom import Page as CustomPage
+        from ._hook import _Hooks
 
         self._class_module_name = ""
         self._class_locals: t.Dict[str, t.Any] = {}
@@ -56,11 +56,8 @@ class Page:
             self._frame = kwargs.get("frame")
         elif self._renderer:
             self._frame = self._renderer._frame
-        elif isinstance(self, CustomPage):
-            self._frame = t.cast(FrameType, t.cast(FrameType, inspect.stack()[2].frame))
-            # Allow CustomPage class to be inherited
-            if len(inspect.stack()) > 3 and inspect.stack()[2].function != "<module>":
-                self._frame = t.cast(FrameType, t.cast(FrameType, inspect.stack()[3].frame))
+        elif _Hooks()._get_custom_page_type() and isinstance(self, _Hooks()._get_custom_page_type()):  # type: ignore[union-attr]
+            _Hooks()._assign_custom_page_frame(self)
         elif len(inspect.stack()) < 4:
             raise RuntimeError(f"Can't resolve module. Page '{type(self).__name__}' is not registered.")
         else:

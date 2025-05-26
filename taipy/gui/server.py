@@ -28,10 +28,7 @@ from flask import (
     Flask,
     json,
     jsonify,
-    make_response,
     render_template,
-    render_template_string,
-    request,
     send_from_directory,
 )
 from flask_cors import CORS
@@ -45,7 +42,6 @@ from taipy.common.logger._taipy_logger import _TaipyLogger
 
 from ._renderers.json import _TaipyJsonProvider
 from .config import ServerConfig
-from .custom._page import _ExternalResourceHandlerManager
 from .utils import _is_in_notebook, _is_port_open, _RuntimeManager
 from .utils._css import get_style
 
@@ -58,7 +54,6 @@ class _Server:
     __RE_CLOSING_CURLY = re.compile(r"(\})([^\"])")
     __OPENING_CURLY = r"\1&#x7B;"
     __CLOSING_CURLY = r"&#x7D;\2"
-    _RESOURCE_HANDLER_ARG = "tprh"
 
     def __init__(
         self,
@@ -166,20 +161,13 @@ class _Server:
         @taipy_bp.route("/", defaults={"path": ""})
         @taipy_bp.route("/<path:path>")
         def my_index(path):
-            resource_handler_id = request.cookies.get(_Server._RESOURCE_HANDLER_ARG, None)
-            if resource_handler_id is not None:
-                resource_handler = _ExternalResourceHandlerManager().get(resource_handler_id)
-                if resource_handler is None:
-                    reload_html = "<html><head><style>body {background-color: black; margin: 0;}</style></head><body><script>location.reload();</script></body></html>"  # noqa: E501
-                    response = make_response(render_template_string(reload_html), 400)
-                    response.set_cookie(
-                        _Server._RESOURCE_HANDLER_ARG, "", secure=request.is_secure, httponly=True, expires=0, path="/"
-                    )
-                    return response
-                try:
-                    return resource_handler.get_resources(path, static_folder, base_url)
-                except Exception as e:
-                    raise RuntimeError("Can't get resources from custom resource handler") from e
+            from ._hook import _Hooks
+
+            custom_page_resource = _Hooks()._resolve_custom_page_resource_handler(
+                path, base_url, static_folder, client_config, css_vars, scripts, styles
+            )
+            if custom_page_resource is not None:
+                return custom_page_resource
             if path == "" or path == "index.html" or "." not in path:
                 try:
                     return render_template(
@@ -239,12 +227,17 @@ class _Server:
 
         return taipy_bp
 
-    # Update to render as JSX
-    def _render(self, html_fragment, script_paths, style, head, context):
+    @staticmethod
+    def _render_jsx_fragment(html_fragment):
         template_str = _Server.__RE_OPENING_CURLY.sub(_Server.__OPENING_CURLY, html_fragment)
         template_str = _Server.__RE_CLOSING_CURLY.sub(_Server.__CLOSING_CURLY, template_str)
         template_str = template_str.replace('"{!', "{")
         template_str = template_str.replace('!}"', "}")
+        return template_str
+
+    # Update to render as JSX
+    def _render(self, html_fragment, script_paths, style, head, context):
+        template_str = _Server._render_jsx_fragment(html_fragment)
         style = get_style(style)
         return self._direct_render_json(
             {

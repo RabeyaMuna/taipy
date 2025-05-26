@@ -49,6 +49,7 @@ export enum Types {
     Acknowledgement = "ACKNOWLEDGEMENT",
     Broadcast = "BROADCAST",
     LocalStorage = "LOCAL_STORAGE",
+    RefreshThemes = "REFRESH_THEMES",
 }
 
 /**
@@ -58,6 +59,7 @@ export interface TaipyState {
     socket?: Socket;
     isSocketConnected?: boolean;
     data: Record<string, unknown>;
+    themes: Record<PaletteMode, Theme>;
     theme: Theme;
     locations: Record<string, string>;
     timeZone?: string;
@@ -167,8 +169,8 @@ export interface FormatConfig {
 }
 
 const getUserTheme = (mode: PaletteMode) => {
-    const tkTheme = (window.taipyConfig?.stylekit && stylekitTheme) || {};
-    const tkModeTheme = (window.taipyConfig?.stylekit && stylekitModeThemes[mode]) || {};
+    const tkTheme = (window.taipyConfig?.stylekit && stylekitTheme()) || {};
+    const tkModeTheme = (window.taipyConfig?.stylekit && stylekitModeThemes()[mode]) || {};
     const userTheme = window.taipyConfig?.themes?.base || {};
     const modeTheme = (window.taipyConfig?.themes && window.taipyConfig.themes[mode]) || {};
     return createTheme(
@@ -183,7 +185,7 @@ const getUserTheme = (mode: PaletteMode) => {
                     },
                 },
             },
-        })
+        }),
     );
 };
 
@@ -194,6 +196,7 @@ const themes = {
 
 export const INITIAL_STATE: TaipyState = {
     data: {},
+    themes: themes,
     theme: window.taipyConfig?.darkMode ? themes.dark : themes.light,
     locations: {},
     timeZone: window.taipyConfig?.timeZone
@@ -471,10 +474,21 @@ export const taipyReducer = (state: TaipyState, baseAction: TaipyBaseAction): Ta
             if (mode !== state.theme.palette.mode) {
                 return {
                     ...state,
-                    theme: themes[mode],
+                    theme: state.themes[mode],
                 };
             }
             return state;
+        }
+        case Types.RefreshThemes: {
+            const tempThemes = {
+                light: getUserTheme("light"),
+                dark: getUserTheme("dark"),
+            };
+            return {
+                ...state,
+                themes: tempThemes,
+                theme: tempThemes[state.theme.palette.mode]
+            };
         }
         case Types.SetTimeZone: {
             let timeZone = (action.payload.timeZone as string) || "client";
@@ -928,4 +942,8 @@ export const createLocalStorageAction = (localStorageData: Record<string, string
     type: Types.LocalStorage,
     name: "",
     payload: localStorageData,
+});
+
+export const createRefreshThemesAction = (): TaipyBaseAction => ({
+    type: Types.RefreshThemes,
 });
