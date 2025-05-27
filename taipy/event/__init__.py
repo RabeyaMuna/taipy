@@ -9,5 +9,9 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+"""# Event management package for Taipy.
+
+This package provides classes and objects to handle Taipy events and trigger actions in response to these events."""
+
 from ..core.notification.event import Event, EventEntityType, EventOperation
 from .event_consumer import GuiEventConsumer
