@@ -38,7 +38,7 @@ class GuiEventConsumer(_CoreEventConsumerBase):
     both cases where callbacks are broadcast to all states or executed once on the
     server side.
 
-    The main method to use is `on_event()^`, that registers a callback to a topic.
+    The main method to use is `on_event()`, that registers a callback to a topic.
 
     Before starting the event consumer service, register each callback to a topic.
     The topics are defined by the entity type, the entity id, the operation, and the
@@ -65,7 +65,7 @@ class GuiEventConsumer(_CoreEventConsumerBase):
 
         When registering a callback, you can specify if the callback is automatically
         broadcast to all states. In this case, the first argument of the callback must be
-        the state otherwise it is the `GUI^` instance. The second argument is the event.
+        the state otherwise it is the `Gui^` instance. The second argument is the event.
         Optionally, the callback can accept more extra arguments (see the `callback_args`
         argument).
 
@@ -170,7 +170,7 @@ class GuiEventConsumer(_CoreEventConsumerBase):
                 taipy.run(gui)
             ```
 
-    Others methods such as `on_data_node_written()^` or `on_submission_finished()^` are
+    Others methods such as `on_data_node_written()` or `on_submission_finished()` are
     utility methods as shortcuts to easily register callbacks for predefined topics and
     filters.
     """
@@ -315,7 +315,7 @@ class GuiEventConsumer(_CoreEventConsumerBase):
                             ) -> "GuiEventConsumer":
         """ Register a callback for scenario creation events.
 
-        !!! Example:
+        !!! example:
 
             === "A callback for all scenario creations"
 
@@ -384,7 +384,7 @@ class GuiEventConsumer(_CoreEventConsumerBase):
                                       ) -> "GuiEventConsumer":
         """ Register a callback executed for all states on scenario creation events.
 
-        !!! Examples:
+        !!! example:
 
                 === "Two callbacks for all scenario creations"
 
@@ -485,7 +485,7 @@ class GuiEventConsumer(_CoreEventConsumerBase):
                             ) -> "GuiEventConsumer":
         """ Register a callback for scenario deletion events.
 
-        !!! Example:
+        !!! example:
 
             ```python
             import taipy as tp
@@ -537,7 +537,7 @@ class GuiEventConsumer(_CoreEventConsumerBase):
                                       ) -> "GuiEventConsumer":
         """ Register a callback executed for all states on scenario deletion events.
 
-        !!! Example:
+        !!! example:
 
             ```python
             import taipy as tp
@@ -616,14 +616,15 @@ class GuiEventConsumer(_CoreEventConsumerBase):
         """ Register a callback for data node written events.
 
         The callback is triggered when a datanode is written (see methods
-        `Datanode.write()^` or `Datanode.append()^`).
+        `DataNode.write()^` or `DataNode.append()^`).
 
-        !!! Example:
+        !!! example:
+
             ```python
             import taipy as tp
             from taipy import Event, GuiEventConsumer, Gui, State
 
-            def last_data_edition(event: Event, datanode: Datanode, data: Any, gui: Gui):
+            def last_data_edition(event: Event, datanode: DataNode, data: Any, gui: Gui):
                 print(f"Datanode written at '{event.creation_date}'.")
                 state.last_data_edition.append[datanode.id]
 
@@ -640,12 +641,12 @@ class GuiEventConsumer(_CoreEventConsumerBase):
             callback (callable):The callback to be executed when consuming the event.
                 ```python
                 def on_event_received(event: Event,
-                                      datanode: Datanode,
+                                      datanode: DataNode,
                                       data: Any,
                                       gui: Gui):
                     ...
                 ```
-               The callback takes the event, the datanode, the data, and the GUI instance as
+                The callback takes the event, the datanode, the data, and the GUI instance as
                 arguments. Optionally, the callback can accept extra arguments (see the
                 `callback_args` argument).
             callback_args (List[AnyOf]): The extra arguments to be passed to the callback
@@ -673,14 +674,15 @@ class GuiEventConsumer(_CoreEventConsumerBase):
         """ Register a callback for data node written events.
 
         The callback is triggered when a datanode is written (see methods
-        `Datanode.write()^` or `Datanode.append()^`).
+        `DataNode.write()^` or `DataNode.append()^`).
 
-        !!! Example:
+        !!! example:
+
             ```python
             import taipy as tp
             from taipy import Event, GuiEventConsumer, Gui, State
 
-            def last_data_edition(state: State, event: Event, datanode: Datanode, data: Any):
+            def last_data_edition(state: State, event: Event, datanode: DataNode, data: Any):
                 print(f"Datanode written at '{event.creation_date}'.")
                 state.last_data_edition.append[datanode.id]
 
@@ -697,10 +699,10 @@ class GuiEventConsumer(_CoreEventConsumerBase):
             callback (callable): The callback to be executed for all states on data node
                 written events.
                 ```python
-                def on_event_received(state: State, event: Event, datanode: Datanode, data: Any):
+                def on_event_received(state: State, event: Event, datanode: DataNode, data: Any):
                     ...
                 ```
-               The callback takes the state, the event, the datanode, the data, and the GUI
+                The callback takes the state, the event, the datanode, the data, and the GUI
                 instance as arguments. Optionally, the callback can accept extra arguments
                 (see the `callback_args` argument).
             callback_args (List[AnyOf]): The extra arguments to be passed to the callback
@@ -758,7 +760,8 @@ class GuiEventConsumer(_CoreEventConsumerBase):
                             ) -> "GuiEventConsumer":
         """ Register a callback for data node deletion events.
 
-        !!! Example:
+        !!! example:
+
             ```python
             import taipy as tp
             from taipy import Event, GuiEventConsumer, Gui, State
@@ -808,7 +811,8 @@ class GuiEventConsumer(_CoreEventConsumerBase):
                                       ) -> "GuiEventConsumer":
         """ Register a callback for each state on data node deletion events.
 
-        !!! Example:
+        !!! example:
+
             ```python
             import taipy as tp
             from taipy import Event, GuiEventConsumer, Gui, State
@@ -886,7 +890,8 @@ class GuiEventConsumer(_CoreEventConsumerBase):
                             ) -> "GuiEventConsumer":
         """ Register a callback to be executed on data node creation event.
 
-        !!! Example:
+        !!! example:
+
             ```python
             import taipy as tp
             from taipy import Event, GuiEventConsumer, Gui, State
@@ -936,7 +941,8 @@ class GuiEventConsumer(_CoreEventConsumerBase):
                                       ) -> "GuiEventConsumer":
         """ Register a callback to be executed for each state on data node creation event.
 
-        !!! Examples:
+        !!! example:
+
             ```python
             import taipy as tp
             from taipy import Event, GuiEventConsumer, Gui, State
@@ -1017,7 +1023,8 @@ class GuiEventConsumer(_CoreEventConsumerBase):
                                ) -> "GuiEventConsumer":
         """Register a callback for submission finished events.
 
-        !!! Example:
+        !!! example:
+
             ```python
             import taipy as tp
             from taipy import Event, GuiEventConsumer, Gui, State
@@ -1071,7 +1078,8 @@ class GuiEventConsumer(_CoreEventConsumerBase):
                                          ) -> "GuiEventConsumer":
         """Register a callback to be executed for each state on submission finished events.
 
-        !!! Example:
+        !!! example
+:
             ```python
             import taipy as tp
             from taipy import Event, EventConsumer, Gui, State
