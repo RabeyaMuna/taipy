@@ -254,33 +254,33 @@ class EventProcessor(_CoreEventConsumerBase):
     ) -> "EventProcessor":
         """Register a callback to be broadcast to all states on a specific event.
 
-                Arguments:
-                    callback (callable): The callback to be executed for each state when the
-                        event is produced. The callback takes the state as the first argument
-                        and the event as the second argument.
-                        ```python
-                        def on_event_received(state, event: Event):
-                            ...
-                        ```
-                        Optionally, the callback can accept extra arguments (see the `callback_args`
-                        argument).
-                    callback_args (List[AnyOf]): The extra arguments to be passed to the callback
-                        function in addition to the state and the event.
-                    entity_type (Optional[EventEntityType]): The entity type of the event.
-                        If None, the callback is registered for all entity types.
-                    entity_id (Optional[str]): The entity id of the event.
-                        If None, the callback is registered for all entities.
-                    operation (Optional[EventOperation]): The operation of the event.
-                        If None, the callback is registered for all operations.
-                    attribute_name (Optional[str]): The attribute name of an update event.
-                        If None, the callback is registered for all attribute names.
-                    filter (Optional[Callable[[Event], bool]]): A custom filter to apply to
-                        the event before triggering the callback. The filter must accept an event
-                        as the only argument and return a boolean. If the filter returns False, the
-                        callback is not triggered.
-                Returns:
-                    EventProcessor: The current instance of the `EventProcessor` service.
-                """
+        Arguments:
+            callback (callable): The callback to be executed for each state when the
+                event is produced. The callback takes the state as the first argument
+                and the event as the second argument.
+                ```python
+                def on_event_received(state, event: Event):
+                    ...
+                ```
+                Optionally, the callback can accept extra arguments (see the `callback_args`
+                argument).
+            callback_args (List[AnyOf]): The extra arguments to be passed to the callback
+                function in addition to the state and the event.
+            entity_type (Optional[EventEntityType]): The entity type of the event.
+                If None, the callback is registered for all entity types.
+            entity_id (Optional[str]): The entity id of the event.
+                If None, the callback is registered for all entities.
+            operation (Optional[EventOperation]): The operation of the event.
+                If None, the callback is registered for all operations.
+            attribute_name (Optional[str]): The attribute name of an update event.
+                If None, the callback is registered for all attribute names.
+            filter (Optional[Callable[[Event], bool]]): A custom filter to apply to
+                the event before triggering the callback. The filter must accept an event
+                as the only argument and return a boolean. If the filter returns False, the
+                callback is not triggered.
+        Returns:
+            EventProcessor: The current instance of the `EventProcessor` service.
+        """
         return self.__on_event(
             callback=callback,
             callback_args=callback_args,
@@ -315,41 +315,41 @@ class EventProcessor(_CoreEventConsumerBase):
                             ) -> "EventProcessor":
         """ Register a callback for scenario creation events.
 
-        !!! example:
+        !!! example
 
             === "A callback for all scenario creations"
 
-            ```python
-            import taipy as tp
-            from taipy import Event, EventProcessor, Gui, State
+                ```python
+                import taipy as tp
+                from taipy import Event, EventProcessor, Gui, State
 
-            def print_scenario_created(event: Event, scenario: Scenario, gui: Gui):
-                print(f"Scenario '{scenario.name}' created at '{event.creation_date}'.")
+                def print_scenario_created(event: Event, scenario: Scenario, gui: Gui):
+                    print(f"Scenario '{scenario.name}' created at '{event.creation_date}'.")
 
-            if __name__ == "__main__":
-                gui = Gui()
-                event_processor = EventProcessor(gui)
-                event_processor.on_scenario_created(callback=print_scenario_created)
-                event_processor.start()
-                ...
-                taipy.run(gui)
-            ```
+                if __name__ == "__main__":
+                    gui = Gui()
+                    event_processor = EventProcessor(gui)
+                    event_processor.on_scenario_created(callback=print_scenario_created)
+                    event_processor.start()
+                    ...
+                    taipy.run(gui)
+                ```
 
             === "One callback for a specific scenario configuration"
 
-            ```python
-            import taipy as tp
-            from taipy import Event, EventProcessor, Gui
+                ```python
+                import taipy as tp
+                from taipy import Event, EventProcessor, Gui
 
-            def print_scenario_created(event: Event, scenario: Scenario, gui: Gui):
-                print(f"Scenario '{scenario.name}' created at '{event.creation_date}'.")
+                def print_scenario_created(event: Event, scenario: Scenario, gui: Gui):
+                    print(f"Scenario '{scenario.name}' created at '{event.creation_date}'.")
 
-            if __name__ == "__main__":
-                event_processor = EventProcessor()
-                event_processor.on_scenario_created(callback=print_scenario_created, scenario_config="my_cfg")
-                event_processor.start()
-                ...
-            ```
+                if __name__ == "__main__":
+                    event_processor = EventProcessor()
+                    event_processor.on_scenario_created(callback=print_scenario_created, scenario_config="my_cfg")
+                    event_processor.start()
+                    ...
+                ```
 
         Arguments:
             callback (callable):The callback to be executed when consuming the event.
@@ -384,9 +384,9 @@ class EventProcessor(_CoreEventConsumerBase):
                                       ) -> "EventProcessor":
         """ Register a callback executed for all states on scenario creation events.
 
-        !!! example:
+        !!! example
 
-                === "Two callbacks for all scenario creations"
+            === "Two callbacks for all scenario creations"
 
                 ```python
                 import taipy as tp
@@ -405,7 +405,7 @@ class EventProcessor(_CoreEventConsumerBase):
                     taipy.run(gui)
                 ```
 
-                === "One callback for a specific scenario configuration"
+            === "One callback for a specific scenario configuration"
 
                 ```python
                 import taipy as tp
@@ -485,7 +485,7 @@ class EventProcessor(_CoreEventConsumerBase):
                             ) -> "EventProcessor":
         """ Register a callback for scenario deletion events.
 
-        !!! example:
+        !!! example
 
             ```python
             import taipy as tp
@@ -537,7 +537,7 @@ class EventProcessor(_CoreEventConsumerBase):
                                       ) -> "EventProcessor":
         """ Register a callback executed for all states on scenario deletion events.
 
-        !!! example:
+        !!! example
 
             ```python
             import taipy as tp
@@ -618,7 +618,7 @@ class EventProcessor(_CoreEventConsumerBase):
         The callback is triggered when a datanode is written (see methods
         `DataNode.write()^` or `DataNode.append()^`).
 
-        !!! example:
+        !!! example
 
             ```python
             import taipy as tp
@@ -676,7 +676,7 @@ class EventProcessor(_CoreEventConsumerBase):
         The callback is triggered when a datanode is written (see methods
         `DataNode.write()^` or `DataNode.append()^`).
 
-        !!! example:
+        !!! example
 
             ```python
             import taipy as tp
@@ -760,7 +760,7 @@ class EventProcessor(_CoreEventConsumerBase):
                             ) -> "EventProcessor":
         """ Register a callback for data node deletion events.
 
-        !!! example:
+        !!! example
 
             ```python
             import taipy as tp
@@ -811,7 +811,7 @@ class EventProcessor(_CoreEventConsumerBase):
                                       ) -> "EventProcessor":
         """ Register a callback for each state on data node deletion events.
 
-        !!! example:
+        !!! example
 
             ```python
             import taipy as tp
@@ -890,7 +890,7 @@ class EventProcessor(_CoreEventConsumerBase):
                             ) -> "EventProcessor":
         """ Register a callback to be executed on data node creation event.
 
-        !!! example:
+        !!! example
 
             ```python
             import taipy as tp
@@ -941,7 +941,7 @@ class EventProcessor(_CoreEventConsumerBase):
                                       ) -> "EventProcessor":
         """ Register a callback to be executed for each state on data node creation event.
 
-        !!! example:
+        !!! example
 
             ```python
             import taipy as tp
@@ -1023,7 +1023,7 @@ class EventProcessor(_CoreEventConsumerBase):
                                ) -> "EventProcessor":
         """Register a callback for submission finished events.
 
-        !!! example:
+        !!! example
 
             ```python
             import taipy as tp
@@ -1079,7 +1079,7 @@ class EventProcessor(_CoreEventConsumerBase):
         """Register a callback to be executed for each state on submission finished events.
 
         !!! example
-:
+
             ```python
             import taipy as tp
             from taipy import Event, EventProcessor, Gui, State
