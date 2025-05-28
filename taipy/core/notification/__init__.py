@@ -20,7 +20,7 @@ This call will yield a `RegistrationId` and a dedicated event queue for
 receiving notifications.
 
 To handle notifications, an event consumer can be instantiated with an associated
-event queue. See (`GuiEventConsumer^` for more details).
+event queue. See (`EventProcessor^` for more details).
 """
 
 from ._registration import _Registration
