@@ -4,8 +4,6 @@ interface ChildrenProps {
     children: ReactNode;
 }
 
-function ReactMarkdownMock({ children }: ChildrenProps) {
-    return <p>{children}</p>;
-}
+const ReactMarkdownMock = ({ children }: ChildrenProps) => <p>{children}</p>;
 
 export default ReactMarkdownMock;

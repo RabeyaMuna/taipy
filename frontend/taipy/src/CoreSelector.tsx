@@ -24,7 +24,7 @@ import React, {
 import { TextField, Theme, alpha } from "@mui/material";
 import Badge, { BadgeOrigin } from "@mui/material/Badge";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
 import Switch from "@mui/material/Switch";
 import Tooltip from "@mui/material/Tooltip";
@@ -71,7 +71,7 @@ import {
     BaseTreeViewSx,
     CoreProps,
     FlagSx,
-    ParentItemSx,
+    // ParentItemSx,
 } from "./utils";
 
 export interface EditProps {
@@ -205,7 +205,7 @@ const CoreItem = (props: {
                     ) : null}
                 </Grid>
             }
-            sx={nodeType === NodeType.NODE ? undefined : ParentItemSx}
+            // sx={nodeType === NodeType.NODE ? undefined : ParentItemSx}
         >
             {items
                 ? items.filter(v => v).map((item) => (
@@ -352,7 +352,7 @@ const CoreSelector = (props: CoreSelectorProps) => {
 
     useDispatchRequestUpdateOnFirstRender(dispatch, id, module, updateVars, undefined, true);
 
-    const onItemExpand = useCallback((e: SyntheticEvent, itemId: string, expanded: boolean) => {
+    const onItemExpand = useCallback((e: SyntheticEvent | null, itemId: string, expanded: boolean) => {
         setExpandedItems((old) => {
             if (!expanded) {
                 return old.filter((id) => id != itemId);
@@ -362,8 +362,8 @@ const CoreSelector = (props: CoreSelectorProps) => {
     }, []);
 
     const onNodeSelect = useCallback(
-        (e: SyntheticEvent, nodeId: string | string[] | null) => {
-            const { selectable = "false" } = e.currentTarget.parentElement?.dataset || {};
+        (e: SyntheticEvent | null, nodeId: string | string[] | null) => {
+            const { selectable = "false" } = e?.currentTarget.parentElement?.dataset || {};
             const isSelectable = selectable === "true";
             if (!isSelectable && multiple) {
                 return;

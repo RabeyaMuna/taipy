@@ -155,8 +155,15 @@ describe("Table Filter Component", () => {
         await userEvent.click(getByText("is on or before"));
         const validate = getByTestId("CheckIcon").parentElement;
         expect(validate).toBeDisabled();
-        const input = getByPlaceholderText("YYYY/MM/DD");
-        await userEvent.type(input, "{ArrowLeft}{ArrowLeft}{ArrowLeft}2020/11/11", { delay: 1 });
+        const year = getByText("YYYY");
+        expect(year).toBeInTheDocument();
+        await userEvent.type(year, "2020", { delay: 1 });
+        const month = getByText("MM");
+        expect(month).toBeInTheDocument();
+        await userEvent.type(month, "01", { delay: 1 });
+        const day = getByText("DD");
+        expect(day).toBeInTheDocument();
+        await userEvent.type(day, "01", { delay: 1 });
         expect(validate).not.toBeDisabled();
     });
     it("adds a row on validation", async () => {

@@ -63,6 +63,14 @@ class _Factory:
         "tree": "value",
     }
 
+    __DRAG_N_DROP_ATTRIBUTES = [
+        ("drag_type", PropertyType.string),
+        ("allowed_drag_types", PropertyType.string_list),
+        ("on_action", PropertyType.function),
+        ("drag_data", PropertyType.dynamic_dict),
+        ("drop_data", PropertyType.dynamic_dict),
+    ]
+
     _TEXT_ATTRIBUTES = ["format", "id", "hover_text", "raw"]
 
     __TEXT_ANCHORS = ["bottom", "top", "left", "right"]
@@ -373,7 +381,7 @@ class _Factory:
                 ("hover_text", PropertyType.dynamic_string),
                 ("width",),
                 ("width[mobile]",),
-                ("expanded",PropertyType.boolean, False),
+                ("expanded", PropertyType.boolean, False),
             ]
         )
         ._set_propagate(),
@@ -476,6 +484,7 @@ class _Factory:
                 ("content", PropertyType.toHtmlContent),
                 ("width", PropertyType.string_or_number),
             ]
+            + _Factory.__DRAG_N_DROP_ATTRIBUTES
         ),
         "progress": lambda gui, control_type, attrs: _Builder(
             gui=gui,
@@ -515,6 +524,7 @@ class _Factory:
                 ("selection_message", PropertyType.dynamic_string),
                 ("show_select_all", PropertyType.boolean),
             ]
+            + _Factory.__DRAG_N_DROP_ATTRIBUTES
         )
         ._set_propagate(),
         "slider": lambda gui, control_type, attrs: _Builder(
@@ -670,6 +680,12 @@ class _Factory:
                 ("select_leafs_only", PropertyType.boolean),
                 ("row_height", PropertyType.string),
                 ("lov", PropertyType.lov),
+                ("drag_type", PropertyType.string),
+                ("drop_types", PropertyType.string_list),
+                ("on_action", PropertyType.function),
+                ("drag_type", PropertyType.string),
+                ("drop_types", PropertyType.string_list),
+                ("dnd_parameters", PropertyType.dynamic_dict),
             ]
         )
         ._set_propagate(),

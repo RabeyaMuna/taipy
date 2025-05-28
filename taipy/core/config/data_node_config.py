@@ -97,6 +97,7 @@ class DataNodeConfig(Section):
     _OPTIONAL_EXPOSED_TYPE_CSV_PROPERTY = "exposed_type"
     _OPTIONAL_DEFAULT_PATH_CSV_PROPERTY = "default_path"
     _OPTIONAL_HAS_HEADER_CSV_PROPERTY = "has_header"
+    _OPTIONAL_SEPARATOR_CSV_PROPERTY = "separator"
     # Excel
     _OPTIONAL_EXPOSED_TYPE_EXCEL_PROPERTY = "exposed_type"
     _OPTIONAL_DEFAULT_PATH_EXCEL_PROPERTY = "default_path"
@@ -120,8 +121,8 @@ class DataNodeConfig(Section):
     # SQL_TABLE
     _REQUIRED_TABLE_NAME_SQL_TABLE_PROPERTY = "table_name"
     # SQL
-    _REQUIRED_READ_QUERY_SQL_PROPERTY = "read_query"
-    _REQUIRED_WRITE_QUERY_BUILDER_SQL_PROPERTY = "write_query_builder"
+    _OPTIONAL_READ_QUERY_SQL_PROPERTY = "read_query"
+    _OPTIONAL_WRITE_QUERY_BUILDER_SQL_PROPERTY = "write_query_builder"
     _OPTIONAL_APPEND_QUERY_BUILDER_SQL_PROPERTY = "append_query_builder"
     # MONGO
     _REQUIRED_DB_NAME_MONGO_PROPERTY = "db_name"
@@ -167,8 +168,8 @@ class DataNodeConfig(Section):
         _STORAGE_TYPE_VALUE_SQL: {
             _REQUIRED_DB_NAME_SQL_PROPERTY: str,
             _REQUIRED_DB_ENGINE_SQL_PROPERTY: str,
-            _REQUIRED_READ_QUERY_SQL_PROPERTY: str,
-            _REQUIRED_WRITE_QUERY_BUILDER_SQL_PROPERTY: Callable,
+            _OPTIONAL_READ_QUERY_SQL_PROPERTY: str,
+            _OPTIONAL_WRITE_QUERY_BUILDER_SQL_PROPERTY: Callable,
             _OPTIONAL_APPEND_QUERY_BUILDER_SQL_PROPERTY: Callable,
             _OPTIONAL_DB_USERNAME_SQL_PROPERTY: str,
             _OPTIONAL_DB_PASSWORD_SQL_PROPERTY: str,
@@ -198,6 +199,7 @@ class DataNodeConfig(Section):
             _OPTIONAL_DEFAULT_PATH_CSV_PROPERTY: str,
             _OPTIONAL_ENCODING_PROPERTY: str,
             _OPTIONAL_HAS_HEADER_CSV_PROPERTY: bool,
+            _OPTIONAL_SEPARATOR_CSV_PROPERTY: str,
             _OPTIONAL_EXPOSED_TYPE_CSV_PROPERTY: (str, Callable),
         },
         _STORAGE_TYPE_VALUE_EXCEL: {
@@ -260,8 +262,6 @@ class DataNodeConfig(Section):
         _STORAGE_TYPE_VALUE_SQL: [
             _REQUIRED_DB_NAME_SQL_PROPERTY,
             _REQUIRED_DB_ENGINE_SQL_PROPERTY,
-            _REQUIRED_READ_QUERY_SQL_PROPERTY,
-            _REQUIRED_WRITE_QUERY_BUILDER_SQL_PROPERTY,
         ],
         _STORAGE_TYPE_VALUE_MONGO_COLLECTION: [
             _REQUIRED_DB_NAME_MONGO_PROPERTY,
@@ -292,6 +292,7 @@ class DataNodeConfig(Section):
             _OPTIONAL_DEFAULT_PATH_CSV_PROPERTY: None,
             _OPTIONAL_ENCODING_PROPERTY: _DEFAULT_ENCODING_VALUE,
             _OPTIONAL_HAS_HEADER_CSV_PROPERTY: True,
+            _OPTIONAL_SEPARATOR_CSV_PROPERTY: ",",
             _OPTIONAL_EXPOSED_TYPE_CSV_PROPERTY: _DEFAULT_EXPOSED_TYPE,
         },
         _STORAGE_TYPE_VALUE_EXCEL: {
@@ -624,6 +625,7 @@ class DataNodeConfig(Section):
         default_path: Optional[str] = None,
         encoding: Optional[str] = None,
         has_header: Optional[bool] = None,
+        separator: Optional[str] = None,
         exposed_type: Optional[str] = None,
         scope: Optional[Scope] = None,
         validity_period: Optional[timedelta] = None,
@@ -636,6 +638,7 @@ class DataNodeConfig(Section):
             default_path (Optional[str]): The default path of the CSV file.
             encoding (Optional[str]): The encoding of the CSV file.
             has_header (Optional[bool]): If True, indicates that the CSV file has a header.
+            separator (Optional[str]): The character used to separate values in the CSV file.
             exposed_type (Optional[str]): The exposed type of the data read from CSV file.<br/>
                 The default value is `pandas`.
             scope (Optional[Scope^]): The scope of the CSV data node configuration.<br/>
@@ -657,6 +660,8 @@ class DataNodeConfig(Section):
             properties[cls._OPTIONAL_ENCODING_PROPERTY] = encoding
         if has_header is not None:
             properties[cls._OPTIONAL_HAS_HEADER_CSV_PROPERTY] = has_header
+        if separator is not None:
+            properties[cls._OPTIONAL_SEPARATOR_CSV_PROPERTY] = separator
         if exposed_type is not None:
             properties[cls._OPTIONAL_EXPOSED_TYPE_CSV_PROPERTY] = exposed_type
 
@@ -1088,11 +1093,13 @@ class DataNodeConfig(Section):
             {
                 cls._REQUIRED_DB_NAME_SQL_PROPERTY: db_name,
                 cls._REQUIRED_DB_ENGINE_SQL_PROPERTY: db_engine,
-                cls._REQUIRED_READ_QUERY_SQL_PROPERTY: read_query,
-                cls._REQUIRED_WRITE_QUERY_BUILDER_SQL_PROPERTY: write_query_builder,
             }
         )
 
+        if read_query is not None:
+            properties[cls._OPTIONAL_READ_QUERY_SQL_PROPERTY] = read_query
+        if write_query_builder is not None:
+            properties[cls._OPTIONAL_WRITE_QUERY_BUILDER_SQL_PROPERTY] = write_query_builder
         if append_query_builder is not None:
             properties[cls._OPTIONAL_APPEND_QUERY_BUILDER_SQL_PROPERTY] = append_query_builder
         if db_username is not None:

@@ -13,9 +13,13 @@ import re
 
 import pandas as pd
 
+from ._map_dict import _MapDict
+
 
 def _get_data_type(value):
     if not isinstance(value, str):
+        if isinstance(value, (dict, _MapDict)):
+            return "dict"
         if pd.api.types.is_bool_dtype(value):
             return "bool"
         elif pd.api.types.is_integer_dtype(value):

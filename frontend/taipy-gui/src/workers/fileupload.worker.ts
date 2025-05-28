@@ -32,17 +32,17 @@ const uploadFile = (
     xhr.open("POST", `${uploadUrl}?client_id=${id}`, false);
     xhr.onerror = (e) => self.postMessage({ message: "Error: " + e, error: true });
     xhr.onload = (e) => progressCb(e.lengthComputable ? e.loaded : 0);
-    const fdata = new FormData();
-    fdata.append("blob", blobOrFile, fileName);
-    fdata.append("part", part.toString());
-    fdata.append("total", total.toString());
-    fdata.append("var_name", varName);
-    context && fdata.append("context", context);
-    onAction && fdata.append("on_action", onAction);
-    uploadData && fdata.append("upload_data", uploadData);
-    fdata.append("multiple", multiple ? "True" : "False");
-    fdata.append("path", filePath)
-    xhr.send(fdata);
+    const formData = new FormData();
+    formData.append("blob", blobOrFile, fileName);
+    formData.append("part", part.toString());
+    formData.append("total", total.toString());
+    formData.append("var_name", varName);
+    context && formData.append("context", context);
+    onAction && formData.append("on_action", onAction);
+    uploadData && formData.append("upload_data", uploadData);
+    formData.append("multiple", multiple ? "True" : "False");
+    formData.append("path", filePath)
+    xhr.send(formData);
 };
 
 // 1MB chunk sizes.

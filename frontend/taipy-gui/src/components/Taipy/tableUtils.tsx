@@ -54,7 +54,7 @@ import { TaipyActiveProps, TaipyMultiSelectProps, getSuffixedClassNames } from "
 export const generateHeaderClassName = (columnName: string | undefined): string => {
     // logic for the css header classname
     if (!columnName) {
-        // return an empty string if columname is undefined or empty
+        // return an empty string if columnName is undefined or empty
         return "";
     }
     return "-" + columnName.replace(/\W+/g, "-").replace(/-+/g, "-").toLowerCase();
@@ -392,7 +392,7 @@ export const getColumnHeader = (columns: Record<string, ColumnDesc>, columnKey: 
 
 const setInputFocus = (input: HTMLInputElement) => input && input.focus();
 
-const textFieldProps = { textField: { margin: "dense" } } as BaseDateTimePickerSlotProps<Date>;
+const textFieldProps = { textField: { margin: "dense" } } as BaseDateTimePickerSlotProps;
 
 const filter = createFilterOptions<string>();
 const getOptionKey = (option: string) => (Array.isArray(option) ? option[0] : option);

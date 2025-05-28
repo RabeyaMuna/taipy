@@ -13,7 +13,7 @@
 
 import { lighten } from "@mui/material";
 
-export const stylekitTheme = {
+export const stylekitTheme = () => ({
     palette: {
         // Primary and secondary colors
         primary: {
@@ -165,9 +165,9 @@ export const stylekitTheme = {
             },
         },
     },
-};
+});
 
-export const stylekitModeThemes = {
+export const stylekitModeThemes = () => ({
     light: {
         palette: {
             background: {
@@ -232,4 +232,4 @@ export const stylekitModeThemes = {
             },
         },
     },
-};
+});

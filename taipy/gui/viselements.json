@@ -1103,7 +1103,8 @@
             {
                 "inherits": [
                     "lovComp",
-                    "propagate"
+                    "propagate",
+                    "dndComp"
                 ],
                 "properties": [
                     {
@@ -1930,7 +1931,8 @@
             {
                 "inherits": [
                     "partial",
-                    "shared"
+                    "shared",
+                    "dndComp"
                 ],
                 "properties": [
                     {
@@ -2195,6 +2197,53 @@
                         "type": "bool",
                         "default_value": "False",
                         "doc": "If False, the selection value (in <i>value</i>) is the selected element in <i>lov</i>. If set to True, then <i>value</i> is set to the id of the selected element in <i>lov</i>."
+                    }
+                ]
+            }
+        ],
+
+        [
+            "dndComp",
+            {
+                "properties": [
+                    {
+                        "name": "drag_type",
+                        "type": "str",
+                        "doc": "The type of source element that the user can drag.<br/>If empty, the element is not draggable."
+                    },
+                    {
+                        "name": "allowed_drag_types",
+                        "type": "list[str]",
+                        "doc": "The list of source elements types supported by this component. ie to allow a dragged source element to be dropped on this drop target.<br/>If empty, the element does not support drops."
+                    },
+                    {
+                        "name": "drag_data",
+                        "type": "dynamic[dict[str, Any]]",
+                        "doc": "A dict containing data that will be associated with the drag source."
+                    },
+                    {
+                        "name": "drop_data",
+                        "type": "dynamic[dict[str, Any]]",
+                        "doc": "A dict containing data that will be associated with the drop target."
+                    },
+                    {
+                        "name": "on_action",
+                        "type": "Union[str, Callable]",
+                        "doc": "A function or the name of a function that is triggered when a source element is dropped on a target element.<br/>This function is invoked with the following parameters:\n<ul><li><i>state</i> (<code>State^</code>): the state instance.</li><li><i>payload</i> (dict): a dictionary that contains the following keys <ul><li>action</li><li>reason: \"drop\"</li><li>source_id,</li><li>source_item_id</li><li>source_data</li><li>source_var_name</li><li>target_id</li><li>target_item_id</li><li>target_data</li><li>target_var_name</li></ul>.</li></ul>",
+                        "signature": [
+                            [
+                                "state",
+                                "State"
+                            ],
+                            [
+                                "id",
+                                "str"
+                            ],
+                            [
+                                "payload",
+                                "dict"
+                            ]
+                        ]
                     }
                 ]
             }

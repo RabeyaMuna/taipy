@@ -17,7 +17,7 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 
 import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 import DateSelector from "./DateSelector";
 import { TaipyContext } from "../../context/taipyContext";
@@ -111,7 +111,7 @@ describe("DateSelector Component", () => {
         expect(cleanText(input?.value || "")).toEqual("11-01-01");
     });
     it("shows label", async () => {
-        const { getByLabelText } = render(
+        render(
             <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DateSelector
                     defaultDate="2001-01-01T00:00:01.001Z"
@@ -121,8 +121,10 @@ describe("DateSelector Component", () => {
                 />
             </LocalizationProvider>
         );
-        const input = getByLabelText("a label") as HTMLInputElement;
-        expect(input.value).toBe("01/01/2001");
+        const label = document.querySelector("label");
+        expect(label).toBeInTheDocument();
+        expect(label).toHaveTextContent("a label");
+        expect(label?.parentElement?.querySelector("input")?.value).toBe("01/01/2001");
     });
     it("displays with width=70%", async () => {
         render(
@@ -175,25 +177,29 @@ describe("DateSelector Component", () => {
     it("dispatch a well formed message", async () => {
         const dispatch = jest.fn();
         const state: TaipyState = INITIAL_STATE;
-        render(
+        const { getByText } = render(
             <TaipyContext.Provider value={{ state, dispatch }}>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <DateSelector date={curDateStr} />
+                    <DateSelector date="" />
                 </LocalizationProvider>
             </TaipyContext.Provider>
         );
-        const input = document.querySelector("input");
-        expect(input).toBeInTheDocument();
-        if (input) {
-            // await userEvent.clear(input);
-            await userEvent.type(input, "{ArrowLeft}{ArrowLeft}{ArrowLeft}01012001", { delay: 1 });
-            expect(dispatch).toHaveBeenLastCalledWith({
-                name: "",
-                payload: { value: "Mon Jan 01 2001" },
-                propagate: true,
-                type: "SEND_UPDATE_ACTION",
-            });
-        }
+        const year = getByText("YYYY");
+        expect(year).toBeInTheDocument();
+        await userEvent.type(year, "2001", { delay: 1 });
+        const month = getByText("MM");
+        expect(month).toBeInTheDocument();
+        await userEvent.type(month, "01", { delay: 1 });
+        const day = getByText("DD");
+        expect(day).toBeInTheDocument();
+        await userEvent.type(day, "01", { delay: 1 });
+
+        expect(dispatch).toHaveBeenLastCalledWith({
+            name: "",
+            payload: { value: "Mon Jan 01 2001" },
+            propagate: true,
+            type: "SEND_UPDATE_ACTION",
+        });
     });
 });
 
@@ -210,7 +216,7 @@ describe("DateSelector with time Component", () => {
     it("renders with analog time picker", async () => {
         const { getByTestId } = render(
             <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DateSelector date={curDateStr} withTime={true} analogic={true}/>
+                <DateSelector date={curDateStr} withTime={true} analogic={true} />
             </LocalizationProvider>
         );
         const elt = getByTestId("CalendarIcon");
@@ -287,28 +293,37 @@ describe("DateSelector with time Component", () => {
     it("dispatch a well formed message", async () => {
         const dispatch = jest.fn();
         const state: TaipyState = INITIAL_STATE;
-        render(
+        const { getByText } = render(
             <TaipyContext.Provider value={{ state, dispatch }}>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <DateSelector date={curDateStr} withTime={true} updateVarName="varname" />
+                    <DateSelector date="" withTime={true} updateVarName="varname" />
                 </LocalizationProvider>
             </TaipyContext.Provider>
         );
-        const input = document.querySelector("input");
-        expect(input).toBeInTheDocument();
-        if (input) {
-            // await userEvent.clear(input);
-            await userEvent.type(
-                input,
-                "{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}010120010101am",
-                { delay: 1 }
-            );
-            expect(dispatch).toHaveBeenLastCalledWith({
-                name: "varname",
-                payload: { value: "2001-01-01T01:01:00.000Z" },
-                propagate: true,
-                type: "SEND_UPDATE_ACTION",
-            });
-        }
+        const year = getByText("YYYY");
+        expect(year).toBeInTheDocument();
+        await userEvent.type(year, "2001", { delay: 1 });
+        const month = getByText("MM");
+        expect(month).toBeInTheDocument();
+        await userEvent.type(month, "01", { delay: 1 });
+        const day = getByText("DD");
+        expect(day).toBeInTheDocument();
+        await userEvent.type(day, "01", { delay: 1 });
+        const hour = getByText("hh");
+        expect(hour).toBeInTheDocument();
+        await userEvent.type(hour, "01", { delay: 1 });
+        const minute = getByText("mm");
+        expect(minute).toBeInTheDocument();
+        await userEvent.type(minute, "01", { delay: 1 });
+        const am = getByText("aa");
+        expect(am).toBeInTheDocument();
+        await userEvent.type(am, "am", { delay: 1 });
+
+        expect(dispatch).toHaveBeenLastCalledWith({
+            name: "varname",
+            payload: { value: "2001-01-01T01:01:00.000Z" },
+            propagate: true,
+            type: "SEND_UPDATE_ACTION",
+        });
     });
 });

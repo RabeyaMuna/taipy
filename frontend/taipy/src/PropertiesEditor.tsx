@@ -13,7 +13,7 @@
 
 import React, { useState, useCallback, useEffect, ChangeEvent, MouseEvent, KeyboardEvent } from "react";
 import Divider from "@mui/material/Divider";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";

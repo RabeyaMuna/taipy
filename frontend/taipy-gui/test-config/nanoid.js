@@ -13,6 +13,4 @@
 
 // mock nanoid that is ESM and does not work with jest
 // https://github.com/ai/nanoid/issues/363
-jest.mock("nanoid", () => { return {
-    nanoid : ()=>{}
-  } });
+jest.mock("nanoid", () => ({ nanoid: () => {} }));

@@ -17,7 +17,7 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 
 import { LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 
 import DateRange from "./DateRange";
 import { TaipyContext } from "../../context/taipyContext";
@@ -77,19 +77,19 @@ describe("DateRange Component", () => {
                 <DateRange dates={curDates} />
             </LocalizationProvider>
         );
-        const elts = getAllByTestId("CalendarIcon");
-        expect(elts).toHaveLength(2);
-        expect(elts[0].parentElement?.tagName).toBe("BUTTON");
+        const elements = getAllByTestId("CalendarIcon");
+        expect(elements).toHaveLength(2);
+        expect(elements[0].parentElement?.tagName).toBe("BUTTON");
     });
     it("renders with analog time picker", async () => {
         const { getAllByTestId } = render(
             <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DateRange dates={curDates} withTime={true} analogic={true}/>
+                <DateRange dates={curDates} withTime={true} analogic={true} />
             </LocalizationProvider>
         );
-        const elts = getAllByTestId("CalendarIcon");
-        expect(elts).toHaveLength(2);
-        expect(elts[0].parentElement?.tagName).toBe("BUTTON");
+        const elements = getAllByTestId("CalendarIcon");
+        expect(elements).toHaveLength(2);
+        expect(elements[0].parentElement?.tagName).toBe("BUTTON");
     });
     it("displays the right info for string", async () => {
         const { getAllByTestId } = render(
@@ -97,20 +97,20 @@ describe("DateRange Component", () => {
                 <DateRange dates={curDates} defaultDates={defaultDates} className="taipy-date-2" />
             </LocalizationProvider>
         );
-        const elts = getAllByTestId("CalendarIcon");
-        expect(elts).toHaveLength(2);
-        expect(elts[0].parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
+        const elements = getAllByTestId("CalendarIcon");
+        expect(elements).toHaveLength(2);
+        expect(elements[0].parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
             "taipy-date-2-picker",
             "taipy-date-2-picker-start"
         );
-        expect(elts[0].parentElement?.parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
+        expect(elements[0].parentElement?.parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
             "taipy-date-2"
         );
-        expect(elts[1].parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
+        expect(elements[1].parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
             "taipy-date-2-picker",
             "taipy-date-2-picker-end"
         );
-        expect(elts[1].parentElement?.parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
+        expect(elements[1].parentElement?.parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
             "taipy-date-2"
         );
     });
@@ -150,7 +150,7 @@ describe("DateRange Component", () => {
         expect(cleanText(input2?.value || "")).toEqual("31-01-2001");
     });
     it("shows labels", async () => {
-        const { getByLabelText } = render(
+        render(
             <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DateRange
                     defaultDates={defaultDates}
@@ -161,10 +161,13 @@ describe("DateRange Component", () => {
                 />
             </LocalizationProvider>
         );
-        const startInput = getByLabelText("start") as HTMLInputElement;
-        expect(startInput.value).toBe("01/01/2001");
-        const endInput = getByLabelText("end") as HTMLInputElement;
-        expect(endInput.value).toBe("01/31/2001");
+        const labels = document.querySelectorAll("label");
+        expect(labels).toHaveLength(2);
+        const first = labels[0].textContent === "start";
+        const startLabel = first ? labels[0] : labels[1];
+        expect(startLabel.parentElement?.querySelector("input")?.value).toBe("01/01/2001");
+        const endLabel = first ? labels[1] : labels[0];
+        expect(endLabel.parentElement?.querySelector("input")?.value).toBe("01/31/2001");
     });
     it("displays with width=70%", async () => {
         render(
@@ -220,29 +223,44 @@ describe("DateRange Component", () => {
     it("dispatch a well formed message", async () => {
         const dispatch = jest.fn();
         const state: TaipyState = INITIAL_STATE;
-        render(
+        const { getAllByText } = render(
             <TaipyContext.Provider value={{ state, dispatch }}>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <DateRange dates={curDates} className="taipy-date-range" />
+                    <DateRange dates={undefined as unknown as string[]} className="taipy-date-range" />
                 </LocalizationProvider>
             </TaipyContext.Provider>
         );
-        const input = document.querySelector(".taipy-date-range-picker-start input");
-        expect(input).toBeInTheDocument();
-        const input2 = document.querySelector(".taipy-date-range-picker-end input");
-        expect(input2).toBeInTheDocument();
-        if (input && input2) {
-            // await userEvent.clear(input);
-            await userEvent.type(input, "{ArrowLeft}{ArrowLeft}{ArrowLeft}01012001", { delay: 1 });
-            // await userEvent.clear(input2);
-            await userEvent.type(input2, "{ArrowLeft}{ArrowLeft}{ArrowLeft}01312001", { delay: 1 });
-            expect(dispatch).toHaveBeenLastCalledWith({
-                name: "",
-                payload: { value: ["Mon Jan 01 2001", "Wed Jan 31 2001"] },
-                propagate: true,
-                type: "SEND_UPDATE_ACTION",
-            });
+        const years = getAllByText("YYYY");
+        expect(years).toHaveLength(2);
+        expect(years[0]).toBeInTheDocument();
+        expect(years[1]).toBeInTheDocument();
+        await userEvent.type(years[0], "2001", { delay: 1 });
+        await userEvent.type(years[1], "2001", { delay: 1 });
+
+        const months = getAllByText("MM");
+        expect(months).toHaveLength(2);
+        expect(months[0]).toBeInTheDocument();
+        expect(months[1]).toBeInTheDocument();
+        if (months[0].closest(".taipy-date-range-picker-start")) {
+            await userEvent.type(months[0], "01", { delay: 1 });
+            await userEvent.type(months[1], "03", { delay: 1 });
+        } else {
+            await userEvent.type(months[1], "01", { delay: 1 });
+            await userEvent.type(months[0], "03", { delay: 1 });
         }
+        const days = getAllByText("DD");
+        expect(days).toHaveLength(2);
+        expect(days[0]).toBeInTheDocument();
+        expect(days[1]).toBeInTheDocument();
+        await userEvent.type(days[0], "01", { delay: 1 });
+        await userEvent.type(days[1], "01", { delay: 1 });
+
+        expect(dispatch).toHaveBeenLastCalledWith({
+            name: "",
+            payload: { value: ["Mon Jan 01 2001", "Thu Mar 01 2001"] },
+            propagate: true,
+            type: "SEND_UPDATE_ACTION",
+        });
     });
 });
 
@@ -253,9 +271,9 @@ describe("DateRange with time Component", () => {
                 <DateRange dates={curDates} withTime={true} />
             </LocalizationProvider>
         );
-        const elts = getAllByTestId("CalendarIcon");
-        expect(elts).toHaveLength(2);
-        expect(elts[0].parentElement?.tagName).toBe("BUTTON");
+        const elements = getAllByTestId("CalendarIcon");
+        expect(elements).toHaveLength(2);
+        expect(elements[0].parentElement?.tagName).toBe("BUTTON");
     });
     it("displays the right info for string", async () => {
         const { getAllByTestId } = render(
@@ -263,20 +281,20 @@ describe("DateRange with time Component", () => {
                 <DateRange dates={curDates} withTime={true} className="taipy-time" />
             </LocalizationProvider>
         );
-        const elts = getAllByTestId("CalendarIcon");
-        expect(elts).toHaveLength(2);
-        expect(elts[0].parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
+        const elements = getAllByTestId("CalendarIcon");
+        expect(elements).toHaveLength(2);
+        expect(elements[0].parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
             "taipy-time-picker",
             "taipy-time-picker-start"
         );
-        expect(elts[0].parentElement?.parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
+        expect(elements[0].parentElement?.parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
             "taipy-time"
         );
-        expect(elts[1].parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
+        expect(elements[1].parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
             "taipy-time-picker",
             "taipy-time-picker-end"
         );
-        expect(elts[1].parentElement?.parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
+        expect(elements[1].parentElement?.parentElement?.parentElement?.parentElement?.parentElement).toHaveClass(
             "taipy-time"
         );
     });
@@ -330,10 +348,13 @@ describe("DateRange with time Component", () => {
                 />
             </LocalizationProvider>
         );
-        const startInput = getByLabelText("start") as HTMLInputElement;
-        expect(startInput.value.toLocaleLowerCase()).toBe("01/01/2001 12:00 am");
-        const endInput = getByLabelText("end") as HTMLInputElement;
-        expect(endInput.value.toLocaleLowerCase()).toBe("01/31/2001 12:00 am");
+        const labels = document.querySelectorAll("label");
+        expect(labels).toHaveLength(2);
+        const first = labels[0].textContent === "start";
+        const startLabel = first ? labels[0] : labels[1];
+        expect(startLabel.parentElement?.querySelector("input")?.value).toBe("01/01/2001 12:00 AM");
+        const endLabel = first ? labels[1] : labels[0];
+        expect(endLabel.parentElement?.querySelector("input")?.value).toBe("01/31/2001 12:00 AM");
     });
     it("is disabled", async () => {
         render(
@@ -371,36 +392,62 @@ describe("DateRange with time Component", () => {
     it("dispatch a well formed message", async () => {
         const dispatch = jest.fn();
         const state: TaipyState = INITIAL_STATE;
-        render(
+        const { getAllByText } = render(
             <TaipyContext.Provider value={{ state, dispatch }}>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <DateRange dates={curDates} withTime={true} updateVarName="varname" className="tp-dt" />
+                    <DateRange dates={[]} withTime={true} updateVarName="varname" className="tp-dt" />
                 </LocalizationProvider>
             </TaipyContext.Provider>
         );
-        const input = document.querySelector(".tp-dt-picker-start input");
-        expect(input).toBeInTheDocument();
-        const input2 = document.querySelector(".tp-dt-picker-end input");
-        expect(input2).toBeInTheDocument();
-        if (input && input2) {
-            // await userEvent.clear(input);
-            await userEvent.type(
-                input,
-                "{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}010120010101am",
-                { delay: 1 }
-            );
-            // await userEvent.clear(input2);
-            await userEvent.type(
-                input2,
-                "{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}{ArrowLeft}123120010101am",
-                { delay: 1 }
-            );
-            expect(dispatch).toHaveBeenLastCalledWith({
-                name: "varname",
-                payload: { value: ["2001-01-01T01:01:00.000Z", "2001-12-31T01:01:00.000Z"] },
-                propagate: true,
-                type: "SEND_UPDATE_ACTION",
-            });
+
+        const years = getAllByText("YYYY");
+        expect(years).toHaveLength(2);
+        expect(years[0]).toBeInTheDocument();
+        expect(years[1]).toBeInTheDocument();
+        await userEvent.type(years[0], "2001", { delay: 1 });
+        await userEvent.type(years[1], "2001", { delay: 1 });
+
+        const months = getAllByText("MM");
+        expect(months).toHaveLength(2);
+        expect(months[0]).toBeInTheDocument();
+        expect(months[1]).toBeInTheDocument();
+        if (months[0].closest(".taipy-date-range-picker-start")) {
+            await userEvent.type(months[0], "12", { delay: 1 });
+            await userEvent.type(months[1], "01", { delay: 1 });
+        } else {
+            await userEvent.type(months[1], "12", { delay: 1 });
+            await userEvent.type(months[0], "01", { delay: 1 });
         }
+        const days = getAllByText("DD");
+        expect(days).toHaveLength(2);
+        expect(days[0]).toBeInTheDocument();
+        expect(days[1]).toBeInTheDocument();
+        await userEvent.type(days[0], "01", { delay: 1 });
+        await userEvent.type(days[1], "01", { delay: 1 });
+        const hours = getAllByText("hh");
+        expect(hours).toHaveLength(2);
+        expect(hours[0]).toBeInTheDocument();
+        expect(hours[1]).toBeInTheDocument();
+        await userEvent.type(hours[0], "01", { delay: 1 });
+        await userEvent.type(hours[1], "01", { delay: 1 });
+        const minutes = getAllByText("mm");
+        expect(minutes).toHaveLength(2);
+        expect(minutes[0]).toBeInTheDocument();
+        expect(minutes[1]).toBeInTheDocument();
+        await userEvent.type(minutes[0], "01", { delay: 1 });
+        await userEvent.type(minutes[1], "01", { delay: 1 });
+        const ams = getAllByText("aa");
+        expect(ams).toHaveLength(2);
+        expect(ams[0]).toBeInTheDocument();
+        expect(ams[1]).toBeInTheDocument();
+        await userEvent.type(ams[0], "am", { delay: 1 });
+        await userEvent.type(ams[1], "am", { delay: 1 });
+
+        expect(dispatch).toHaveBeenLastCalledWith({
+            name: "varname",
+            payload: { value: ["2001-01-01T01:01:00.000Z", "2001-12-01T01:01:00.000Z"] },
+            propagate: true,
+            type: "SEND_UPDATE_ACTION",
+        });
     });
 });

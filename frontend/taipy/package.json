@@ -1,6 +1,6 @@
 {
   "name": "taipy-gui-core",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "private": true,
   "devDependencies": {
     "@eslint/compat": "^1.2.7",
@@ -32,10 +32,10 @@
   "dependencies": {
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.8",
-    "@mui/icons-material": "^6.0.1",
-    "@mui/material": "^6.0.1",
-    "@mui/x-date-pickers": "^7.0.0",
-    "@mui/x-tree-view": "^7.0.0",
+    "@mui/icons-material": "^7.1.0",
+    "@mui/material": "^7.1.0",
+    "@mui/x-date-pickers": "^8.3.0",
+    "@mui/x-tree-view": "^8.3.0",
     "@projectstorm/react-diagrams": "^7.0.2",
     "@textea/json-viewer": "^4.0.0",
     "date-fns": "^4.1.0",
@@ -44,6 +44,9 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "taipy-gui": "file:../../taipy/gui/webapp"
+  },
+  "overrides": {
+    "@mui/material": "$@mui/material"
   },
   "scripts": {
     "postinstall": "node scripts/install.js",

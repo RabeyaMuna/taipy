@@ -15,6 +15,7 @@ export const toDataUrl = (url: string | null) =>
     new Promise((resolve, reject) => {
         if (!url) {
             resolve(null);
+            return
         }
         const xhr = new XMLHttpRequest();
         xhr.onload = () => {

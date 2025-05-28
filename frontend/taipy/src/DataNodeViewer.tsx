@@ -32,7 +32,7 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
-import Grid from "@mui/material/Grid2";
+import Grid from "@mui/material/Grid";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import Popover from "@mui/material/Popover";
@@ -50,12 +50,12 @@ import CheckCircle from "@mui/icons-material/CheckCircle";
 import Download from "@mui/icons-material/Download";
 import Launch from "@mui/icons-material/Launch";
 import LockOutlined from "@mui/icons-material/LockOutlined";
-import Upload from "@mui/icons-material/Upload";
+import {Upload} from "@mui/icons-material"; // issue with Mui not exporting Upload icon in the latest version
 
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { BaseDateTimePickerSlotProps } from "@mui/x-date-pickers/DateTimePicker/shared";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { format } from "date-fns";
 import deepEqual from "fast-deep-equal/es6";
 
@@ -111,7 +111,7 @@ const editSx = {
     fontSize: "smaller",
     "& > div": { writingMode: "vertical-rl", transform: "rotate(180deg)", paddingBottom: "1em" },
 };
-const textFieldProps = { textField: { margin: "dense" } } as BaseDateTimePickerSlotProps<Date>;
+const textFieldProps = { textField: { margin: "dense" } } as BaseDateTimePickerSlotProps;
 const buttonSx = { minWidth: "0px" };
 
 type DataNodeFull = [

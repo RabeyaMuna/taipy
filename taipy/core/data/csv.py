@@ -36,11 +36,15 @@ class CSVDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
     - *default_data*: The default data of the data node. It is used at the data node instantiation
         to write the data to the CSV file.
     - *has_header* (`bool`): If True, indicates that the CSV file has a header.
+    - *separator* (`str`): The separator used in the CSV file. The default value is `,`.
     - *exposed_type*: The exposed type of the data read from CSV file. The default value is `pandas`.
     """
 
     __STORAGE_TYPE = "csv"
-    __ENCODING_KEY = "encoding"
+    _ENCODING_KEY = "encoding"
+    _DEFAULT_ENCODING_VALUE = "utf-8"
+    _SEPARATOR_KEY = "separator"
+    _DEFAULT_SEPARATOR_VALUE = ","
 
     _REQUIRED_PROPERTIES: List[str] = []
 
@@ -65,11 +69,14 @@ class CSVDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
         if properties is None:
             properties = {}
 
-        if self.__ENCODING_KEY not in properties.keys():
-            properties[self.__ENCODING_KEY] = "utf-8"
+        if self._ENCODING_KEY not in properties.keys():
+            properties[self._ENCODING_KEY] = self._DEFAULT_ENCODING_VALUE
 
         if self._HAS_HEADER_PROPERTY not in properties.keys():
             properties[self._HAS_HEADER_PROPERTY] = True
+
+        if self._SEPARATOR_KEY not in properties.keys():
+            properties[self._SEPARATOR_KEY] = self._DEFAULT_SEPARATOR_VALUE
 
         properties[self._EXPOSED_TYPE_PROPERTY] = _TabularDataNodeMixin._get_valid_exposed_type(properties)
         self._check_exposed_type(properties[self._EXPOSED_TYPE_PROPERTY])
@@ -106,7 +113,8 @@ class CSVDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
                 self._IS_GENERATED_KEY,
                 self._HAS_HEADER_PROPERTY,
                 self._EXPOSED_TYPE_PROPERTY,
-                self.__ENCODING_KEY,
+                self._ENCODING_KEY,
+                self._SEPARATOR_KEY,
             }
         )
 
@@ -122,7 +130,7 @@ class CSVDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
             columns (Optional[List[str]]): The list of column names to write.
             editor_id (str): An optional identifier of the writer.
         """
-        self._write(data, columns)
+        self._write_to_path(self._path, data, columns)
         self.track_edit(editor_id=editor_id, timestamp=datetime.now())
 
     def _read(self):
@@ -141,12 +149,12 @@ class CSVDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
 
     def _read_as(self, path: str):
         properties = self.properties
-        with open(path, encoding=properties[self.__ENCODING_KEY]) as csvFile:
+        with open(path, encoding=properties[self._ENCODING_KEY]) as csvFile:
             if properties[self._HAS_HEADER_PROPERTY]:
-                reader_with_header = csv.DictReader(csvFile)
+                reader_with_header = csv.DictReader(csvFile, delimiter=properties[self._SEPARATOR_KEY])
                 return [self._decoder(line) for line in reader_with_header]
 
-            reader_without_header = csv.reader(csvFile)
+            reader_without_header = csv.reader(csvFile, delimiter=properties[self._SEPARATOR_KEY])
             return [self._decoder(line) for line in reader_without_header]
 
     def _read_as_numpy(self, path: str) -> np.ndarray:
@@ -162,12 +170,22 @@ class CSVDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
             properties = self.properties
             if properties[self._HAS_HEADER_PROPERTY]:
                 if column_names:
-                    return pd.read_csv(path, encoding=properties[self.__ENCODING_KEY])[column_names]
-                return pd.read_csv(path, encoding=properties[self.__ENCODING_KEY])
+                    return pd.read_csv(
+                        path, encoding=properties[self._ENCODING_KEY], sep=properties[self._SEPARATOR_KEY]
+                    )[column_names]
+                return pd.read_csv(path, encoding=properties[self._ENCODING_KEY], sep=properties[self._SEPARATOR_KEY])
             else:
                 if usecols:
-                    return pd.read_csv(path, encoding=properties[self.__ENCODING_KEY], header=None, usecols=usecols)
-                return pd.read_csv(path, encoding=properties[self.__ENCODING_KEY], header=None)
+                    return pd.read_csv(
+                        path,
+                        encoding=properties[self._ENCODING_KEY],
+                        sep=properties[self._SEPARATOR_KEY],
+                        header=None,
+                        usecols=usecols,
+                    )
+                return pd.read_csv(
+                    path, encoding=properties[self._ENCODING_KEY], header=None, sep=properties[self._SEPARATOR_KEY]
+                )
         except pd.errors.EmptyDataError:
             return pd.DataFrame()
 
@@ -175,9 +193,19 @@ class CSVDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
         properties = self.properties
         exposed_type = properties[self._EXPOSED_TYPE_PROPERTY]
         data = self._convert_data_to_dataframe(exposed_type, data)
-        data.to_csv(self._path, mode="a", index=False, encoding=properties[self.__ENCODING_KEY], header=False)
+        data.to_csv(
+            self._path,
+            mode="a",
+            index=False,
+            encoding=properties[self._ENCODING_KEY],
+            sep=properties[self._SEPARATOR_KEY],
+            header=False,
+        )
 
     def _write(self, data: Any, columns: Optional[List[str]] = None):
+        self._write_to_path(self._path, data, columns)
+
+    def _write_to_path(self, path: str, data: Any, columns: Optional[List[str]] = None):
         properties = self.properties
         exposed_type = properties[self._EXPOSED_TYPE_PROPERTY]
         data = self._convert_data_to_dataframe(exposed_type, data)
@@ -186,8 +214,9 @@ class CSVDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
             data.columns = pd.Index(columns, dtype="object")
 
         data.to_csv(
-            self._path,
+            path,
             index=False,
-            encoding=properties[self.__ENCODING_KEY],
+            encoding=properties[self._ENCODING_KEY],
+            sep=properties[self._SEPARATOR_KEY],
             header=properties[self._HAS_HEADER_PROPERTY],
         )

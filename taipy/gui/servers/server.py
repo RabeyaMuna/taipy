@@ -84,11 +84,16 @@ class _Server(ABC):
     def save_uploaded_file(self, file, path):
         raise NotImplementedError
 
-    def render(self, html_fragment, script_paths, style, head, context):
+    @staticmethod
+    def _render_jsx_fragment(html_fragment):
         template_str = _Server._RE_OPENING_CURLY.sub(_Server._OPENING_CURLY, html_fragment)
         template_str = _Server._RE_CLOSING_CURLY.sub(_Server._CLOSING_CURLY, template_str)
         template_str = template_str.replace('"{!', "{")
         template_str = template_str.replace('!}"', "}")
+        return template_str
+
+    def render(self, html_fragment, script_paths, style, head, context):
+        template_str = _Server._render_jsx_fragment(html_fragment)
         style = get_style(style)
         return self.direct_render_json(
             {
