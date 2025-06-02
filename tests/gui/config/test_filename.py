@@ -22,5 +22,6 @@ def test_env_filename():
     gui.run(run_server=False)
     service_config = gui._config.config
     assert service_config["run_browser"] is False # type: ignore
+    assert service_config["port"] == 5555 # type: ignore
     gui.stop()
 
