@@ -18,7 +18,7 @@ from taipy.gui import Gui
 
 def test_env_filename():
 
-    gui = Gui(env_filename=str(pathlib.Path(__file__).parent.parent / "resources" / "taipy.env"))
+    gui = Gui(env_filename=str(pathlib.Path(__file__).parent.parent / "resources" / "taipy_env"))
     gui.run(run_server=False)
     service_config = gui._config.config
     assert service_config["run_browser"] is False # type: ignore
