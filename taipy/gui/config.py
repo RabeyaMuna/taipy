@@ -12,13 +12,13 @@
 import os
 import re
 import typing as t
-from importlib.util import find_spec
 
 import pytz
 import tzlocal
 from dotenv import dotenv_values
 from werkzeug.serving import is_running_from_reloader
 
+from taipy.common._check_dependencies import _module_exists
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
 from ._gui_cli import _GuiCLI
@@ -279,7 +279,7 @@ class _Config(object):
                         )
 
         # Taipy-config
-        if find_spec("taipy") and find_spec("taipy.common.config"):
+        if _module_exists("taipy.common.config"):
             from taipy.common.config import Config as TaipyConfig
 
             try:

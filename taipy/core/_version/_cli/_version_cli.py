@@ -10,8 +10,8 @@
 # specific language governing permissions and limitations under the License.
 
 import sys
-from importlib.util import find_spec
 
+from taipy.common._check_dependencies import _module_exists
 from taipy.common._cli._base_cli._abstract_cli import _AbstractCLI
 from taipy.common._cli._base_cli._taipy_parser import _TaipyParser
 from taipy.common.config import Config
@@ -97,7 +97,7 @@ class _VersionCLI(_AbstractCLI):
 
         latest_version_number = _VersionManagerFactory._build_manager()._get_latest_version()
         development_version_number = _VersionManagerFactory._build_manager()._get_development_version()
-        if find_spec("taipy.enterprise"):
+        if _module_exists("taipy.enterprise"):
             production_version_numbers = _VersionManagerFactory._build_manager()._get_production_versions()
         else:
             production_version_numbers = []
