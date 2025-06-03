@@ -12,7 +12,7 @@
 from functools import lru_cache
 from typing import Type
 
-from ...common._check_dependencies import EnterpriseEditionUtils
+from ...common._check_dependencies import EnterpriseEdition
 from .._manager._manager_factory import _ManagerFactory
 from ..common._utils import _load_fct
 from ._sequence_manager import _SequenceManager
@@ -22,9 +22,9 @@ class _SequenceManagerFactory(_ManagerFactory):
     @classmethod
     @lru_cache
     def _build_manager(cls) -> Type[_SequenceManager]:
-        if EnterpriseEditionUtils._using_enterprise():
+        if EnterpriseEdition._is_installed():
             sequence_manager = _load_fct(
-                EnterpriseEditionUtils._TAIPY_ENTERPRISE_CORE_MODULE + ".sequence._sequence_manager", "_SequenceManager"
+                EnterpriseEdition._CORE_MODULE_PATH + ".sequence._sequence_manager", "_SequenceManager"
             )
         else:
             sequence_manager = _SequenceManager

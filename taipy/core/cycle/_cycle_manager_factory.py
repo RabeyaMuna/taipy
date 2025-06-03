@@ -12,7 +12,7 @@
 from functools import lru_cache
 from typing import Type
 
-from ...common._check_dependencies import EnterpriseEditionUtils
+from ...common._check_dependencies import EnterpriseEdition
 from .._manager._manager_factory import _ManagerFactory
 from ..common._utils import _load_fct
 from ..cycle._cycle_manager import _CycleManager
@@ -25,12 +25,10 @@ class _CycleManagerFactory(_ManagerFactory):
     @classmethod
     @lru_cache
     def _build_manager(cls) -> Type[_CycleManager]:
-        if EnterpriseEditionUtils._using_enterprise():
-            cycle_manager = _load_fct(
-                EnterpriseEditionUtils._TAIPY_ENTERPRISE_CORE_MODULE + ".cycle._cycle_manager", "_CycleManager"
-            )  # type: ignore
+        if EnterpriseEdition._is_installed():
+            cycle_manager = _load_fct(EnterpriseEdition._CORE_MODULE_PATH + ".cycle._cycle_manager", "_CycleManager")  # type: ignore
             build_repository = _load_fct(
-                EnterpriseEditionUtils._TAIPY_ENTERPRISE_CORE_MODULE + ".cycle._cycle_manager_factory",
+                EnterpriseEdition._CORE_MODULE_PATH + ".cycle._cycle_manager_factory",
                 "_CycleManagerFactory",
             )._build_repository  # type: ignore
         else:

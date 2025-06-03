@@ -10,15 +10,14 @@
 # specific language governing permissions and limitations under the License.
 
 from config.config import configure
-from pages import job_page, scenario_page
-from pages.root import content, root, selected_data_node, selected_scenario
 
 import taipy as tp
+from pages import job_page, scenario_page
+from pages.root import content, root, selected_data_node, selected_scenario
 from taipy import Gui, Orchestrator
 
 
-def on_init(state):
-    ...
+def on_init(state): ...
 
 
 def on_change(state, var, val):

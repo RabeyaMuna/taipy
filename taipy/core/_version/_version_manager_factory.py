@@ -12,7 +12,7 @@
 from functools import lru_cache
 from typing import Type
 
-from ...common._check_dependencies import EnterpriseEditionUtils
+from ...common._check_dependencies import EnterpriseEdition
 from .._manager._manager_factory import _ManagerFactory
 from ..common import _utils
 from ._version_fs_repository import _VersionFSRepository
@@ -25,12 +25,12 @@ class _VersionManagerFactory(_ManagerFactory):
     @classmethod
     @lru_cache
     def _build_manager(cls) -> Type[_VersionManager]:
-        if EnterpriseEditionUtils._using_enterprise():
+        if EnterpriseEdition._is_installed():
             version_manager = _utils._load_fct(
-                EnterpriseEditionUtils._TAIPY_ENTERPRISE_CORE_MODULE + "._version._version_manager", "_VersionManager"
+                EnterpriseEdition._CORE_MODULE_PATH + "._version._version_manager", "_VersionManager"
             )  # type: ignore
             build_repository = _utils._load_fct(
-                EnterpriseEditionUtils._TAIPY_ENTERPRISE_CORE_MODULE + "._version._version_manager_factory",
+                EnterpriseEdition._CORE_MODULE_PATH + "._version._version_manager_factory",
                 "_VersionManagerFactory",
             )._build_repository  # type: ignore
         else:
