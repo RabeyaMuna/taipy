@@ -38,7 +38,7 @@ def _entrypoint():
 
     enterprise_module_exists = _module_exists("taipy.enterprise")
     if enterprise_module_exists:
-        from taipy.enterprise._entrypoint import (  # type: ignore
+        from taipy.enterprise._entrypoint import (  # type: ignore[reportMissingImports]
             _entrypoint_initialize as _enterprise_entrypoint_initialize,
         )
 
@@ -49,16 +49,18 @@ def _entrypoint():
 
     _RunCLI.create_parser()
     _GuiCLI.create_run_parser()
-    _core_cli.create_run_parser()  # type: ignore
+    _core_cli.create_run_parser()  # type: ignore[reportAttributeAccessIssue]
 
     _VersionCLIFactory._build_cli().create_parser()
-    _create_cli.generate_template_map()  # type: ignore
+    _create_cli.generate_template_map()  # type: ignore[reportAttributeAccessIssue]
     _create_cli.create_parser()
     _MigrateCLI.create_parser()
     _HelpCLI.create_parser()
 
     if enterprise_module_exists:
-        from taipy.enterprise._entrypoint import _entrypoint_handling as _enterprise_entrypoint_handling  # type: ignore
+        from taipy.enterprise._entrypoint import (  # type: ignore[reportMissingImports]
+            _entrypoint_handling as _enterprise_entrypoint_handling,
+        )
 
         _enterprise_entrypoint_handling()
 

@@ -24,7 +24,7 @@ class _SubmissionManagerFactory(_ManagerFactory):
 
     @classmethod
     @lru_cache
-    def _build_manager(cls) -> Type[_SubmissionManager]:  # type: ignore
+    def _build_manager(cls) -> Type[_SubmissionManager]:  # type: ignore[reportIncompatibleMethodOverride]
         if EnterpriseEdition._is_installed():
             submission_manager = _load_fct(
                 EnterpriseEdition._CORE_MODULE_PATH + ".submission._submission_manager",
@@ -33,14 +33,14 @@ class _SubmissionManagerFactory(_ManagerFactory):
             build_repository = _load_fct(
                 EnterpriseEdition._CORE_MODULE_PATH + ".submission._submission_manager_factory",
                 "_SubmissionManagerFactory",
-            )._build_repository  # type: ignore
+            )._build_repository  # type: ignore[reportFunctionMemberAccess]
         else:
             submission_manager = _SubmissionManager
             build_repository = cls._build_repository
-        submission_manager._repository = build_repository()  # type: ignore
-        return submission_manager  # type: ignore
+        submission_manager._repository = build_repository()  # type: ignore[reportFunctionMemberAccess]
+        return submission_manager  # type: ignore[reportReturnType]
 
     @classmethod
     @lru_cache
-    def _build_repository(cls):  # type: ignore
-        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()  # type: ignore
+    def _build_repository(cls):  # type: ignore[reportIncompatibleMethodOverride]
+        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()  # type: ignore[reportOptionalCall]

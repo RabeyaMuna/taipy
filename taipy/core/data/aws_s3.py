@@ -116,7 +116,7 @@ class S3ObjectDataNode(DataNode):
             **properties,
         )
 
-        self._s3_client = boto3.client(  # type: ignore
+        self._s3_client = boto3.client(  # type: ignore[reportPossiblyUnboundVariable]
             "s3",
             aws_access_key_id=properties.get(self.__AWS_ACCESS_KEY_ID),
             aws_secret_access_key=properties.get(self.__AWS_SECRET_ACCESS_KEY),
@@ -124,7 +124,7 @@ class S3ObjectDataNode(DataNode):
             **properties.get(self.__AWS_S3_CLIENT_PARAMETERS, {}),
         )
 
-        if not self._last_edit_date:  # type: ignore
+        if not self._last_edit_date:
             self._last_edit_date = datetime.now()
 
         self._TAIPY_PROPERTIES.update(

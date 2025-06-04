@@ -24,19 +24,19 @@ class _JobManagerFactory(_ManagerFactory):
 
     @classmethod
     @lru_cache
-    def _build_manager(cls) -> Type[_JobManager]:  # type: ignore
+    def _build_manager(cls) -> Type[_JobManager]:  # type: ignore[reportIncompatibleMethodOverride]
         if EnterpriseEdition._is_installed():
             job_manager = _load_fct(EnterpriseEdition._CORE_MODULE_PATH + ".job._job_manager", "_JobManager")
             build_repository = _load_fct(
                 EnterpriseEdition._CORE_MODULE_PATH + ".job._job_manager_factory", "_JobManagerFactory"
-            )._build_repository  # type: ignore
+            )._build_repository  # type: ignore[reportFunctionMemberAccess]
         else:
             job_manager = _JobManager
             build_repository = cls._build_repository
-        job_manager._repository = build_repository()  # type: ignore
-        return job_manager  # type: ignore
+        job_manager._repository = build_repository()  # type: ignore[reportFunctionMemberAccess]
+        return job_manager  # type: ignore[reportReturnType]
 
     @classmethod
     @lru_cache
-    def _build_repository(cls):  # type: ignore
-        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()  # type: ignore
+    def _build_repository(cls):  # type: ignore[reportIncompatibleMethodOverride]
+        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()  # type: ignore[reportOptionalCall]

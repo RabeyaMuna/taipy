@@ -24,22 +24,22 @@ class _VersionManagerFactory(_ManagerFactory):
 
     @classmethod
     @lru_cache
-    def _build_manager(cls) -> Type[_VersionManager]:  # type: ignore
+    def _build_manager(cls) -> Type[_VersionManager]:  # type: ignore[reportIncompatibleMethodOverride]
         if EnterpriseEdition._is_installed():
             version_manager = _utils._load_fct(
                 EnterpriseEdition._CORE_MODULE_PATH + "._version._version_manager", "_VersionManager"
-            )  # type: ignore
+            )
             build_repository = _utils._load_fct(
                 EnterpriseEdition._CORE_MODULE_PATH + "._version._version_manager_factory",
                 "_VersionManagerFactory",
-            )._build_repository  # type: ignore
+            )._build_repository  # type: ignore[reportFunctionMemberAccess]
         else:
             version_manager = _VersionManager
             build_repository = cls._build_repository
-        version_manager._repository = build_repository()  # type: ignore
-        return version_manager  # type: ignore
+        version_manager._repository = build_repository()  # type: ignore[reportFunctionMemberAccess]
+        return version_manager  # type: ignore[reportReturnType]
 
     @classmethod
     @lru_cache
-    def _build_repository(cls):  # type: ignore
-        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()  # type: ignore
+    def _build_repository(cls):  # type: ignore[reportIncompatibleMethodOverride]
+        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()  # type: ignore[reportOptionalCall]

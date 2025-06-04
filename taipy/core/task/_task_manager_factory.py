@@ -24,20 +24,20 @@ class _TaskManagerFactory(_ManagerFactory):
 
     @classmethod
     @lru_cache
-    def _build_manager(cls) -> Type[_TaskManager]:  # type: ignore
+    def _build_manager(cls) -> Type[_TaskManager]:  # type: ignore[reportIncompatibleMethodOverride]
         if EnterpriseEdition._is_installed():
-            task_manager = _load_fct(EnterpriseEdition._CORE_MODULE_PATH + ".task._task_manager", "_TaskManager")  # type: ignore
+            task_manager = _load_fct(EnterpriseEdition._CORE_MODULE_PATH + ".task._task_manager", "_TaskManager")
             build_repository = _load_fct(
                 EnterpriseEdition._CORE_MODULE_PATH + ".task._task_manager_factory",
                 "_TaskManagerFactory",
-            )._build_repository  # type: ignore
+            )._build_repository  # type: ignore[reportFunctionMemberAccess]
         else:
             task_manager = _TaskManager
             build_repository = cls._build_repository
-        task_manager._repository = build_repository()  # type: ignore
-        return task_manager  # type: ignore
+        task_manager._repository = build_repository()  # type: ignore[reportFunctionMemberAccess]
+        return task_manager  # type: ignore[reportReturnType]
 
     @classmethod
     @lru_cache
-    def _build_repository(cls):  # type: ignore
-        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()  # type: ignore
+    def _build_repository(cls):  # type: ignore[reportIncompatibleMethodOverride]
+        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()  # type: ignore[reportOptionalCall]

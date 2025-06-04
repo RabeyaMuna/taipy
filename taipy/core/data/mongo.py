@@ -111,7 +111,7 @@ class MongoCollectionDataNode(DataNode):
             **properties,
         )
 
-        mongo_client = _connect_mongodb(  # type: ignore
+        mongo_client = _connect_mongodb(  # type: ignore[reportPossiblyUnboundVariable]
             db_host=properties.get(self.__DB_HOST_KEY, self.__DB_HOST_DEFAULT),
             db_port=properties.get(self.__DB_PORT_KEY, self.__DB_PORT_DEFAULT),
             db_username=properties.get(self.__DB_USERNAME_KEY, ""),
@@ -135,7 +135,7 @@ class MongoCollectionDataNode(DataNode):
         if callable(custom_encoder):
             self._encoder = custom_encoder
 
-        if not self._last_edit_date:  # type: ignore
+        if not self._last_edit_date:
             self._last_edit_date = datetime.now()
 
         self._TAIPY_PROPERTIES.update(
@@ -209,7 +209,7 @@ class MongoCollectionDataNode(DataNode):
         if isinstance(data[0], dict):
             self._insert_dicts(data)
         else:
-            self._insert_dicts([self._encoder(row) for row in data])  # type: ignore
+            self._insert_dicts([self._encoder(row) for row in data])  # type: ignore[reportArgumentType]
 
     def _write(self, data) -> None:
         """Check data against a collection of types to handle insertion on the database.
@@ -227,7 +227,7 @@ class MongoCollectionDataNode(DataNode):
         if isinstance(data[0], dict):
             self._insert_dicts(data, drop=True)
         else:
-            self._insert_dicts([self._encoder(row) for row in data], drop=True)  # type: ignore
+            self._insert_dicts([self._encoder(row) for row in data], drop=True)  # type: ignore[reportArgumentType]
 
     def _insert_dicts(self, data: List[Dict], drop=False) -> None:
         """

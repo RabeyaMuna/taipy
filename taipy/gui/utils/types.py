@@ -224,7 +224,7 @@ class _TaipyToJson(_TaipyBase):
         if not val:
             return None
         if _module_exists("plotly.graph_objs"):
-            from plotly.graph_objs import Figure as PlotlyFigure  # type: ignore
+            from plotly.graph_objs import Figure as PlotlyFigure  # type: ignore[reportMissingImports]
 
             if isinstance(val, PlotlyFigure):
                 try:
