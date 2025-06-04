@@ -138,7 +138,7 @@ class FlaskServer(_Server):
         @taipy_bp.route("/", defaults={"path": ""})
         @taipy_bp.route("/<path:path>")
         def my_index(path):
-            from ._hook import _Hooks
+            from ..._hook import _Hooks
 
             custom_page_resource = _Hooks()._resolve_custom_page_resource_handler(
                 path, base_url, static_folder, client_config, css_vars, scripts, styles

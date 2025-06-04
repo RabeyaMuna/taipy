@@ -34,7 +34,6 @@ from taipy.common.logger._taipy_logger import _TaipyLogger
 
 from ..._renderers.json import _TaipyJsonEncoder
 from ...config import ServerConfig
-from ...custom._page import _ExternalResourceHandlerManager
 from ...utils import _is_in_notebook, _is_port_open, _RuntimeManager
 from ..server import _Server
 from .request import request as request_context
@@ -186,33 +185,13 @@ class FastAPIServer(_Server):
         @taipy_router.get("/{path:path}", response_class=HTMLResponse)
         def my_index(request: Request, path: str = "", request_meta: _AppCtxGlobals = Depends(request_meta_dependency)):  # noqa: B008
             with set_request_ctx(request), get_request_meta_ctx():
-                resource_handler_id = request.cookies.get("_RESOURCE_HANDLER_ARG", None)
-                if resource_handler_id is not None:
-                    resource_handler = _ExternalResourceHandlerManager().get(resource_handler_id)
-                    if resource_handler is None:
-                        reload_html = """
-                            <html>
-                                <head><style>body {background-color: black; margin: 0;}</style></head>
-                                <body><script>location.reload();</script></body>
-                            </html>
-                        """
-                        response = HTMLResponse(content=reload_html, status_code=400)
-                        response.set_cookie(
-                            "_RESOURCE_HANDLER_ARG",
-                            "",
-                            secure=request.url.scheme == "https",
-                            httponly=True,
-                            expires=0,
-                            path="/",
-                        )
-                        return response
-                    try:
-                        return resource_handler.get_resources(path, static_folder, base_url)
-                    except Exception as e:
-                        raise HTTPException(
-                            status_code=500, detail="Can't get resources from custom resource handler"
-                        ) from e
+                from ..._hook import _Hooks
 
+                custom_page_resource = _Hooks()._resolve_custom_page_resource_handler(
+                    path, base_url, static_folder, client_config, css_vars, scripts, styles
+                )
+                if custom_page_resource is not None:
+                    return custom_page_resource
                 if not path or path == "index.html" or "." not in path:
                     try:
                         return templates.TemplateResponse(
