@@ -9,8 +9,17 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-"""Exceptions raised by taipy package functionalities."""
+import pathlib
 
-class NoGuiDefinedInEventConsumer(Exception):
-    """Raised when an on event callback is registered to be broadcast to all states,
-    but no GUI is defined in the event consumer."""
+from taipy.gui import Gui
+
+
+def test_env_filename():
+
+    gui = Gui(env_filename=str(pathlib.Path(__file__).parent.parent / "resources" / "taipy_env"))
+    gui.run(run_server=False)
+    service_config = gui._config.config
+    assert service_config["run_browser"] is False # type: ignore
+    assert service_config["port"] == 5555 # type: ignore
+    gui.stop()
+

@@ -68,6 +68,7 @@ from .taipy import (
     unsubscribe_scenario,
     unsubscribe_sequence,
     untag,
+    update,
 )
 from .task.task import Task
 from .task.task_id import TaskId
