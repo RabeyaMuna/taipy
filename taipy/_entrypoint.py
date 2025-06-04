@@ -38,7 +38,9 @@ def _entrypoint():
 
     enterprise_module_exists = _module_exists("taipy.enterprise")
     if enterprise_module_exists:
-        from taipy.enterprise._entrypoint import _entrypoint_initialize as _enterprise_entrypoint_initialize  # type: ignore
+        from taipy.enterprise._entrypoint import (  # type: ignore
+            _entrypoint_initialize as _enterprise_entrypoint_initialize,
+        )
 
         _enterprise_entrypoint_initialize()
 
