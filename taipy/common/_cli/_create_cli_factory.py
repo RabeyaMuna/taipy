@@ -15,7 +15,7 @@ from typing import Type
 
 from taipy.common._cli._base_cli._abstract_cli import _AbstractCLI
 
-from .._check_dependencies import EnterpriseEdition
+from .._modules import EnterpriseEdition
 from ._create_cli import _CreateCLI
 
 

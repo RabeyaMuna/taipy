@@ -20,13 +20,12 @@ def _module_exists(module_path: str) -> bool:
     """
     parts = module_path.split(".")
     for i in range(1, len(parts) + 1):
-        partial = ".".join(parts[:i])
-        if find_spec(partial) is None:
+        if find_spec(".".join(parts[:i])) is None:
             return False
     return True
 
 
-def _check_dependency_is_installed(
+def _is_dependency_installed(
     module_name: str, package_name: str, extra_taipy_package_name: str, taipy_sublibrary: Optional[str] = None
 ) -> None:
     """
@@ -60,4 +59,4 @@ class EnterpriseEdition:
 
     @classmethod
     def _is_installed(cls) -> bool:
-        return _module_exists(cls._MODULE_PATH) is not None
+        return _module_exists(cls._MODULE_PATH)

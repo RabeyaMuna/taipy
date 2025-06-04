@@ -70,7 +70,7 @@ application.
 
 """
 
-from taipy.common._check_dependencies import _module_exists
+from taipy.common import _module_exists
 
 from ._init import *
 from ._renderers import Html, Markdown

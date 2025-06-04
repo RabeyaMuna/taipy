@@ -12,7 +12,7 @@
 from functools import lru_cache
 from typing import Type
 
-from ...common._check_dependencies import EnterpriseEdition
+from ...common._modules import EnterpriseEdition
 from .._manager._manager_factory import _ManagerFactory
 from ..common._utils import _load_fct
 from ..cycle._cycle_manager import _CycleManager
@@ -24,9 +24,9 @@ class _CycleManagerFactory(_ManagerFactory):
 
     @classmethod
     @lru_cache
-    def _build_manager(cls) -> Type[_CycleManager]:
+    def _build_manager(cls) -> Type[_CycleManager]:  # type: ignore
         if EnterpriseEdition._is_installed():
-            cycle_manager = _load_fct(EnterpriseEdition._CORE_MODULE_PATH + ".cycle._cycle_manager", "_CycleManager")  # type: ignore
+            cycle_manager = _load_fct(EnterpriseEdition._CORE_MODULE_PATH + ".cycle._cycle_manager", "_CycleManager")
             build_repository = _load_fct(
                 EnterpriseEdition._CORE_MODULE_PATH + ".cycle._cycle_manager_factory",
                 "_CycleManagerFactory",
@@ -39,5 +39,5 @@ class _CycleManagerFactory(_ManagerFactory):
 
     @classmethod
     @lru_cache
-    def _build_repository(cls):
-        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()
+    def _build_repository(cls):  # type: ignore
+        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()  # type: ignore

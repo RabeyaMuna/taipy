@@ -18,7 +18,7 @@ import tzlocal
 from dotenv import dotenv_values
 from werkzeug.serving import is_running_from_reloader
 
-from taipy.common._check_dependencies import _module_exists
+from taipy.common import _module_exists
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
 from ._gui_cli import _GuiCLI

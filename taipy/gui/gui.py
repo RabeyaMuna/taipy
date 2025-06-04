@@ -43,7 +43,7 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 import __main__  # noqa: F401
-from taipy.common._check_dependencies import _module_exists
+from taipy.common import _module_exists
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
 if util.find_spec("pyngrok"):

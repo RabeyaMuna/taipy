@@ -12,7 +12,7 @@
 from functools import lru_cache
 from typing import Type
 
-from ...common._check_dependencies import EnterpriseEdition
+from ...common._modules import EnterpriseEdition
 from .._manager._manager_factory import _ManagerFactory
 from ..common import _utils
 from ._version_fs_repository import _VersionFSRepository
@@ -24,7 +24,7 @@ class _VersionManagerFactory(_ManagerFactory):
 
     @classmethod
     @lru_cache
-    def _build_manager(cls) -> Type[_VersionManager]:
+    def _build_manager(cls) -> Type[_VersionManager]:  # type: ignore
         if EnterpriseEdition._is_installed():
             version_manager = _utils._load_fct(
                 EnterpriseEdition._CORE_MODULE_PATH + "._version._version_manager", "_VersionManager"
@@ -41,5 +41,5 @@ class _VersionManagerFactory(_ManagerFactory):
 
     @classmethod
     @lru_cache
-    def _build_repository(cls):
-        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()
+    def _build_repository(cls):  # type: ignore
+        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()  # type: ignore

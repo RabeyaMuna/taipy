@@ -14,7 +14,7 @@ from typing import Optional, Type
 
 from taipy.common.config import Config
 
-from ...common._check_dependencies import EnterpriseEdition
+from ...common._modules import EnterpriseEdition
 from ..common._utils import _load_fct
 from ..exceptions.exceptions import ModeNotAvailable, OrchestratorNotBuilt
 from ._abstract_orchestrator import _AbstractOrchestrator

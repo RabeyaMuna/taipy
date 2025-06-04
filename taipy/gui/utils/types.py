@@ -15,7 +15,7 @@ import typing as t
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-from taipy.common._check_dependencies import _module_exists
+from taipy.common import _module_exists
 
 from .._warnings import _warn
 from . import _date_to_string, _MapDict, _string_to_date, _variable_decode
@@ -224,7 +224,7 @@ class _TaipyToJson(_TaipyBase):
         if not val:
             return None
         if _module_exists("plotly.graph_objs"):
-            from plotly.graph_objs import Figure as PlotlyFigure
+            from plotly.graph_objs import Figure as PlotlyFigure  # type: ignore
 
             if isinstance(val, PlotlyFigure):
                 try:

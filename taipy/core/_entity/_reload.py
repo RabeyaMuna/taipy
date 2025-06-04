@@ -13,7 +13,7 @@ import functools
 import threading
 from typing import Dict, Type
 
-from ...common._check_dependencies import EnterpriseEdition
+from ...common._modules import EnterpriseEdition
 from .._manager._manager import _Manager
 from ..common._utils import _load_fct
 from ..notification import EventOperation, Notifier, _make_event

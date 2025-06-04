@@ -12,7 +12,7 @@
 from flask import Blueprint, current_app
 from flask_restful import Api
 
-from taipy.common._check_dependencies import EnterpriseEdition
+from taipy.common._modules import EnterpriseEdition
 from taipy.common.logger._taipy_logger import _TaipyLogger
 from taipy.core.common._utils import _load_fct
 
@@ -170,37 +170,37 @@ load_enterprise_resources(api)
 
 
 def register_views():
-    apispec.spec.components.schema("DataNodeSchema", schema=DataNodeSchema)
-    apispec.spec.path(view=DataNodeResource, app=current_app)
-    apispec.spec.path(view=DataNodeList, app=current_app)
-    apispec.spec.path(view=DataNodeReader, app=current_app)
-    apispec.spec.path(view=DataNodeWriter, app=current_app)
+    apispec.spec.components.schema("DataNodeSchema", schema=DataNodeSchema)  # type: ignore
+    apispec.spec.path(view=DataNodeResource, app=current_app)  # type: ignore
+    apispec.spec.path(view=DataNodeList, app=current_app)  # type: ignore
+    apispec.spec.path(view=DataNodeReader, app=current_app)  # type: ignore
+    apispec.spec.path(view=DataNodeWriter, app=current_app)  # type: ignore
 
-    apispec.spec.components.schema("TaskSchema", schema=TaskSchema)
-    apispec.spec.path(view=TaskResource, app=current_app)
-    apispec.spec.path(view=TaskList, app=current_app)
-    apispec.spec.path(view=TaskExecutor, app=current_app)
+    apispec.spec.components.schema("TaskSchema", schema=TaskSchema)  # type: ignore
+    apispec.spec.path(view=TaskResource, app=current_app)  # type: ignore
+    apispec.spec.path(view=TaskList, app=current_app)  # type: ignore
+    apispec.spec.path(view=TaskExecutor, app=current_app)  # type: ignore
 
-    apispec.spec.components.schema("SequenceSchema", schema=SequenceSchema)
-    apispec.spec.path(view=SequenceResource, app=current_app)
-    apispec.spec.path(view=SequenceList, app=current_app)
-    apispec.spec.path(view=SequenceExecutor, app=current_app)
+    apispec.spec.components.schema("SequenceSchema", schema=SequenceSchema)  # type: ignore
+    apispec.spec.path(view=SequenceResource, app=current_app)  # type: ignore
+    apispec.spec.path(view=SequenceList, app=current_app)  # type: ignore
+    apispec.spec.path(view=SequenceExecutor, app=current_app)  # type: ignore
 
-    apispec.spec.components.schema("ScenarioSchema", schema=ScenarioSchema)
-    apispec.spec.path(view=ScenarioResource, app=current_app)
-    apispec.spec.path(view=ScenarioList, app=current_app)
-    apispec.spec.path(view=ScenarioExecutor, app=current_app)
+    apispec.spec.components.schema("ScenarioSchema", schema=ScenarioSchema)  # type: ignore
+    apispec.spec.path(view=ScenarioResource, app=current_app)  # type: ignore
+    apispec.spec.path(view=ScenarioList, app=current_app)  # type: ignore
+    apispec.spec.path(view=ScenarioExecutor, app=current_app)  # type: ignore
 
-    apispec.spec.components.schema("CycleSchema", schema=CycleSchema)
-    apispec.spec.path(view=CycleResource, app=current_app)
-    apispec.spec.path(view=CycleList, app=current_app)
+    apispec.spec.components.schema("CycleSchema", schema=CycleSchema)  # type: ignore
+    apispec.spec.path(view=CycleResource, app=current_app)  # type: ignore
+    apispec.spec.path(view=CycleList, app=current_app)  # type: ignore
 
-    apispec.spec.components.schema("JobSchema", schema=JobSchema)
-    apispec.spec.path(view=JobResource, app=current_app)
-    apispec.spec.path(view=JobList, app=current_app)
-    apispec.spec.path(view=JobExecutor, app=current_app)
+    apispec.spec.components.schema("JobSchema", schema=JobSchema)  # type: ignore
+    apispec.spec.path(view=JobResource, app=current_app)  # type: ignore
+    apispec.spec.path(view=JobList, app=current_app)  # type: ignore
+    apispec.spec.path(view=JobExecutor, app=current_app)  # type: ignore
 
-    apispec.spec.components.schema(
+    apispec.spec.components.schema(  # type: ignore
         "Any",
         {
             "description": "Any value",

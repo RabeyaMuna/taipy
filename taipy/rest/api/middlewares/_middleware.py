@@ -11,7 +11,7 @@
 
 from functools import wraps
 
-from taipy.common._check_dependencies import EnterpriseEdition
+from taipy.common._modules import EnterpriseEdition
 from taipy.core.common._utils import _load_fct
 
 

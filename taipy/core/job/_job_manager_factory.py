@@ -12,7 +12,7 @@
 from functools import lru_cache
 from typing import Type
 
-from ...common._check_dependencies import EnterpriseEdition
+from ...common._modules import EnterpriseEdition
 from .._manager._manager_factory import _ManagerFactory
 from ..common._utils import _load_fct
 from ._job_fs_repository import _JobFSRepository
@@ -24,7 +24,7 @@ class _JobManagerFactory(_ManagerFactory):
 
     @classmethod
     @lru_cache
-    def _build_manager(cls) -> Type[_JobManager]:
+    def _build_manager(cls) -> Type[_JobManager]:  # type: ignore
         if EnterpriseEdition._is_installed():
             job_manager = _load_fct(EnterpriseEdition._CORE_MODULE_PATH + ".job._job_manager", "_JobManager")
             build_repository = _load_fct(
@@ -38,5 +38,5 @@ class _JobManagerFactory(_ManagerFactory):
 
     @classmethod
     @lru_cache
-    def _build_repository(cls):
-        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()
+    def _build_repository(cls):  # type: ignore
+        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()  # type: ignore
