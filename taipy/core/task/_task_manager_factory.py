@@ -35,7 +35,7 @@ class _TaskManagerFactory(_ManagerFactory):
             task_manager = _TaskManager
             build_repository = cls._build_repository
         task_manager._repository = build_repository()  # type: ignore[reportFunctionMemberAccess]
-        return task_manager  # type: ignore[reportReturnType]
+        return task_manager  # type: ignore[return-value]
 
     @classmethod
     @lru_cache

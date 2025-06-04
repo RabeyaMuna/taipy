@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from importlib import util
 from typing import Any, Dict, List, Optional, Set
 
-from ...common._modules import _is_dependency_installed
+from ...common._modules import _assert_module_installation
 
 if util.find_spec("boto3"):
     import boto3
@@ -92,7 +92,7 @@ class S3ObjectDataNode(DataNode):
         editor_expiration_date: Optional[datetime] = None,
         properties: Optional[Dict] = None,
     ) -> None:
-        _is_dependency_installed("S3 Data Node", "boto3", "s3")
+        _assert_module_installation("S3 Data Node", "boto3", "s3")
         if properties is None:
             properties = {}
         required = self._REQUIRED_PROPERTIES

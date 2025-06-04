@@ -25,7 +25,7 @@ def _module_exists(module_path: str) -> bool:
     return True
 
 
-def _is_dependency_installed(
+def _assert_module_installation(
     module_name: str, package_name: str, extra_taipy_package_name: str, taipy_sublibrary: Optional[str] = None
 ) -> None:
     """

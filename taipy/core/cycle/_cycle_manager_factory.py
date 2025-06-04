@@ -35,7 +35,7 @@ class _CycleManagerFactory(_ManagerFactory):
             cycle_manager = _CycleManager
             build_repository = cls._build_repository
         cycle_manager._repository = build_repository()  # type: ignore[reportFunctionMemberAccess ]
-        return cycle_manager  # type: ignore[reportReturnType]
+        return cycle_manager  # type: ignore[return-value]
 
     @classmethod
     @lru_cache

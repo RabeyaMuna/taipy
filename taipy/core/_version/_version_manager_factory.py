@@ -37,7 +37,7 @@ class _VersionManagerFactory(_ManagerFactory):
             version_manager = _VersionManager
             build_repository = cls._build_repository
         version_manager._repository = build_repository()  # type: ignore[reportFunctionMemberAccess]
-        return version_manager  # type: ignore[reportReturnType]
+        return version_manager  # type: ignore[return-value]
 
     @classmethod
     @lru_cache

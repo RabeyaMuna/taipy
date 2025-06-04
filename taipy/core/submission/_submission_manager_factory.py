@@ -38,7 +38,7 @@ class _SubmissionManagerFactory(_ManagerFactory):
             submission_manager = _SubmissionManager
             build_repository = cls._build_repository
         submission_manager._repository = build_repository()  # type: ignore[reportFunctionMemberAccess]
-        return submission_manager  # type: ignore[reportReturnType]
+        return submission_manager  # type: ignore[return-value]
 
     @classmethod
     @lru_cache

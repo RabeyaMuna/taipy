@@ -34,7 +34,7 @@ class _JobManagerFactory(_ManagerFactory):
             job_manager = _JobManager
             build_repository = cls._build_repository
         job_manager._repository = build_repository()  # type: ignore[reportFunctionMemberAccess]
-        return job_manager  # type: ignore[reportReturnType]
+        return job_manager  # type: ignore[return-value]
 
     @classmethod
     @lru_cache

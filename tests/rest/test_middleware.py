@@ -23,8 +23,8 @@ def mock_enterprise_middleware(f):
     return wrapper
 
 
-@patch("taipy.rest.api.middlewares._middleware._enterprise_middleware")
 @patch("taipy.common._check_dependencies.EnterpriseEdition._is_installed")
+@patch("taipy.rest.api.middlewares._middleware._enterprise_middleware")
 def test_enterprise_middleware_applied_when_enterprise_is_installed(
     enterprise_middleware: MagicMock, is_enterprise_installed: MagicMock
 ):
@@ -41,8 +41,8 @@ def test_enterprise_middleware_applied_when_enterprise_is_installed(
     enterprise_middleware.assert_called_once()
 
 
-@patch("taipy.rest.api.middlewares._middleware._enterprise_middleware")
 @patch("taipy.common._check_dependencies.EnterpriseEdition._is_installed")
+@patch("taipy.rest.api.middlewares._middleware._enterprise_middleware")
 def test_enterprise_middleware_not_applied_when_enterprise_is_not_installed(
     enterprise_middleware: MagicMock, is_enterprise_installed: MagicMock
 ):

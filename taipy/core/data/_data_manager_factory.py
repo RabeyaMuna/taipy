@@ -35,7 +35,7 @@ class _DataManagerFactory(_ManagerFactory):
             data_manager = _DataManager
             build_repository = cls._build_repository
         data_manager._repository = build_repository()  # type: ignore[reportFunctionMemberAccess]
-        return data_manager  # type: ignore[reportReturnType]
+        return data_manager  # type: ignore[return-value]
 
     @classmethod
     @lru_cache

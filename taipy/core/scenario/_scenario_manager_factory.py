@@ -37,7 +37,7 @@ class _ScenarioManagerFactory(_ManagerFactory):
             scenario_manager = _ScenarioManager
             build_repository = cls._build_repository
         scenario_manager._repository = build_repository()  # type: ignore[reportFunctionMemberAccess]
-        return scenario_manager  # type: ignore[reportReturnType]
+        return scenario_manager  # type: ignore[return-value]
 
     @classmethod
     @lru_cache

@@ -14,7 +14,7 @@ from importlib import util
 from inspect import isclass
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
-from ...common._modules import _is_dependency_installed
+from ...common._modules import _assert_module_installation
 from .._version._version_manager_factory import _VersionManagerFactory
 from ..common.scope import Scope
 
@@ -84,7 +84,7 @@ class MongoCollectionDataNode(DataNode):
         editor_expiration_date: Optional[datetime] = None,
         properties: Optional[Dict] = None,
     ) -> None:
-        _is_dependency_installed("Mongo Data Node", "pymongo", "mongo")
+        _assert_module_installation("Mongo Data Node", "pymongo", "mongo")
         if properties is None:
             properties = {}
         required = self._REQUIRED_PROPERTIES
