@@ -14,7 +14,6 @@ import inspect
 import pytest
 
 from taipy.gui import Gui, Markdown
-from taipy.gui.servers.request import RequestAccessor
 
 
 @pytest.mark.skip_if_not_server("flask")
@@ -31,12 +30,12 @@ def test_broadcast(gui: Gui, helpers):
         Markdown("<|{selected_val}|selector|multiple|>"),
     )
     gui.run(run_server=False)
-    server_client = gui._server.test_client()
+    server_test_client = gui._server.test_client()
     # WS client and emit
     ws_client = gui._server._ws.test_client(gui._server.get_server_instance())
     sid = helpers.create_scope_and_get_sid(gui)
     # Get the jsx once so that the page will be evaluated -> variable will be registered
-    server_client.get(f"/taipy-jsx/test?client_id={sid}")
+    server_test_client.get(f"/taipy-jsx/test?client_id={sid}")
     gui._broadcast("broadcast_name", "broadcast_value")
     received_messages = ws_client.get_received()
     assert len(received_messages)
@@ -60,7 +59,7 @@ def test_broadcast_fastapi(gui: Gui, helpers):
     helpers.run_e2e_multi_client(gui)
     ws_client = helpers.get_socketio_test_client()
     sid = helpers.create_scope_and_get_sid(gui)
-    RequestAccessor.set_sid(ws_client.get_sid())
+    gui._server.request.set_sid(ws_client.get_sid())
     ws_client.get(f"/taipy-jsx/test?client_id={sid}")
     gui._broadcast("broadcast_name", "broadcast_value")
     received_messages = ws_client.get_received()

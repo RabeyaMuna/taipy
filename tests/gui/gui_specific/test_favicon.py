@@ -15,7 +15,6 @@ import warnings
 import pytest
 
 from taipy.gui import Gui, Markdown
-from taipy.gui.servers.request import RequestAccessor
 
 
 @pytest.mark.skip_if_not_server("flask")
@@ -47,7 +46,7 @@ def test_favicon_fastapi(gui: Gui, helpers):
         helpers.run_e2e_multi_client(gui)
         ws_client = helpers.get_socketio_test_client()
         sid = helpers.create_scope_and_get_sid(gui)
-        RequestAccessor.set_sid(ws_client.get_sid())
+        gui._server.request.set_sid(ws_client.get_sid())
         ws_client.get(f"/taipy-jsx/test?client_id={sid}")
         gui.set_favicon("https://newfavicon.com/favicon.png")
         msgs = ws_client.get_received()

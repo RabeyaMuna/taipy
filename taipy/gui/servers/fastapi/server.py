@@ -36,10 +36,10 @@ from ..._renderers.json import _TaipyJsonEncoder
 from ...config import ServerConfig
 from ...utils import _is_in_notebook, _is_port_open, _RuntimeManager
 from ..server import _Server
+from .request import RequestAccessorFastAPI, request_meta
 from .request import request as request_context
-from .request import request_meta
 from .request import sid as sid_context
-from .utils import run_async, send_from_directory
+from .utils import run_async, send_file, send_from_directory
 
 if t.TYPE_CHECKING:
     from ...gui import Gui
@@ -102,6 +102,7 @@ class FastAPIServer(_Server):
         allow_upgrades: bool = True,
         server_config: t.Optional[ServerConfig] = None,
     ):
+        self.request = RequestAccessorFastAPI()
         self._gui = gui
         server_config = server_config or {}
         self._path_mapping = path_mapping or {}
@@ -221,7 +222,7 @@ class FastAPIServer(_Server):
                 if (file_path := str(os.path.normpath((base_path := static_folder + os.path.sep) + path))).startswith(
                     base_path
                 ) and os.path.isfile(file_path):
-                    return send_from_directory(base_path, path)
+                    return self.send_from_directory(base_path, path)
                 # use the path mapping to detect and find resources
                 for k, v in self._path_mapping.items():
                     if (
@@ -231,7 +232,7 @@ class FastAPIServer(_Server):
                         ).startswith(base_path)
                         and os.path.isfile(file_path)
                     ):
-                        return send_from_directory(base_path, path[len(k) + 1 :])
+                        return self.send_from_directory(base_path, path[len(k) + 1 :])
                 if (
                     hasattr(__main__, "__file__")
                     and (
@@ -242,7 +243,7 @@ class FastAPIServer(_Server):
                     and os.path.isfile(file_path)
                     and not self._is_ignored(file_path)
                 ):
-                    return send_from_directory(base_path, path)
+                    return self.send_from_directory(base_path, path)
                 if (
                     (
                         file_path := str(os.path.normpath((base_path := self._gui._root_dir + os.path.sep) + path))  # type: ignore[attr-defined]
@@ -250,7 +251,7 @@ class FastAPIServer(_Server):
                     and os.path.isfile(file_path)
                     and not self._is_ignored(file_path)
                 ):
-                    return send_from_directory(base_path, path)
+                    return self.send_from_directory(base_path, path)
 
                 # Default error return for unmatched paths
                 raise HTTPException(status_code=404, detail="")
@@ -294,6 +295,18 @@ class FastAPIServer(_Server):
         with open(path, "wb") as f_buffer:
             f_buffer.write(run_async(file.read))
 
+    def send_file(self, *args, **kwargs):
+        return send_file(*args, **kwargs)
+
+    def send_from_directory(self, *args, **kwargs):
+        return send_from_directory(*args, **kwargs)
+
+    def has_server_context(self):
+        return request_context.get() is not None
+
+    def is_running_from_reloader(self):
+        return os.getpid() == os.getppid()
+
     def run(
         self,
         host,
@@ -307,8 +320,6 @@ class FastAPIServer(_Server):
         notebook_proxy,
         port_auto_ranges,
     ):
-        from ..utils import is_running_from_reloader
-
         host_value = host if host != "0.0.0.0" else "localhost"
         self._host = host
         if port == "auto":
@@ -318,11 +329,11 @@ class FastAPIServer(_Server):
         if _is_in_notebook() or run_in_thread:
             runtime_manager = _RuntimeManager()
             runtime_manager.add_gui(self._gui, port)
-        if debug and not is_running_from_reloader() and _is_port_open(host_value, port):
+        if debug and not self.is_running_from_reloader() and _is_port_open(host_value, port):
             raise ConnectionError(
                 f"Port {port} is already opened on {host} because another application is running on the same port.\nPlease pick another port number and rerun with the 'port=<new_port>' setting.\nYou can also let Taipy choose a port number for you by running with the 'port=\"auto\"' setting."  # noqa: E501
             )
-        if not is_running_from_reloader() and self._gui._get_config("run_browser", False):  # type: ignore[attr-defined]
+        if not self.is_running_from_reloader() and self._gui._get_config("run_browser", False):  # type: ignore[attr-defined]
             webbrowser.open(client_url or server_url, new=2)
         if _is_in_notebook() or run_in_thread:
             return self._run_notebook()

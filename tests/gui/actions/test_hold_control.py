@@ -15,8 +15,6 @@ import warnings
 import pytest
 
 from taipy.gui import Gui, Markdown, hold_control
-from taipy.gui.servers import get_request_meta
-from taipy.gui.servers.request import RequestAccessor
 
 
 @pytest.mark.skip_if_not_server("flask")
@@ -26,13 +24,13 @@ def test_hold_control(gui: Gui, helpers):
 
     gui.add_page("test", Markdown("<|Hello|button|>"))
     gui.run(run_server=False)
-    server_client = gui._server.test_client()
+    server_test_client = gui._server.test_client()
     # WS client and emit
     ws_client = gui._server._ws.test_client(gui._server.get_server_instance())  # type: ignore[arg-type]
     cid = helpers.create_scope_and_get_sid(gui)
-    server_client.get(f"/taipy-jsx/test?client_id={cid}")
+    server_test_client.get(f"/taipy-jsx/test?client_id={cid}")
     with gui._server.test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
-        get_request_meta().client_id = cid
+        gui._server.request.get_request_meta().client_id = cid
         hold_control(gui._Gui__state)  # type: ignore[attr-defined]
 
     received_messages = ws_client.get_received()
@@ -54,8 +52,8 @@ def test_hold_control_fastapi(gui: Gui, helpers):
     sid = ws_client.get_sid()
     ws_client.get(f"/taipy-jsx/test?client_id={cid}")
     with gui.get_app_context():
-        RequestAccessor.set_sid(sid)
-        get_request_meta().client_id = cid
+        gui._server.request.set_sid(sid)
+        gui._server.request.get_request_meta().client_id = cid
         hold_control(gui._Gui__state)  # type: ignore[attr-defined]
 
     received_messages = ws_client.get_received()

@@ -17,8 +17,8 @@ from taipy.gui import Gui
 
 def test_get_status(gui: Gui, helpers, gui_server):
     gui.run(run_server=False)
-    server_client = gui._server.test_client()
-    ret = server_client.get("/taipy.status.json")
+    server_test_client = gui._server.test_client()
+    ret = server_test_client.get("/taipy.status.json")
     assert ret.status_code == 200, f"status_code => {ret.status_code} != 200"
     if gui_server == "flask":
         assert ret.mimetype == "application/json", f"mimetype => {ret.mimetype} != application/json"
@@ -36,8 +36,8 @@ def test_get_status(gui: Gui, helpers, gui_server):
 
 def test_get_extended_status(gui: Gui, helpers, gui_server):
     gui.run(run_server=False, extended_status=True)
-    server_client = gui._server.test_client()
-    ret = server_client.get("/taipy.status.json")
+    server_test_client = gui._server.test_client()
+    ret = server_test_client.get("/taipy.status.json")
     assert ret.status_code == 200, f"status_code => {ret.status_code} != 200"
     if gui_server == "flask":
         assert ret.mimetype == "application/json", f"mimetype => {ret.mimetype} != application/json"
@@ -66,8 +66,8 @@ def test_get_status_with_user_status(gui: Gui, helpers):
     gui._set_frame(inspect.currentframe())
 
     gui.run(run_server=False)
-    server_client = gui._server.test_client()
-    ret = server_client.get("/taipy.status.json")
+    server_test_client = gui._server.test_client()
+    ret = server_test_client.get("/taipy.status.json")
     ret_json = helpers.get_response_data(ret)
     assert ret.status_code == 200, f"status_code => {ret.status_code} != 200"
     assert ret_json, "json is not defined"

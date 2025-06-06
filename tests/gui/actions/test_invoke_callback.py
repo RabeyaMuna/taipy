@@ -13,7 +13,6 @@ import contextlib
 import inspect
 
 from taipy.gui import Gui, Markdown, State
-from taipy.gui.servers import get_request_meta
 
 
 @contextlib.contextmanager
@@ -35,11 +34,11 @@ def test_invoke_callback(gui: Gui, helpers):
 
     gui.add_page("test", Markdown("<|Hello|button|>\n<|{val}|>"))
     gui.run(run_server=False)
-    server_client = gui._server.test_client()
+    server_test_client = gui._server.test_client()
     # client id
     cid = helpers.create_scope_and_get_sid(gui)
     # Get the jsx once so that the page will be evaluated -> variable will be registered
-    server_client.get(f"/taipy-jsx/test?client_id={cid}")
+    server_test_client.get(f"/taipy-jsx/test?client_id={cid}")
 
     gui.invoke_callback(cid, user_callback, [])
     with get_state(gui, cid) as state:
@@ -57,18 +56,18 @@ def test_invoke_callback_sid(gui: Gui, helpers):
 
     gui.add_page("test", Markdown("<|Hello|button|>\n<|{val}|>"))
     gui.run(run_server=False)
-    server_client = gui._server.test_client()
+    server_test_client = gui._server.test_client()
     # client id
     cid = helpers.create_scope_and_get_sid(gui)
     base_sid, _ = gui._bindings()._get_or_create_scope("base sid")
 
     # Get the jsx once so that the page will be evaluated -> variable will be registered
-    server_client.get(f"/taipy-jsx/test?client_id={cid}")
+    server_test_client.get(f"/taipy-jsx/test?client_id={cid}")
     with gui.get_app_context():
-        get_request_meta().client_id = base_sid
-        assert get_request_meta().client_id == base_sid
+        gui._server.request.get_request_meta().client_id = base_sid
+        assert gui._server.request.get_request_meta().client_id == base_sid
         gui.invoke_callback(cid, user_callback, [])
-        assert get_request_meta().client_id == base_sid
+        assert gui._server.request.get_request_meta().client_id == base_sid
 
     with get_state(gui, base_sid) as base_state:
         assert base_state.val == 1

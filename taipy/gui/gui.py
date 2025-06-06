@@ -63,17 +63,13 @@ from .page import Page
 from .partial import Partial
 from .servers import (
     HttpResponse,
-    RequestAccessor,
     ServerFrameworks,
     create_server,
-    get_request,
-    get_request_meta,
     get_request_meta_ctx,
+    get_server_request_accessor,
     get_server_type,
     request_dependency,
     request_meta_dependency,
-    send_file,
-    send_from_directory,
     set_server_type,
 )
 from .state import State, _AsyncState, _GuiState
@@ -267,12 +263,12 @@ class Gui:
                 f"Invalid 'server' option. 'server' must be one of {t.get_args(ServerFrameworks)} or a Flask or FastAPI instance."  # noqa: E501
             )
 
-        self._config = _Config()
+        self._config = _Config(self)
         self.__content_accessor = None
         self.__accessors: t.Optional[_DataAccessors] = None
         self.__state: t.Optional[State] = None
         self.__bindings = _Bindings(self)  # type: ignore[arg-type]
-        self.__locals_context = _LocalsContext()
+        self.__locals_context = _LocalsContext(self)
         self.__var_dir = _VariableDirectory(self.__locals_context)
 
         self.__evaluator: _Evaluator = None  # type: ignore[assignment]
@@ -641,35 +637,43 @@ class Gui:
         return (
             _DataScopes._GLOBAL_ID
             if self._bindings()._is_single_client()
-            else getattr(get_request_meta(), Gui.__ARG_CLIENT_ID, "unknown id")
+            else getattr(get_server_request_accessor(self).get_request_meta(), Gui.__ARG_CLIENT_ID, "unknown id")
         )
 
     def __set_client_id_in_context(self, client_id: t.Optional[str] = None, force=False):
-        if not client_id and get_request():
-            client_id = RequestAccessor.arg(Gui.__ARG_CLIENT_ID, "")
-        if not client_id and (ws_client_id := getattr(get_request_meta(), "ws_client_id", None)):
+        if not client_id and get_server_request_accessor(self).get_request():
+            client_id = get_server_request_accessor(self).arg(Gui.__ARG_CLIENT_ID, "")
+        if not client_id and (
+            ws_client_id := getattr(get_server_request_accessor(self).get_request_meta(), "ws_client_id", None)
+        ):
             client_id = ws_client_id
         if not client_id and force:
             res = self._bindings()._get_or_create_scope("")
             client_id = res[0] if res[1] else None
         if client_id:
-            if sid := RequestAccessor.sid():
+            if sid := get_server_request_accessor(self).sid():
                 sids = self.__client_id_2_sid.get(client_id, None)
                 if sids is None:
                     sids = set()
                     self.__client_id_2_sid[client_id] = sids
                 sids.add(sid)
-        get_request_meta().client_id = client_id
+        get_server_request_accessor(self).get_request_meta().client_id = client_id
 
     def __is_var_modified_in_context(self, var_name: str, derived_vars: t.Set[str]) -> bool:
-        modified_vars: t.Optional[t.Set[str]] = getattr(get_request_meta(), "modified_vars", None)
-        der_vars: t.Optional[t.Set[str]] = getattr(get_request_meta(), "derived_vars", None)
-        setattr(get_request_meta(), "update_count", getattr(get_request_meta(), "update_count", 0) + 1)  # noqa: B010
+        modified_vars: t.Optional[t.Set[str]] = getattr(
+            get_server_request_accessor(self).get_request_meta(), "modified_vars", None
+        )
+        der_vars: t.Optional[t.Set[str]] = getattr(
+            get_server_request_accessor(self).get_request_meta(), "derived_vars", None
+        )
+        get_server_request_accessor(self).get_request_meta().update_count = (
+            getattr(get_server_request_accessor(self).get_request_meta(), "update_count", 0) + 1
+        )  # noqa: B010
         if modified_vars is None:
             modified_vars = set()
-            get_request_meta().modified_vars = modified_vars
+            get_server_request_accessor(self).get_request_meta().modified_vars = modified_vars
         if der_vars is None:
-            get_request_meta().derived_vars = derived_vars
+            get_server_request_accessor(self).get_request_meta().derived_vars = derived_vars
         else:
             der_vars.update(derived_vars)
         if var_name in modified_vars:
@@ -678,15 +682,17 @@ class Gui:
         return False
 
     def __clean_vars_on_exit(self) -> t.Optional[t.Set[str]]:
-        update_count = getattr(get_request_meta(), "update_count", 0) - 1
+        update_count = getattr(get_server_request_accessor(self).get_request_meta(), "update_count", 0) - 1
         if update_count < 1:
-            derived_vars: t.Set[str] = getattr(get_request_meta(), "derived_vars", set())
-            delattr(get_request_meta(), "update_count")
-            delattr(get_request_meta(), "modified_vars")
-            delattr(get_request_meta(), "derived_vars")
+            derived_vars: t.Set[str] = getattr(
+                get_server_request_accessor(self).get_request_meta(), "derived_vars", set()
+            )
+            delattr(get_server_request_accessor(self).get_request_meta(), "update_count")
+            delattr(get_server_request_accessor(self).get_request_meta(), "modified_vars")
+            delattr(get_server_request_accessor(self).get_request_meta(), "derived_vars")
             return derived_vars
         else:
-            setattr(get_request_meta(), "update_count", update_count)  # noqa: B010
+            setattr(get_server_request_accessor(self).get_request_meta(), "update_count", update_count)  # noqa: B010
             return None
 
     def _handle_connect(self):
@@ -694,7 +700,9 @@ class Gui:
 
     def _handle_disconnect(self):
         _Hooks()._handle_disconnect(self)
-        if (sid := RequestAccessor.sid()) and (st_to := self._get_config("state_retention_period", 0)) > 0:
+        if (sid := get_server_request_accessor(self).sid()) and (
+            st_to := self._get_config("state_retention_period", 0)
+        ) > 0:
             for cl_id, sids in self.__client_id_2_sid.items():
                 if sid in sids:
                     if len(sids) == 1:
@@ -725,7 +733,7 @@ class Gui:
                     self.__handle_ws_gui_addr({"name": message.get("name"), "payload": front_gui_addr})
             expected_client_id = client_id or message.get(Gui.__ARG_CLIENT_ID)
             self.__set_client_id_in_context(expected_client_id)
-            get_request_meta().ws_client_id = expected_client_id
+            get_server_request_accessor(self).get_request_meta().ws_client_id = expected_client_id
             with self._set_locals_context(message.get("module_context") or None):
                 with self._get_authorization():
                     payload = message.get("payload", {})
@@ -912,10 +920,10 @@ class Gui:
         if len(parts) > 1:
             file_name = parts[-1]
             (dir_path, as_attachment) = self.__get_content_accessor().get_content_path(
-                path[: -len(file_name) - 1], file_name, RequestAccessor.arg("bypass")
+                path[: -len(file_name) - 1], file_name, get_server_request_accessor(self).arg("bypass")
             )
             if dir_path:
-                return send_from_directory(str(dir_path), file_name, as_attachment=as_attachment)
+                return self._server.send_from_directory(str(dir_path), file_name, as_attachment=as_attachment)
         return HttpResponse("", 404)
 
     def _get_user_content_url(
@@ -928,7 +936,7 @@ class Gui:
     def __serve_user_content(self, path: str) -> t.Any:
         self.__set_client_id_in_context()
         q_args: t.Dict[str, str] = {}
-        q_args.update(RequestAccessor.args(True))
+        q_args.update(get_server_request_accessor(self).args(True))
         q_args.pop(Gui.__ARG_CLIENT_ID, None)
         cb_function: t.Union[t.Callable, str, None] = None
         cb_function_name = None
@@ -985,7 +993,7 @@ class Gui:
                 try:
                     resource_name = library.get_resource("/".join(parts[1:]))
                     if resource_name:
-                        return send_file(resource_name)
+                        return self._server.send_file(resource_name)
                 except Exception as e:
                     last_error = f"\n{e}"  # Check if the resource is served by another library with the same name
         _warn(f"Resource '{resource_name or path}' not accessible for library '{parts[0]}'{last_error}")
@@ -1037,17 +1045,20 @@ class Gui:
 
     def __upload_files(self):
         self.__set_client_id_in_context()
-        on_upload_action = RequestAccessor.form().get("on_action", None)
-        var_name = t.cast(str, RequestAccessor.form().get("var_name", None))
+        on_upload_action = get_server_request_accessor(self).form().get("on_action", None)
+        var_name = t.cast(str, get_server_request_accessor(self).form().get("var_name", None))
         if not var_name and not on_upload_action:
             _warn("upload files: No var name")
             return HttpResponse("upload files: No var name", 400)
-        context = RequestAccessor.form().get("context", None)
-        upload_data = RequestAccessor.form().get("upload_data", None)
-        multiple = "multiple" in RequestAccessor.form() and RequestAccessor.form()["multiple"] == "True"
+        context = get_server_request_accessor(self).form().get("context", None)
+        upload_data = get_server_request_accessor(self).form().get("upload_data", None)
+        multiple = (
+            "multiple" in get_server_request_accessor(self).form()
+            and get_server_request_accessor(self).form()["multiple"] == "True"
+        )
 
         # File parsing and checks
-        file = RequestAccessor.files().get("blob", None)
+        file = get_server_request_accessor(self).files().get("blob", None)
         if not file:
             _warn("upload files: No file part")
             return HttpResponse("upload files: No file part", 400)
@@ -1058,15 +1069,15 @@ class Gui:
             return HttpResponse("upload files: No selected file", 400)
 
         # Path parsing and checks
-        path = RequestAccessor.form().get("path", "")
+        path = get_server_request_accessor(self).form().get("path", "")
         suffix = ""
         complete = True
         part = 0
 
-        if "total" in RequestAccessor.form():
-            total = int(RequestAccessor.form()["total"])
-            if total > 1 and "part" in RequestAccessor.form():
-                part = int(RequestAccessor.form()["part"])
+        if "total" in get_server_request_accessor(self).form():
+            total = int(get_server_request_accessor(self).form()["total"])
+            if total > 1 and "part" in get_server_request_accessor(self).form():
+                part = int(get_server_request_accessor(self).form()["part"])
                 suffix = f".part.{part}"
                 complete = part == total - 1
 
@@ -1457,7 +1468,7 @@ class Gui:
     def __get_ws_receiver(self, send_back_only=False) -> t.Union[t.List[str], t.Any, None]:
         if self._bindings()._is_single_client():
             return None
-        sid = RequestAccessor.sid()
+        sid = get_server_request_accessor(self).sid()
         sids = self.__get_sids(self._get_client_id())
         if sid:
             sids.add(sid)
@@ -1605,13 +1616,13 @@ class Gui:
 
     def _invoke_method(self, state_id: str, method: t.Callable, *args):
         this_sid = None
-        if get_request():
+        if get_server_request_accessor(self).get_request():
             # avoid messing with the client_id => Set(ws id)
-            this_sid = getattr(get_request(), "sid", None)
-            RequestAccessor.set_sid(None)  # type: ignore[attr-defined]
+            this_sid = getattr(get_server_request_accessor(self).get_request(), "sid", None)
+            get_server_request_accessor(self).set_sid(None)  # type: ignore[attr-defined]
         try:
             with self.get_app_context():
-                setattr(get_request_meta(), Gui.__ARG_CLIENT_ID, state_id)
+                setattr(get_server_request_accessor(self).get_request_meta(), Gui.__ARG_CLIENT_ID, state_id)
                 return method(self, *args)
         except Exception as e:  # pragma: no cover
             if not self._call_on_exception(method, e):
@@ -1621,7 +1632,7 @@ class Gui:
                 )
         finally:
             if this_sid:
-                RequestAccessor.set_sid(this_sid)  # type: ignore[attr-defined]
+                get_server_request_accessor(self).set_sid(this_sid)  # type: ignore[attr-defined]
         return None
 
     def invoke_callback(
@@ -1643,13 +1654,13 @@ class Gui:
             args (Optional[Sequence]): The remaining arguments, as a List or a Tuple.
             module_context (Optional[str]): The name of the module that will be used.
         """  # noqa: E501
-        this_sid = RequestAccessor.sid()
+        this_sid = get_server_request_accessor(self).sid()
         if this_sid:
             # avoid messing with the client_id => Set(ws id)
-            RequestAccessor.set_sid(None)
+            get_server_request_accessor(self).set_sid(None)
         try:
             with self.get_app_context():
-                setattr(get_request_meta(), Gui.__ARG_CLIENT_ID, state_id)
+                setattr(get_server_request_accessor(self).get_request_meta(), Gui.__ARG_CLIENT_ID, state_id)
                 with self._set_module_context(module_context):
                     if not _is_function(callback):
                         callback = self._get_user_function(t.cast(str, callback))
@@ -1665,7 +1676,7 @@ class Gui:
                 )
         finally:
             if this_sid:
-                RequestAccessor.set_sid(this_sid)  # type: ignore[attr-defined]
+                get_server_request_accessor(self).set_sid(this_sid)  # type: ignore[attr-defined]
         return None
 
     def broadcast_callback(
@@ -1736,7 +1747,7 @@ class Gui:
 
     def _is_in_brdcst_callback(self):
         try:
-            return getattr(get_request_meta(), Gui.__BRDCST_CALLBACK_G_ID, False)
+            return getattr(get_server_request_accessor(self).get_request_meta(), Gui.__BRDCST_CALLBACK_G_ID, False)
         except RuntimeError:
             return False
 
@@ -2322,11 +2333,11 @@ class Gui:
 
     def _set_broadcast(self, broadcast: bool = True):
         with contextlib.suppress(RuntimeError):
-            setattr(get_request_meta(), Gui.__BROADCAST_G_ID, broadcast)
+            setattr(get_server_request_accessor(self).get_request_meta(), Gui.__BROADCAST_G_ID, broadcast)
 
     def _is_broadcasting(self) -> bool:
         try:
-            return getattr(get_request_meta(), Gui.__BROADCAST_G_ID, False)
+            return getattr(get_server_request_accessor(self).get_request_meta(), Gui.__BROADCAST_G_ID, False)
         except RuntimeError:
             return False
 
@@ -2502,8 +2513,11 @@ class Gui:
         if hasattr(self, "on_navigate") and _is_function(self.on_navigate):
             try:
                 params = (
-                    RequestAccessor.args(True)
-                    if (hasattr(get_request(), "args") or hasattr(get_request(), "query_params"))
+                    get_server_request_accessor(self).args(True)
+                    if (
+                        hasattr(get_server_request_accessor(self).get_request(), "args")
+                        or hasattr(get_server_request_accessor(self).get_request(), "query_params")
+                    )
                     else {}
                 )
                 params.pop("client_id", None)
@@ -3175,16 +3189,16 @@ class Gui:
     def __do_fire_event(
         self, event_name: str, client_id: t.Optional[str] = None, payload: t.Optional[t.Dict[str, t.Any]] = None
     ):
-        this_sid = RequestAccessor.sid()
+        this_sid = get_server_request_accessor(self).sid()
         if this_sid:
             # avoid messing with the client_id => Set(ws id)
-            RequestAccessor.set_sid(None)
+            get_server_request_accessor(self).set_sid(None)
 
         try:
             with self.get_app_context(), self.__event_manager:
                 if client_id:
-                    setattr(get_request_meta(), Gui.__ARG_CLIENT_ID, client_id)
+                    setattr(get_server_request_accessor(self).get_request_meta(), Gui.__ARG_CLIENT_ID, client_id)
                 _Hooks()._fire_event(event_name, client_id, payload)
         finally:
             if this_sid:
-                RequestAccessor.set_sid(this_sid)
+                get_server_request_accessor(self).set_sid(this_sid)

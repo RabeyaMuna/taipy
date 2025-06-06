@@ -13,7 +13,6 @@ import inspect
 import warnings
 
 from taipy.gui import Gui, Markdown, get_module_context, get_module_name_from_state
-from taipy.gui.servers import get_request_meta
 
 
 def test_get_module_context(gui: Gui, helpers):
@@ -22,11 +21,11 @@ def test_get_module_context(gui: Gui, helpers):
 
     gui.add_page("test", Markdown("<|Hello|button|>"))
     gui.run(run_server=False)
-    server_client = gui._server.test_client()
+    server_test_client = gui._server.test_client()
     cid = helpers.create_scope_and_get_sid(gui)
-    server_client.get(f"/taipy-jsx/test?client_id={cid}")
+    server_test_client.get(f"/taipy-jsx/test?client_id={cid}")
     with gui.get_app_context():
-        get_request_meta().client_id = cid
+        gui._server.request.get_request_meta().client_id = cid
         module = get_module_context(gui._Gui__state)  # type: ignore[attr-defined]
         assert module == "test_get_module_context"
 
@@ -43,11 +42,11 @@ def test_get_module_name_from_state(gui: Gui, helpers):
 
     gui.add_page("test", Markdown("<|Hello|button|>"))
     gui.run(run_server=False)
-    server_client = gui._server.test_client()
+    server_test_client = gui._server.test_client()
     cid = helpers.create_scope_and_get_sid(gui)
-    server_client.get(f"/taipy-jsx/test?client_id={cid}")
+    server_test_client.get(f"/taipy-jsx/test?client_id={cid}")
     with gui.get_app_context():
-        get_request_meta().client_id = cid
+        gui._server.request.get_request_meta().client_id = cid
         module = get_module_name_from_state(gui._Gui__state)  # type: ignore[attr-defined]
         assert module == "test_get_module_context"
 

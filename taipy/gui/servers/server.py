@@ -24,6 +24,7 @@ import __main__
 from ..utils import _is_port_open, _RuntimeManager
 from ..utils._css import get_style
 from ..utils.singleton import _Singleton
+from .request import BaseRequestAccessor
 
 
 class _Server(ABC):
@@ -32,6 +33,7 @@ class _Server(ABC):
     _OPENING_CURLY = r"\1&#x7B;"
     _CLOSING_CURLY = r"&#x7D;\2"
     _RESOURCE_HANDLER_ARG = "tprh"
+    request: BaseRequestAccessor = BaseRequestAccessor()  # type: ignore[assignment]
 
     def _is_ignored(self, file_path: str) -> bool:
         if not hasattr(self, "_ignore_matches"):
@@ -82,6 +84,22 @@ class _Server(ABC):
 
     @abstractmethod
     def save_uploaded_file(self, file, path):
+        raise NotImplementedError
+
+    @abstractmethod
+    def send_file(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def send_from_directory(self, *args, **kwargs):
+        raise NotImplementedError
+
+    @abstractmethod
+    def has_server_context(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def is_running_from_reloader(self):
         raise NotImplementedError
 
     @staticmethod

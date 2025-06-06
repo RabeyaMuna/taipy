@@ -14,14 +14,18 @@ from __future__ import annotations
 import contextlib
 import typing as t
 
+if t.TYPE_CHECKING:
+    from ..gui import Gui  # pragma: no cover
+
 
 class _LocalsContext:
     __ctx_g_name = "locals_context"
 
-    def __init__(self) -> None:
+    def __init__(self, gui: "Gui") -> None:
         self.__default_module: str = ""
         self._lc_stack: t.List[str] = []
         self._locals_map: t.Dict[str, t.Dict[str, t.Any]] = {}
+        self._gui = gui
 
     def set_default(self, default: t.Dict[str, t.Any], default_module_name: str = "") -> None:
         self.__default_module = default_module_name
@@ -49,32 +53,40 @@ class _LocalsContext:
 
     @contextlib.contextmanager
     def set_locals_context(self, context: t.Optional[str]) -> t.Iterator[None]:
-        from ..servers import get_request_meta
+        from ..servers import get_server_request_accessor
 
         has_set_context = False
         try:
             if context in self._locals_map:
-                if hasattr(get_request_meta(), _LocalsContext.__ctx_g_name):
-                    self._lc_stack.append(getattr(get_request_meta(), _LocalsContext.__ctx_g_name))
-                setattr(get_request_meta(), _LocalsContext.__ctx_g_name, context)
+                if hasattr(get_server_request_accessor(self._gui).get_request_meta(), _LocalsContext.__ctx_g_name):
+                    self._lc_stack.append(
+                        getattr(get_server_request_accessor(self._gui).get_request_meta(), _LocalsContext.__ctx_g_name)
+                    )
+                setattr(get_server_request_accessor(self._gui).get_request_meta(), _LocalsContext.__ctx_g_name, context)
                 has_set_context = True
             yield
         finally:
-            if has_set_context and hasattr(get_request_meta(), _LocalsContext.__ctx_g_name):
+            if has_set_context and hasattr(
+                get_server_request_accessor(self._gui).get_request_meta(), _LocalsContext.__ctx_g_name
+            ):
                 if len(self._lc_stack) > 0:
-                    setattr(get_request_meta(), _LocalsContext.__ctx_g_name, self._lc_stack.pop())
+                    setattr(
+                        get_server_request_accessor(self._gui).get_request_meta(),
+                        _LocalsContext.__ctx_g_name,
+                        self._lc_stack.pop(),
+                    )
                 else:
-                    delattr(get_request_meta(), _LocalsContext.__ctx_g_name)
+                    delattr(get_server_request_accessor(self._gui).get_request_meta(), _LocalsContext.__ctx_g_name)
 
     def get_locals(self) -> t.Dict[str, t.Any]:
         return self.get_default() if (context := self.get_context()) is None else self._locals_map[context]
 
     def get_context(self) -> t.Optional[str]:
-        from ..servers import get_request_meta
+        from ..servers import get_server_request_accessor
 
         return (
-            getattr(get_request_meta(), _LocalsContext.__ctx_g_name)
-            if hasattr(get_request_meta(), _LocalsContext.__ctx_g_name)
+            getattr(get_server_request_accessor(self._gui).get_request_meta(), _LocalsContext.__ctx_g_name)
+            if hasattr(get_server_request_accessor(self._gui).get_request_meta(), _LocalsContext.__ctx_g_name)
             else None
         )
 

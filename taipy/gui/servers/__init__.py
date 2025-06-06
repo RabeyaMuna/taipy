@@ -10,38 +10,24 @@
 # specific language governing permissions and limitations under the License.
 
 from .fastapi.server import get_request_meta_ctx, request_dependency, request_meta_dependency
-from .request import RequestAccessor
 from .response import HttpResponse
 from .server import ServerFrameworks, _Server
 from .utils import (
     create_server,
-    get_request,
-    get_request_meta,
+    get_server_request_accessor,
     get_server_type,
-    has_request_context,
-    has_server_context,
-    is_running_from_reloader,
-    send_file,
-    send_from_directory,
     set_server_type,
 )
 
 __all__ = [
     "HttpResponse",
-    "RequestAccessor",
     "ServerFrameworks",
     "_Server",
     "create_server",
-    "get_request",
-    "get_request_meta",
+    "get_server_request_accessor",
     "get_request_meta_ctx",
     "get_server_type",
-    "has_request_context",
-    "has_server_context",
-    "is_running_from_reloader",
     "request_dependency",
     "request_meta_dependency",
-    "send_file",
-    "send_from_directory",
     "set_server_type",
 ]

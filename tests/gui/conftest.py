@@ -15,9 +15,9 @@ from unittest.mock import patch
 
 import pandas as pd  # type: ignore
 import pytest
-from flask import Flask
+from flask import Flask, g
 
-from taipy.gui.servers import get_request_meta, get_server_type
+from taipy.gui.servers import get_server_type
 
 csv = pd.read_csv(
     f"{Path(Path(__file__).parent.resolve())}{os.path.sep}current-covid-patients-hospital.csv", parse_dates=["Day"]
@@ -62,7 +62,7 @@ def test_client():
         with flask_app.test_client() as testing_client:
             # Establish an application context
             with flask_app.app_context():
-                get_request_meta().client_id = "test client id"
+                g.client_id = "test client id"
                 yield testing_client  # this is where the testing happens!
     else:
         yield None

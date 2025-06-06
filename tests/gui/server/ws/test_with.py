@@ -15,7 +15,6 @@ import pytest
 
 from taipy.gui import Gui, Markdown
 from taipy.gui.data.data_scope import _DataScopes
-from taipy.gui.servers.request import RequestAccessor
 
 
 @pytest.mark.skip_if_not_server("flask")
@@ -28,12 +27,12 @@ def test_sending_messages_in_group(gui: Gui, helpers):
 
     gui.add_page("test", Markdown("<|Hello {name}|button|id={btn_id}|>"))
     gui.run(run_server=False, single_client=True)
-    server_client = gui._server.test_client()
+    server_test_client = gui._server.test_client()
     # WS client and emit
     ws_client = gui._server._ws.test_client(gui._server.get_server_instance())
     cid = _DataScopes._GLOBAL_ID
     # Get the jsx once so that the page will be evaluated -> variable will be registered
-    server_client.get(f"/taipy-jsx/test?client_id={cid}")
+    server_test_client.get(f"/taipy-jsx/test?client_id={cid}")
     assert gui._bindings()._get_all_scopes()[cid].name == "World!"  # type: ignore
     assert gui._bindings()._get_all_scopes()[cid].btn_id == "button1"  # type: ignore
 
@@ -61,7 +60,7 @@ def test_sending_messages_in_group_fastapi(gui: Gui, helpers):
     gui.add_page("test", Markdown("<|Hello {name}|button|id={btn_id}|>"))
     helpers.run_e2e(gui)
     ws_client = helpers.get_socketio_test_client()
-    RequestAccessor.set_sid(ws_client.get_sid())
+    gui._server.request.set_sid(ws_client.get_sid())
     cid = _DataScopes._GLOBAL_ID
     ws_client.get(f"/taipy-jsx/test?client_id={cid}")
     try:

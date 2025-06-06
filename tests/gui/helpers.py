@@ -22,6 +22,7 @@ import socketio
 from taipy.gui import Gui, Html, Markdown
 from taipy.gui._renderers.builder import _Builder
 from taipy.gui._warnings import TaipyGuiWarning
+from taipy.gui.servers.server import ServerManager
 from taipy.gui.servers.utils import get_server_type
 from taipy.gui.utils._variable_directory import _reset_name_map
 from taipy.gui.utils.expr_var_name import _reset_expr_var_name
@@ -73,6 +74,8 @@ class Helpers:
         _Builder._reset_key()
         _reset_name_map()
         _reset_expr_var_name()
+        ServerManager()._server = None
+        ServerManager()._framework = None
         Gui._Gui__extensions.clear()
         Gui._Gui__shared_variables.clear()
         Gui._Gui__content_providers.clear()

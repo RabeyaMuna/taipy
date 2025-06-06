@@ -25,9 +25,11 @@ from importlib import util
 from flask import (
     Blueprint,
     Flask,
+    has_app_context,
     json,
     jsonify,
     render_template,
+    send_file,
     send_from_directory,
 )
 from flask_cors import CORS
@@ -42,6 +44,7 @@ from ..._renderers.json import _TaipyJsonProvider
 from ...config import ServerConfig
 from ...utils import _is_in_notebook, _is_port_open, _RuntimeManager
 from ..server import _Server
+from .request import RequestAccessorFlask
 
 if t.TYPE_CHECKING:
     from ...gui import Gui
@@ -57,6 +60,7 @@ class FlaskServer(_Server):
         allow_upgrades: bool = True,
         server_config: t.Optional[ServerConfig] = None,
     ):
+        self.request = RequestAccessorFlask()
         self._gui = gui
         server_config = server_config or {}
         self._server = server
@@ -170,7 +174,7 @@ class FlaskServer(_Server):
             if (file_path := str(os.path.normpath((base_path := static_folder + os.path.sep) + path))).startswith(
                 base_path
             ) and os.path.isfile(file_path):
-                return send_from_directory(base_path, path)
+                return self.send_from_directory(base_path, path)
             # use the path mapping to detect and find resources
             for k, v in self.__path_mapping.items():
                 if (
@@ -180,7 +184,7 @@ class FlaskServer(_Server):
                     ).startswith(base_path)
                     and os.path.isfile(file_path)
                 ):
-                    return send_from_directory(base_path, path[len(k) + 1 :])
+                    return self.send_from_directory(base_path, path[len(k) + 1 :])
             if (
                 hasattr(__main__, "__file__")
                 and (
@@ -191,7 +195,7 @@ class FlaskServer(_Server):
                 and os.path.isfile(file_path)
                 and not self._is_ignored(file_path)
             ):
-                return send_from_directory(base_path, path)
+                return self.send_from_directory(base_path, path)
             if (
                 (
                     file_path := str(os.path.normpath((base_path := self._gui._root_dir + os.path.sep) + path))  # type: ignore[attr-defined]
@@ -199,7 +203,7 @@ class FlaskServer(_Server):
                 and os.path.isfile(file_path)
                 and not self._is_ignored(file_path)
             ):
-                return send_from_directory(base_path, path)
+                return self.send_from_directory(base_path, path)
             return ("", 404)
 
         return taipy_bp
@@ -249,6 +253,18 @@ class FlaskServer(_Server):
     def save_uploaded_file(self, file, path):
         file.save(path)
 
+    def send_file(self, *args, **kwargs):
+        return send_file(*args, **kwargs)
+
+    def send_from_directory(self, *args, **kwargs):
+        return send_from_directory(*args, **kwargs)
+
+    def has_server_context(self):
+        return has_app_context()
+
+    def is_running_from_reloader(self):
+        return is_running_from_reloader()
+
     def run(
         self,
         host,
@@ -278,21 +294,21 @@ class FlaskServer(_Server):
         if _is_in_notebook() or run_in_thread:
             runtime_manager = _RuntimeManager()
             runtime_manager.add_gui(self._gui, port)
-        if debug and not is_running_from_reloader() and _is_port_open(host_value, port):
+        if debug and not self.is_running_from_reloader() and _is_port_open(host_value, port):
             raise ConnectionError(
                 f"Port {port} is already opened on {host} because another application is running on the same port.\nPlease pick another port number and rerun with the 'port=<new_port>' setting.\nYou can also let Taipy choose a port number for you by running with the 'port=\"auto\"' setting."  # noqa: E501
             )
         if not server_log:
             log = logging.getLogger("werkzeug")
             log.disabled = True
-            if not is_running_from_reloader():
+            if not self.is_running_from_reloader():
                 _TaipyLogger._get_logger().info(f" * Server starting on {server_url}")
             else:
                 _TaipyLogger._get_logger().info(f" * Server reloaded on {server_url}")
             if client_url is not None:
                 client_url = client_url.format(port=port)
                 _TaipyLogger._get_logger().info(f" * Application is accessible at {client_url}")
-        if not is_running_from_reloader() and self._gui._get_config("run_browser", False):  # type: ignore[attr-defined]
+        if not self.is_running_from_reloader() and self._gui._get_config("run_browser", False):  # type: ignore[attr-defined]
             webbrowser.open(client_url or server_url, new=2)
         if _is_in_notebook() or run_in_thread:
             self._thread = KThread(target=self._run_notebook)

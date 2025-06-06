@@ -16,7 +16,6 @@ import pathlib
 import pytest
 
 from taipy.gui import Gui, download
-from taipy.gui.servers.request import RequestAccessor
 
 
 @pytest.mark.skip_if_not_server("flask")
@@ -64,7 +63,7 @@ def test_download_file_fastapi(gui: Gui, helpers):
     helpers.run_e2e_multi_client(gui)
     ws_client = helpers.get_socketio_test_client()
     sid = helpers.create_scope_and_get_sid(gui)
-    RequestAccessor.set_sid(ws_client.get_sid())
+    gui._server.request.set_sid(ws_client.get_sid())
     ws_client.emit("message", {"client_id": sid, "type": "A", "name": "my_button", "payload": "do_something"})
     # assert for received message (message that would be sent to the front-end client)
     received_messages = ws_client.get_received()

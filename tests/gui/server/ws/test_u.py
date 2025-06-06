@@ -12,7 +12,6 @@
 import inspect
 
 from taipy.gui import Gui, Markdown
-from taipy.gui.servers.request import RequestAccessor
 
 
 def ws_u_assert_template(gui: Gui, helpers, value_before_update, value_after_update, payload):
@@ -25,12 +24,12 @@ def ws_u_assert_template(gui: Gui, helpers, value_before_update, value_after_upd
     # Bind a page so that the variable will be evaluated as expression
     gui.add_page("test", Markdown("<|{var}|>"))
     gui.run(run_server=False)
-    server_client = gui._server.test_client()
+    server_test_client = gui._server.test_client()
     # WS client and emit
     ws_client = gui._server._ws.test_client(gui._server.get_server_instance())
     # Get the jsx once so that the page will be evaluated -> variable will be registered
     sid = helpers.create_scope_and_get_sid(gui)
-    server_client.get(f"/taipy-jsx/test?client_id={sid}")
+    server_test_client.get(f"/taipy-jsx/test?client_id={sid}")
     assert gui._bindings()._get_all_scopes()[sid].var == value_before_update
     ws_client.emit("message", {"client_id": sid, "type": "U", "name": "tpec_TpExPr_var_TPMDL_0", "payload": payload})
     assert gui._bindings()._get_all_scopes()[sid].var == value_after_update
@@ -52,7 +51,7 @@ def ws_u_assert_template_fastapi(gui: Gui, helpers, value_before_update, value_a
     helpers.run_e2e_multi_client(gui)
     ws_client = helpers.get_socketio_test_client()
     sid = helpers.create_scope_and_get_sid(gui)
-    RequestAccessor.set_sid(ws_client.get_sid())
+    gui._server.request.set_sid(ws_client.get_sid())
     ws_client.get(f"/taipy-jsx/test?client_id={sid}")
     try:
         assert gui._bindings()._get_all_scopes()[sid].var == value_before_update

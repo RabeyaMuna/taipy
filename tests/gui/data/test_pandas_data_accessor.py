@@ -24,7 +24,6 @@ from taipy.gui import Gui
 from taipy.gui.data.data_format import _DataFormat
 from taipy.gui.data.decimator import ScatterDecimator
 from taipy.gui.data.pandas_data_accessor import _PandasDataAccessor
-from taipy.gui.servers import get_request_meta
 
 
 # Define a mock to simulate _DataFormat behavior with a "value" attribute
@@ -105,7 +104,7 @@ def test_style(gui: Gui, helpers, small_dataframe):
     gui.run(run_server=False)
     cid = helpers.create_scope_and_get_sid(gui)
     with gui._server.test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
-        get_request_meta().client_id = cid
+        gui._server.request.get_request_meta().client_id = cid
         value = accessor.get_data("x", pd, {"start": 0, "end": 1, "styles": {"st": "test_style"}}, _DataFormat.JSON)[
             "value"
         ]
@@ -126,7 +125,7 @@ def test_tooltip(gui: Gui, helpers, small_dataframe):
     with gui._server.test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
         gui._bind_var_val("tt", tt)
         gui._get_locals_bind_from_context(None)["tt"] = tt
-        get_request_meta().client_id = cid
+        gui._server.request.get_request_meta().client_id = cid
         value = accessor.get_data("x", pd, {"start": 0, "end": 1, "tooltips": {"tt": "tt"}}, _DataFormat.JSON)["value"]
         assert value["rowcount"] == 3
         data = value["data"]
@@ -145,7 +144,7 @@ def test_format_fn(gui: Gui, helpers, small_dataframe):
     with gui._server.test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
         gui._bind_var_val("ff", ff)
         gui._get_locals_bind_from_context(None)["ff"] = ff
-        get_request_meta().client_id = cid
+        gui._server.request.get_request_meta().client_id = cid
         value = accessor.get_data("x", pd, {"start": 0, "end": 1, "formats": {"ff": "ff"}}, _DataFormat.JSON)["value"]
         assert value["rowcount"] == 3
         data = value["data"]
@@ -342,13 +341,13 @@ def test_decimator(gui: Gui, helpers, small_dataframe):
 
     gui.add_page("test", "<|Hello {a_decimator}|button|>")
     gui.run(run_server=False)
-    server_client = gui._server.test_client()
+    server_test_client = gui._server.test_client()
 
     cid = helpers.create_scope_and_get_sid(gui)
     # Get the jsx once so that the page will be evaluated -> variable will be registered
-    server_client.get(f"/taipy-jsx/test?client_id={cid}")
+    server_test_client.get(f"/taipy-jsx/test?client_id={cid}")
     with gui._server.test_request_context(f"/taipy-jsx/test/?client_id={cid}", data={"client_id": cid}):
-        get_request_meta().client_id = cid
+        gui._server.request.get_request_meta().client_id = cid
 
         ret_data = accessor.get_data(
             "x",

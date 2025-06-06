@@ -9,85 +9,41 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-import typing as t
 
-from flask import has_request_context
-from flask import request as flask_request
-from starlette.datastructures import QueryParams
-from werkzeug.datastructures import ImmutableMultiDict
+from typing import Any, Optional
 
-from .fastapi.request import request as fastapi_request
-from .fastapi.request import sid as fastapi_sid
-from .fastapi.utils import run_async
-from .utils import get_server_type
+from flask.ctx import _AppCtxGlobals
 
 
-class RequestAccessor:
-    @staticmethod
-    def args(to_dict=False) -> t.Union[ImmutableMultiDict[t.Any, t.Any], QueryParams, t.Dict[str, str]]:
-        if get_server_type() == "flask":
-            return flask_request.args if to_dict is False else flask_request.args.to_dict(flat=True)
-        elif get_server_type() == "fastapi":
-            fastapi_r = fastapi_request.get()
-            return (
-                {}
-                if fastapi_r is None
-                else fastapi_r.query_params
-                if to_dict is False
-                else dict(fastapi_r.query_params)
-            )
+class BaseRequestAccessor:
+    _request_meta: _AppCtxGlobals = _AppCtxGlobals()
+
+    def args(self, to_dict=False) -> Any:
         return {}
 
-    @staticmethod
-    def arg(key, default=None):
-        if get_server_type() == "flask":
-            return flask_request.args.get(key, default)
-        elif get_server_type() == "fastapi":
-            fastapi_r = fastapi_request.get()
-            return default if fastapi_r is None else fastapi_r.query_params.get(key, default)
+    def arg(self, key, default=None) -> Any:
         return default
 
-    @staticmethod
-    def form():
-        if get_server_type() == "flask":
-            return flask_request.form
-        elif get_server_type() == "fastapi":
-            fastapi_r = fastapi_request.get()
-            return {} if fastapi_r is None else dict(run_async(fastapi_r._get_form))
+    def form(self) -> Any:
         return {}
 
-    @staticmethod
-    def files():
-        if get_server_type() == "flask":
-            return flask_request.files
-        elif get_server_type() == "fastapi":
-            fastapi_r = fastapi_request.get()
-            if fastapi_r is None:
-                return {}
-            form_data = dict(run_async(fastapi_r._get_form))
-            return {k: v for k, v in form_data.items() if hasattr(v, "filename")}
+    def files(self) -> Any:
         return {}
 
-    @staticmethod
-    def cookies():
-        if get_server_type() == "flask":
-            return flask_request.cookies
-        elif get_server_type() == "fastapi":
-            fastapi_r = fastapi_request.get()
-            return {} if fastapi_r is None else fastapi_r.cookies
+    def cookies(self) -> Any:
         return {}
 
-    @staticmethod
-    def sid():
-        if get_server_type() == "flask" and has_request_context() and flask_request:
-            return getattr(flask_request, "sid", None)
-        elif get_server_type() == "fastapi":
-            return fastapi_sid.get()
+    def sid(self) -> Any:
         return None
 
-    @staticmethod
-    def set_sid(sid: t.Optional[str]):
-        if get_server_type() == "flask":
-            flask_request.sid = sid  # type: ignore[attr-defined]
-        elif get_server_type() == "fastapi":
-            fastapi_sid.set(sid)
+    def set_sid(self, sid: Optional[str]) -> None:
+        pass
+
+    def get_request(self) -> Any:
+        return None
+
+    def get_request_meta(self) -> Any:
+        return self._request_meta
+
+    def has_request_context(self) -> bool:
+        return False
