@@ -46,7 +46,7 @@ def build_gui(root_path: Path):
         my_env = os.environ.copy()
         if "NODE_OPTIONS" not in my_env:
             my_env["NODE_OPTIONS"] = "--max-old-space-size=16384"
-        print(f"New Node Env: ${my_env.get('NODE_OPTIONS')}")
+        print(f"New Node Env: ${my_env.get('NODE_OPTIONS')}") # noqa: T201
         subprocess.run(["npm", "ci"], cwd=root_path / "frontend" / "taipy-gui" / "dom", check=True, shell=with_shell,
                        env=my_env)
         subprocess.run(["npm", "ci"], cwd=root_path / "frontend" / "taipy-gui", check=True, shell=with_shell,
