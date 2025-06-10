@@ -19,7 +19,7 @@
 #          workflows\partial-tests.yml
 #          workflows\prebuild.yml
 # --------------------------------------------------------------------------------------------------
-
+import os
 import platform
 import subprocess
 import sys
@@ -42,6 +42,7 @@ def build_gui(root_path: Path):
     if already_exists:
         print(f'Found taipy-gui frontend bundle in {root_path  / "taipy" / "gui" / "webapp"}.')  # noqa: T201
     else:
+        print(f"Node Env: ${os.environ['NODE_OPTIONS']}")
         subprocess.run(["npm", "ci"], cwd=root_path / "frontend" / "taipy-gui" / "dom", check=True, shell=with_shell)
         subprocess.run(["npm", "ci"], cwd=root_path / "frontend" / "taipy-gui", check=True, shell=with_shell)
         subprocess.run(["npm", "run", "build"], cwd=root_path / "frontend" / "taipy-gui", check=True, shell=with_shell)
