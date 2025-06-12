@@ -13,10 +13,10 @@ import typing as t
 
 from flask import g, has_request_context, request
 
-from ..request import BaseRequestAccessor
+from ..request import _BaseRequestAccessor
 
 
-class RequestAccessorFlask(BaseRequestAccessor):
+class _RequestAccessorFlask(_BaseRequestAccessor):
     def args(self, to_dict=False):
         return request.args if to_dict is False else request.args.to_dict(flat=True)
 
@@ -37,8 +37,8 @@ class RequestAccessorFlask(BaseRequestAccessor):
             return getattr(request, "sid", None)
         return None
 
-    def set_sid(self, sid: t.Optional[str]):
-        request.sid = sid  # type: ignore[attr-defined]
+    def set_sid(self, incoming_sid: t.Optional[str]):
+        request.sid = incoming_sid  # type: ignore[attr-defined]
 
     def get_request(self):
         return request

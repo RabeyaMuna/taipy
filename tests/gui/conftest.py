@@ -17,8 +17,6 @@ import pandas as pd  # type: ignore
 import pytest
 from flask import Flask, g
 
-from taipy.gui.servers import get_server_type
-
 csv = pd.read_csv(
     f"{Path(Path(__file__).parent.resolve())}{os.path.sep}current-covid-patients-hospital.csv", parse_dates=["Day"]
 )
@@ -54,8 +52,8 @@ def helpers():
 
 
 @pytest.fixture
-def test_client():
-    if get_server_type() == "flask":
+def test_client(gui_server):
+    if gui_server == "flask":
         flask_app = Flask("Test App")
 
         # Create a test client using the Flask application configured for testing

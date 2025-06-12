@@ -86,7 +86,7 @@ def test_process_content_provider_invalid(gui: Gui, helpers):
     result = server_test_client.get(
         f"/taipy-user-content/test?client_id={cid}&__taipy_html_content=true&variable_name=v_name"
     )
-    assert "No valid provider" in helpers.get_response_raw_data(result)
+    assert "No valid provider" in helpers.get_response_raw_data(result, gui)
 
 
 def test__serve_user_content(gui: Gui, helpers):
@@ -104,7 +104,7 @@ def test__serve_user_content(gui: Gui, helpers):
     server_test_client.get(f"/taipy-jsx/test?client_id={cid}")
     # no content provider
     result = server_test_client.get(f"/taipy-user-content/test?client_id={cid}&custom_user_content_cb=user_content")
-    assert "taipy.gui.state._GuiState" in helpers.get_response_raw_data(result)
+    assert "taipy.gui.state._GuiState" in helpers.get_response_raw_data(result, gui)
 
 
 def test__serve_user_content_bad(gui: Gui, helpers):

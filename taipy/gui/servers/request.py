@@ -15,7 +15,7 @@ from typing import Any, Optional
 from flask.ctx import _AppCtxGlobals
 
 
-class BaseRequestAccessor:
+class _BaseRequestAccessor:
     _request_meta: _AppCtxGlobals = _AppCtxGlobals()
 
     def args(self, to_dict=False) -> Any:
@@ -36,7 +36,7 @@ class BaseRequestAccessor:
     def sid(self) -> Any:
         return None
 
-    def set_sid(self, sid: Optional[str]) -> None:
+    def set_sid(self, incoming_sid: Optional[str]) -> None:
         pass
 
     def get_request(self) -> Any:

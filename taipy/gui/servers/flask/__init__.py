@@ -9,6 +9,6 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-from .server import FlaskServer
+from .server import _FlaskServer
 
-__all__ = ["FlaskServer"]
+__all__ = ["_FlaskServer"]

@@ -11,34 +11,11 @@
 
 import typing as t
 
-from .fastapi import FastAPIServer
-from .flask import FlaskServer
-from .request import BaseRequestAccessor
-from .server import ServerFrameworks, ServerManager, _Server
+from .request import _BaseRequestAccessor
 
 if t.TYPE_CHECKING:
     from ..gui import Gui  # pragma: no cover
 
 
-def set_server_type(framework: ServerFrameworks) -> None:
-    ServerManager().set_server_type(framework)
-
-
-def get_server_type() -> ServerFrameworks:
-    return ServerManager().get_server_type()
-
-
-def create_server(*args, **kwargs) -> _Server:
-    new_server: t.Union[FlaskServer, FastAPIServer, None] = None
-    if get_server_type() == "flask":
-        new_server = FlaskServer(*args, **kwargs)
-    elif get_server_type() == "fastapi":
-        new_server = FastAPIServer(*args, **kwargs)
-    if new_server is None:
-        raise ValueError(f"Invalid server type: {type}")
-    ServerManager().set_server(new_server)
-    return new_server
-
-
-def get_server_request_accessor(gui: "Gui") -> BaseRequestAccessor:
-    return BaseRequestAccessor() if not hasattr(gui, "_server") or gui._server is None else gui._server.request
+def get_server_request_accessor(gui: "Gui") -> _BaseRequestAccessor:
+    return _BaseRequestAccessor() if not hasattr(gui, "_server") or gui._server is None else gui._server.request

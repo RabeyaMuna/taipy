@@ -29,7 +29,7 @@ def test_variable_binding(helpers, gui_server):
     gui.run(run_server=False, single_client=True)
     client = gui._server.test_client()
     response = client.get("/taipy-jsx/test")
-    jsx = helpers.get_response_data(response)["jsx"]
+    jsx = helpers.get_response_data(response, gui)["jsx"]
     for expected in ["<Button", 'defaultLabel="button label"', "label={tpec_TpExPr_z_TPMDL_0}"]:
         assert expected in jsx
     assert gui._bindings().x == x
@@ -48,7 +48,7 @@ def test_properties_binding(helpers, gui_server):
     gui.run(run_server=False)
     client = gui._server.test_client()
     response = client.get("/taipy-jsx/test")
-    jsx = helpers.get_response_data(response)["jsx"]
+    jsx = helpers.get_response_data(response, gui)["jsx"]
     for expected in ["<Button", 'defaultLabel="A nice button"']:
         assert expected in jsx
     helpers.test_cleanup()
@@ -63,7 +63,7 @@ def test_dict_binding(helpers, gui_server):
     gui.run(run_server=False)
     client = gui._server.test_client()
     response = client.get("/taipy-jsx/TaiPy_root_page")
-    jsx = helpers.get_response_data(response)["jsx"]
+    jsx = helpers.get_response_data(response, gui)["jsx"]
     for expected in ["<Field", 'defaultValue="test"']:
         assert expected in jsx
     helpers.test_cleanup()

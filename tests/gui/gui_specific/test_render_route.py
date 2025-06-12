@@ -23,7 +23,7 @@ def test_render_route(gui: Gui, helpers):
     with warnings.catch_warnings(record=True):
         client = gui._server.test_client()
         response = client.get("/taipy-init")
-        response_data = helpers.get_response_data(response)
+        response_data = helpers.get_response_data(response, gui)
         assert response.status_code == 200
         assert isinstance(response_data, dict)
         assert isinstance(response_data["locations"], dict)

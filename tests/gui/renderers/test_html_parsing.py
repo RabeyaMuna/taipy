@@ -22,5 +22,5 @@ def test_simple_html(gui: Gui, helpers):
     gui.run(run_server=False)
     client = gui._server.test_client()
     response = client.get("/taipy-jsx/test")
-    jsx = helpers.get_response_data(response)["jsx"]
+    jsx = helpers.get_response_data(response, gui)["jsx"]
     assert jsx == "<h1>test</h1>"

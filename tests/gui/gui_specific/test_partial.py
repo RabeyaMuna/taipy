@@ -21,7 +21,7 @@ def test_partial(gui: Gui, helpers):
         gui.run(run_server=False)
         client = gui._server.test_client()
         response = client.get(f"/taipy-jsx/{gui._config.partial_routes[0]}")
-        response_data = helpers.get_response_data(response)
+        response_data = helpers.get_response_data(response, gui)
         assert response.status_code == 200
         assert "jsx" in response_data and "This is a partial" in response_data["jsx"]
 
@@ -32,7 +32,7 @@ def test_partial_update(gui: Gui, helpers):
         gui.run(run_server=False, single_client=True)
         client = gui._server.test_client()
         response = client.get(f"/taipy-jsx/{gui._config.partial_routes[0]}")
-        response_data = helpers.get_response_data(response)
+        response_data = helpers.get_response_data(response, gui)
         assert response.status_code == 200
         assert "jsx" in response_data and "This is a partial" in response_data["jsx"]
         # update partial
@@ -40,6 +40,6 @@ def test_partial_update(gui: Gui, helpers):
         fake_state._gui = gui
         partial.update_content(fake_state, "#partial updated")  # type: ignore
         response = client.get(f"/taipy-jsx/{gui._config.partial_routes[0]}")
-        response_data = helpers.get_response_data(response)
+        response_data = helpers.get_response_data(response, gui)
         assert response.status_code == 200
         assert "jsx" in response_data and "partial updated" in response_data["jsx"]

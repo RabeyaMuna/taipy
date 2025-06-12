@@ -22,8 +22,6 @@ import socketio
 from taipy.gui import Gui, Html, Markdown
 from taipy.gui._renderers.builder import _Builder
 from taipy.gui._warnings import TaipyGuiWarning
-from taipy.gui.servers.server import ServerManager
-from taipy.gui.servers.utils import get_server_type
 from taipy.gui.utils._variable_directory import _reset_name_map
 from taipy.gui.utils.expr_var_name import _reset_expr_var_name
 
@@ -74,8 +72,6 @@ class Helpers:
         _Builder._reset_key()
         _reset_name_map()
         _reset_expr_var_name()
-        ServerManager()._server = None
-        ServerManager()._framework = None
         Gui._Gui__extensions.clear()
         Gui._Gui__shared_variables.clear()
         Gui._Gui__content_providers.clear()
@@ -101,7 +97,7 @@ class Helpers:
         client = gui._server.test_client()
         response = client.get("/taipy-jsx/test")
         assert response.status_code == 200, f"response.status_code {response.status_code} != 200"
-        response_data = Helpers.get_response_data(response)
+        response_data = Helpers.get_response_data(response, gui)
         assert isinstance(response_data, t.Dict), "response_data is not Dict"
         assert "jsx" in response_data, "jsx not in response_data"
         jsx = response_data["jsx"]
@@ -218,18 +214,20 @@ class Helpers:
         return [w for w in warns if issubclass(w.category, TaipyGuiWarning)]
 
     @staticmethod
-    def get_response_data(response):
-        if get_server_type() == "flask":
+    def get_response_data(response, gui):
+        server_type = gui._server_class.type
+        if server_type == "flask":
             return json.loads(response.get_data().decode("utf-8", "ignore"))
-        elif get_server_type() == "fastapi":
+        elif server_type == "fastapi":
             return response.json()
         return None
 
     @staticmethod
-    def get_response_raw_data(response):
-        if get_server_type() == "flask":
+    def get_response_raw_data(response, gui):
+        server_type = gui._server_class.type
+        if server_type == "flask":
             return response.get_data().decode("utf-8", "ignore")
-        elif get_server_type() == "fastapi":
+        elif server_type == "fastapi":
             return response.text
         return None
 

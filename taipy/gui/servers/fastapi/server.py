@@ -20,7 +20,7 @@ from contextlib import asynccontextmanager, contextmanager
 
 import socketio
 import uvicorn
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -32,11 +32,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 import __main__
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
+from ..._hook import _Hooks
 from ..._renderers.json import _TaipyJsonEncoder
 from ...config import ServerConfig
 from ...utils import _is_in_notebook, _is_port_open, _RuntimeManager
 from ..server import _Server
-from .request import RequestAccessorFastAPI, request_meta
+from .request import _RequestAccessorFastAPI, request_meta
 from .request import request as request_context
 from .request import sid as sid_context
 from .utils import run_async, send_file, send_from_directory
@@ -91,7 +92,10 @@ class CleanupMiddleware(BaseHTTPMiddleware):
         return response
 
 
-class FastAPIServer(_Server):
+class _FastAPIServer(_Server):
+    type = "fastapi"
+    server_base_class = FastAPI
+
     def __init__(
         self,
         gui: "Gui",
@@ -102,7 +106,7 @@ class FastAPIServer(_Server):
         allow_upgrades: bool = True,
         server_config: t.Optional[ServerConfig] = None,
     ):
-        self.request = RequestAccessorFastAPI()
+        self.request = _RequestAccessorFastAPI()
         self._gui = gui
         server_config = server_config or {}
         self._path_mapping = path_mapping or {}
@@ -265,6 +269,9 @@ class FastAPIServer(_Server):
     def get_server_instance(self):
         return self._server
 
+    def get_app_context(self):
+        return get_request_meta_ctx()
+
     def get_port(self) -> int:
         return self._port or -1
 
@@ -306,6 +313,90 @@ class FastAPIServer(_Server):
 
     def is_running_from_reloader(self):
         return os.getpid() == os.getppid()
+
+    def create_http_response(self, message, status_code=200, headers=None):
+        if headers is None:
+            headers = {}
+        return Response(content=message, status_code=status_code, headers=headers)
+
+    def register_routes(self, styles: t.List[str], scripts: t.List[str]):
+        from ...gui import Gui
+
+        fastapi_router: t.List[APIRouter] = []
+        gui = self._gui
+
+        pages_router = APIRouter()
+        pages_router.add_api_route(
+            f"/{Gui._JSX_URL}/{{page_name:path}}",
+            gui._render_page,
+            methods=["GET"],
+            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
+        )
+        pages_router.add_api_route(
+            f"/{Gui._INIT_URL}",
+            gui._init_route,
+            methods=["GET"],
+            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
+        )
+        fastapi_router.append(pages_router)
+
+        images_router = APIRouter()
+        images_router.add_api_route(
+            f"/{Gui._CONTENT_ROOT}/{{path:path}}",
+            gui._serve_content,
+            methods=["GET"],
+            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
+        )
+        fastapi_router.append(images_router)
+
+        upload_router = APIRouter()
+        upload_router.add_api_route(
+            f"/{Gui._UPLOAD_URL}",
+            gui._upload_files,
+            methods=["POST"],
+            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
+        )
+        fastapi_router.append(upload_router)
+
+        user_content_router = APIRouter()
+        user_content_router.add_api_route(
+            f"/{Gui._USER_CONTENT_URL}/{{path:path}}",
+            gui._serve_user_content,
+            methods=["GET"],
+            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
+        )
+        fastapi_router.append(user_content_router)
+
+        extension_router = APIRouter()
+        extension_router.add_api_route(
+            f"/{Gui._EXTENSION_ROOT}/{{path:path}}",
+            gui._serve_extension,
+            methods=["GET"],
+            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
+        )
+        fastapi_router.append(extension_router)
+
+        fastapi_router.append(
+            self._get_default_handler(
+                static_folder=gui._get_webapp_path(),
+                template_folder=gui._get_webapp_path(),
+                title=gui._get_config("title", "Taipy App"),
+                favicon=gui._get_config("favicon", Gui._DEFAULT_FAVICON_URL),
+                root_margin=gui._get_config("margin", None),
+                scripts=scripts,
+                styles=styles,
+                version=gui._get_version(),
+                client_config=gui._get_client_config(),
+                watermark=gui._get_config("watermark", None),
+                css_vars=gui._get_css_vars(),
+                base_url=gui._get_config("base_url", "/"),
+            )
+        )
+
+        _Hooks()._add_external_routes(self, type=self.type, router=fastapi_router)
+
+        for router in fastapi_router:
+            self._server.include_router(router)
 
     def run(
         self,

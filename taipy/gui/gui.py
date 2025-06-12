@@ -32,8 +32,6 @@ from urllib.parse import unquote, urlencode, urlparse
 
 import markdown as md_lib
 import tzlocal
-from fastapi import APIRouter, Depends, FastAPI
-from flask import Blueprint, Flask
 from werkzeug.utils import secure_filename
 
 import __main__  # noqa: F401
@@ -62,16 +60,11 @@ from .extension.library import Element, ElementLibrary
 from .page import Page
 from .partial import Partial
 from .servers import (
-    HttpResponse,
-    ServerFrameworks,
-    create_server,
-    get_request_meta_ctx,
+    _Server,
     get_server_request_accessor,
-    get_server_type,
-    request_dependency,
-    request_meta_dependency,
-    set_server_type,
 )
+from .servers.fastapi import _FastAPIServer
+from .servers.flask import _FlaskServer
 from .state import State, _AsyncState, _GuiState
 from .types import _WsType
 from .utils import (
@@ -135,12 +128,12 @@ class Gui:
     __MESSAGE_GROUPING_NAME = "TaipyMessageGrouping"
     __ON_INIT_NAME = "TaipyOnInit"
     __ARG_CLIENT_ID = "client_id"
-    __INIT_URL = "taipy-init"
-    __JSX_URL = "taipy-jsx"
-    __CONTENT_ROOT = "taipy-content"
-    __UPLOAD_URL = "taipy-uploads"
+    _INIT_URL = "taipy-init"
+    _JSX_URL = "taipy-jsx"
+    _CONTENT_ROOT = "taipy-content"
+    _UPLOAD_URL = "taipy-uploads"
     _EXTENSION_ROOT = "taipy-extension"
-    __USER_CONTENT_URL = "taipy-user-content"
+    _USER_CONTENT_URL = "taipy-user-content"
     __BROADCAST_G_ID = "taipy_broadcasting"
     __BRDCST_CALLBACK_G_ID = "taipy_brdcst_callback"
     __SELF_VAR = "__gui"
@@ -150,7 +143,7 @@ class Gui:
     __ROBOTO_FONT = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
     __DOWNLOAD_ACTION = "__Taipy__download_csv"
     __DOWNLOAD_DELETE_ACTION = "__Taipy__download_delete_csv"
-    __DEFAULT_FAVICON_URL = "https://raw.githubusercontent.com/Avaiga/taipy-assets/develop/favicon.png"
+    _DEFAULT_FAVICON_URL = "https://raw.githubusercontent.com/Avaiga/taipy-assets/develop/favicon.png"
 
     __RE_HTML = re.compile(r"(.*?)\.html$")
     __RE_MD = re.compile(r"(.*?)\.md$")
@@ -158,12 +151,12 @@ class Gui:
     __RE_PAGE_NAME = re.compile(r"^[\w\-\/]+$")
 
     __reserved_routes: t.List[str] = [
-        __INIT_URL,
-        __JSX_URL,
-        __CONTENT_ROOT,
-        __UPLOAD_URL,
+        _INIT_URL,
+        _JSX_URL,
+        _CONTENT_ROOT,
+        _UPLOAD_URL,
         _EXTENSION_ROOT,
-        __USER_CONTENT_URL,
+        _USER_CONTENT_URL,
     ]
 
     __LOCAL_TZ = str(tzlocal.get_localzone())
@@ -186,7 +179,7 @@ class Gui:
         env_filename: t.Optional[str] = None,
         libraries: t.Optional[t.List[ElementLibrary]] = None,
         script_paths: t.Union[str, Path, t.List[t.Union[str, Path]], None] = None,
-        server: t.Union[ServerFrameworks, Flask, FastAPI] = "flask",
+        server: t.Union[str, t.Any] = "flask",
     ):
         """Initialize a new Gui instance.
 
@@ -230,7 +223,7 @@ class Gui:
             script_paths (Union[str, Path, List[Union[str, Path]], None]):
                 Specifies the path(s) to the JavaScript files or external resources used by the application.
                 It can be a single URL or path, or a list containing multiple URLs and/or paths.
-            server (Union[ServerFrameworks, Flask, FastAPI]): The server type to use for the application.<br/>
+            server (Union[str, Any]): The server type to use for the application.<br/>
                 It can be `flask` or `fastapi`, or a Flask or FastAPI instance.<br/>
                 The default value is `flask`.<br/>
         """
@@ -249,19 +242,23 @@ class Gui:
         self._path_mapping = path_mapping
 
         # Server config
-        self._server_instance: t.Union[Flask, FastAPI, None] = None
-        if isinstance(server, Flask):
-            set_server_type("flask")
-            self._server_instance = server
-        elif isinstance(server, FastAPI):
-            set_server_type("fastapi")
-            self._server_instance = server
-        elif isinstance(server, str) and server in t.get_args(ServerFrameworks):
-            set_server_type(server)  # type: ignore[arg-type]
-        else:
-            raise ValueError(
-                f"Invalid 'server' option. 'server' must be one of {t.get_args(ServerFrameworks)} or a Flask or FastAPI instance."  # noqa: E501
-            )
+        self._server_instance: t.Any = None
+        _supported_server: t.List[t.Type[_Server]] = [
+            _FlaskServer,
+            _FastAPIServer,
+        ]
+        _server_class: t.Optional[t.Type[_Server]] = None
+        for server_class in _supported_server:
+            if isinstance(server, str) and server == server_class.type:
+                _server_class = server_class
+                break
+            if isinstance(server, server_class.server_base_class):  # type: ignore
+                _server_class = server_class
+                self._server_instance = server
+                break
+        if _server_class is None:
+            raise ValueError("Invalid 'server' option")
+        self._server_class = _server_class
 
         self._config = _Config(self)
         self.__content_accessor = None
@@ -912,9 +909,9 @@ class Gui:
 
     def _get_content(self, var_name: str, value: t.Any, image: bool) -> t.Any:
         ret_value = self.__get_content_accessor().get_info(var_name, value, image)
-        return f"/{Gui.__CONTENT_ROOT}/{ret_value[0]}" if isinstance(ret_value, tuple) else ret_value
+        return f"/{Gui._CONTENT_ROOT}/{ret_value[0]}" if isinstance(ret_value, tuple) else ret_value
 
-    def __serve_content(self, path: str) -> t.Any:
+    def _serve_content(self, path: str) -> t.Any:
         self.__set_client_id_in_context()
         parts = path.split("/")
         if len(parts) > 1:
@@ -924,16 +921,16 @@ class Gui:
             )
             if dir_path:
                 return self._server.send_from_directory(str(dir_path), file_name, as_attachment=as_attachment)
-        return HttpResponse("", 404)
+        return self._server.create_http_response("", 404)
 
     def _get_user_content_url(
         self, path: t.Optional[str] = None, query_args: t.Optional[t.Dict[str, str]] = None
     ) -> t.Optional[str]:
         q_args = query_args or {}
         q_args.update({Gui.__ARG_CLIENT_ID: self._get_client_id()})
-        return f"/{Gui.__USER_CONTENT_URL}/{path or 'TaIpY'}?{urlencode(q_args)}"
+        return f"/{Gui._USER_CONTENT_URL}/{path or 'TaIpY'}?{urlencode(q_args)}"
 
-    def __serve_user_content(self, path: str) -> t.Any:
+    def _serve_user_content(self, path: str) -> t.Any:
         self.__set_client_id_in_context()
         q_args: t.Dict[str, str] = {}
         q_args.update(get_server_request_accessor(self).args(True))
@@ -977,13 +974,13 @@ class Gui:
                 if ret is None:
                     _warn(f"{cb_function_name}() callback function must return a value.")
                 else:
-                    return HttpResponse(ret, 200)
+                    return self._server.create_http_response(ret, 200)
             except Exception as e:  # pragma: no cover
                 if not self._call_on_exception(cb_function_name, e):
                     _warn(f"{cb_function_name}() callback function raised an exception", e)
-        return HttpResponse("", 404)
+        return self._server.create_http_response("", 404)
 
-    def __serve_extension(self, path: str) -> t.Any:
+    def _serve_extension(self, path: str) -> t.Any:
         parts = path.split("/")
         last_error = ""
         resource_name = None
@@ -997,9 +994,9 @@ class Gui:
                 except Exception as e:
                     last_error = f"\n{e}"  # Check if the resource is served by another library with the same name
         _warn(f"Resource '{resource_name or path}' not accessible for library '{parts[0]}'{last_error}")
-        return HttpResponse("", 404)
+        return self._server.create_http_response("", 404)
 
-    def __get_version(self) -> str:
+    def _get_version(self) -> str:
         return f"{self.__version.get('major', 0)}.{self.__version.get('minor', 0)}.{self.__version.get('patch', 0)}"
 
     def __append_libraries_to_status(self, status: t.Dict[str, t.Any]):
@@ -1031,7 +1028,7 @@ class Gui:
             base_json.update(
                 {
                     "flask_version": str(metadata.version("flask") or ""),
-                    "backend_version": self.__get_version(),
+                    "backend_version": self._get_version(),
                     "host": f"{self._get_config('host', 'localhost')}:{self._get_config('port', 'default')}",
                     "python_version": sys.version,
                 }
@@ -1043,13 +1040,13 @@ class Gui:
                 _warn(f"Exception raised reading JSON in '{template}'", e)
         return {"gui": base_json}
 
-    def __upload_files(self):
+    def _upload_files(self):
         self.__set_client_id_in_context()
         on_upload_action = get_server_request_accessor(self).form().get("on_action", None)
         var_name = t.cast(str, get_server_request_accessor(self).form().get("var_name", None))
         if not var_name and not on_upload_action:
             _warn("upload files: No var name")
-            return HttpResponse("upload files: No var name", 400)
+            return self._server.create_http_response("upload files: No var name", 400)
         context = get_server_request_accessor(self).form().get("context", None)
         upload_data = get_server_request_accessor(self).form().get("upload_data", None)
         multiple = (
@@ -1061,12 +1058,12 @@ class Gui:
         file = get_server_request_accessor(self).files().get("blob", None)
         if not file:
             _warn("upload files: No file part")
-            return HttpResponse("upload files: No file part", 400)
+            return self._server.create_http_response("upload files: No file part", 400)
         # If the user does not select a file, the browser submits an
         # empty file without a filename.
         if file.filename == "":
             _warn("upload files: No selected file")
-            return HttpResponse("upload files: No selected file", 400)
+            return self._server.create_http_response("upload files: No selected file", 400)
 
         # Path parsing and checks
         path = get_server_request_accessor(self).form().get("path", "")
@@ -1092,7 +1089,7 @@ class Gui:
             self._server.save_uploaded_file(file, os.path.join(upload_path, (file_path.name + suffix)))
         else:
             _warn(f"upload files: Path {path} points outside of upload root.")
-            return HttpResponse("upload files: Path part points outside of upload root.", 400)
+            return self._server.create_http_response("upload files: Path part points outside of upload root.", 400)
 
         if complete:
             if part > 0:
@@ -1106,7 +1103,9 @@ class Gui:
                             part_file_path.unlink()
                 except EnvironmentError as ee:  # pragma: no cover
                     _warn(f"Cannot group file after chunk upload for {file.filename}", ee)
-                    return HttpResponse(f"Cannot group file after chunk upload for {file.filename}", 500)
+                    return self._server.create_http_response(
+                        f"Cannot group file after chunk upload for {file.filename}", 500
+                    )
             # Notify when file is uploaded
             newvalue = str(file_path)
             if multiple and var_name:
@@ -1131,7 +1130,7 @@ class Gui:
                         self._call_function_with_state(t.cast(t.Callable, file_fn), ["file_upload", {"args": [data]}])
                 else:
                     setattr(self._bindings(), var_name, newvalue)
-        return HttpResponse("", 200)
+        return self._server.create_http_response("", 200)
 
     def __send_var_list_update(  # noqa C901
         self,
@@ -1161,7 +1160,7 @@ class Gui:
                         t.cast(str, front_var), newvalue.get(), isinstance(newvalue, _TaipyContentImage)
                     )
                     if isinstance(ret_value, tuple):
-                        newvalue = f"/{Gui.__CONTENT_ROOT}/{ret_value[0]}"
+                        newvalue = f"/{Gui._CONTENT_ROOT}/{ret_value[0]}"
                     else:
                         newvalue = ret_value
                 elif isinstance(newvalue, _TaipyContentHtml):
@@ -2019,12 +2018,12 @@ class Gui:
         return Gui.__root_page_name
 
     # Deprecated
-    def _set_flask(self, flask: Flask):
+    def _set_flask(self, flask):
         raise RuntimeError(
             "'_set_flask()' is deprecated. Use '_set_web_server()' instead as multiple web frameworks has been supported."  # noqa: E501
         )
 
-    def _set_web_server(self, server: t.Union[Flask, FastAPI]):
+    def _set_web_server(self, server: t.Any):
         self._server_instance = server
 
     def _get_default_module_name(self):
@@ -2441,7 +2440,7 @@ class Gui:
                     if not self._call_on_exception(f"{name}.on_user_init", e):
                         _warn(f"Exception raised in {name}.on_user_init()", e)
 
-    def __init_route(self):
+    def _init_route(self):
         self.__set_client_id_in_context(force=True)
         if not _hasscopeattr(self, Gui.__ON_INIT_NAME):  # type: ignore[arg-type]
             _setscopeattr(self, Gui.__ON_INIT_NAME, True)  # type: ignore[arg-type]
@@ -2531,7 +2530,9 @@ class Gui:
                 if nav_page != page_name:
                     if isinstance(nav_page, str):
                         if self._navigate(nav_page):
-                            return HttpResponse("Root page cannot be re-routed by on_navigate().", 302)
+                            return self._server.create_http_response(
+                                "Root page cannot be re-routed by on_navigate().", 302
+                            )
                     else:
                         _warn(f"on_navigate() returned an invalid page name '{nav_page}'.")
                     nav_page = page_name
@@ -2555,7 +2556,7 @@ class Gui:
     def _get_page(self, page_name: str):
         return next((page_i for page_i in self._config.pages if page_i._route == page_name), None)
 
-    def __render_page(self, page_name: str) -> t.Any:
+    def _render_page(self, page_name: str) -> t.Any:
         self.__set_client_id_in_context()
         nav_page = self._get_navigated_page(page_name)
         if not isinstance(nav_page, str):
@@ -2566,7 +2567,7 @@ class Gui:
             page = self._get_partial(nav_page)
         # Make sure that there is a page instance found
         if page is None:
-            return HttpResponse(
+            return self._server.create_http_response(
                 self._server.direct_render_json({"error": f"Page '{nav_page}' doesn't exist."}),
                 400,
                 {"Content-Type": "application/json; charset=utf-8"},
@@ -2598,7 +2599,7 @@ class Gui:
                 context,  # noqa: E501
             )
         else:
-            return HttpResponse("No page template", 404)
+            return self._server.create_http_response("No page template", 404)
 
     def _render_route(self) -> t.Any:
         return self._server.direct_render_json(
@@ -2613,7 +2614,7 @@ class Gui:
     def get_flask_app(self):
         raise RuntimeError("'get_flask_app()' is deprecated. Use 'get_server_instance()' instead.")
 
-    def get_server_instance(self) -> t.Union[Flask, FastAPI]:
+    def get_server_instance(self):
         """Get the internal server application.
 
         This method must be called **after** `(Gui.)run()^` was invoked.
@@ -2626,10 +2627,8 @@ class Gui:
         raise RuntimeError("get_server_instance() cannot be invoked before run() has been called.")
 
     def get_app_context(self):
-        if get_server_type() == "flask":
-            return t.cast(Flask, self.get_server_instance()).app_context()
-        if get_server_type() == "fastapi":
-            return get_request_meta_ctx()
+        if hasattr(self, "_server"):
+            return self._server.get_app_context()
         return contextlib.nullcontext()
 
     def _get_port(self) -> int:
@@ -2673,7 +2672,7 @@ class Gui:
                 )
         return _webapp_path
 
-    def __get_client_config(self) -> t.Dict[str, t.Any]:
+    def _get_client_config(self) -> t.Dict[str, t.Any]:
         config = {
             "timeZone": self._config.get_time_zone(),
             "darkMode": self._get_config("dark_mode", True),
@@ -2694,7 +2693,7 @@ class Gui:
             config["stylekit"] = {_to_camel_case(k): v for k, v in stylekit.items()}
         return config
 
-    def __get_css_vars(self) -> str:
+    def _get_css_vars(self) -> str:
         css_vars = []
         if stylekit := self._get_config("stylekit", _default_stylekit):
             for k, v in stylekit.items():
@@ -2705,7 +2704,7 @@ class Gui:
         app_config = self._config.config
         # Init server if there is no server
         if not hasattr(self, "_server"):
-            self._server = create_server(
+            self._server = self._server_class(
                 self,  # type: ignore[arg-type]
                 path_mapping=self._path_mapping,
                 server=self._server_instance,
@@ -2717,7 +2716,7 @@ class Gui:
         # Stop and reinitialize the server if it is still running as a thread
         if (_is_in_notebook() or app_config.get("run_in_thread")) and hasattr(self._server, "_thread"):
             self.stop()
-            self._server = create_server(
+            self._server = self._server_class(
                 self,  # type: ignore[arg-type]
                 path_mapping=self._path_mapping,
                 server=self._server_instance,
@@ -2794,140 +2793,7 @@ class Gui:
         if self.__script_files:
             scripts.extend(self.__script_files)
 
-        server_type = get_server_type()
-        if server_type == "flask":
-            self.__register_flask_blueprint(styles, scripts)
-        if server_type == "fastapi":
-            self.__register_fastapi_router(styles, scripts)
-
-    def __register_flask_blueprint(self, styles: t.List[str], scripts: t.List[str]):
-        flask_blueprint: t.List[Blueprint] = []
-
-        pages_bp = Blueprint("taipy_pages", __name__)
-        # Run parse markdown to force variables binding at runtime
-        pages_bp.add_url_rule(f"/{Gui.__JSX_URL}/<path:page_name>", view_func=self.__render_page)
-        # server URL Rule for flask rendered react-router
-        pages_bp.add_url_rule(f"/{Gui.__INIT_URL}", view_func=self.__init_route)
-        flask_blueprint.append(pages_bp)
-
-        # server URL Rule for taipy images
-        images_bp = Blueprint("taipy_images", __name__)
-        images_bp.add_url_rule(f"/{Gui.__CONTENT_ROOT}/<path:path>", view_func=self.__serve_content)
-        flask_blueprint.append(images_bp)
-
-        # server URL for uploaded files
-        upload_bp = Blueprint("taipy_upload", __name__)
-        upload_bp.add_url_rule(f"/{Gui.__UPLOAD_URL}", view_func=self.__upload_files, methods=["POST"])
-        flask_blueprint.append(upload_bp)
-
-        # server URL for user content
-        user_content_bp = Blueprint("taipy_user_content", __name__)
-        user_content_bp.add_url_rule(f"/{Gui.__USER_CONTENT_URL}/<path:path>", view_func=self.__serve_user_content)
-        flask_blueprint.append(user_content_bp)
-
-        # server URL for extension resources
-        extension_bp = Blueprint("taipy_extensions", __name__)
-        extension_bp.add_url_rule(f"/{Gui._EXTENSION_ROOT}/<path:path>", view_func=self.__serve_extension)
-        flask_blueprint.append(extension_bp)
-
-        flask_blueprint.append(
-            self._server._get_default_handler(
-                static_folder=self._get_webapp_path(),
-                template_folder=self._get_webapp_path(),
-                title=self._get_config("title", "Taipy App"),
-                favicon=self._get_config("favicon", Gui.__DEFAULT_FAVICON_URL),
-                root_margin=self._get_config("margin", None),
-                scripts=scripts,
-                styles=styles,
-                version=self.__get_version(),
-                client_config=self.__get_client_config(),
-                watermark=self._get_config("watermark", None),
-                css_vars=self.__get_css_vars(),
-                base_url=self._get_config("base_url", "/"),
-            )
-        )
-
-        _Hooks()._add_external_blueprint(self, __name__, blueprint=flask_blueprint)
-
-        # Register Flask Blueprint if available
-        for bp in flask_blueprint:
-            t.cast(Flask, self._server.get_server_instance()).register_blueprint(bp)
-
-    def __register_fastapi_router(self, styles: t.List[str], scripts: t.List[str]):
-        fastapi_router: t.List[APIRouter] = []
-
-        pages_router = APIRouter()
-        pages_router.add_api_route(
-            f"/{Gui.__JSX_URL}/{{page_name:path}}",
-            self.__render_page,
-            methods=["GET"],
-            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
-        )
-        pages_router.add_api_route(
-            f"/{Gui.__INIT_URL}",
-            self.__init_route,
-            methods=["GET"],
-            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
-        )
-        fastapi_router.append(pages_router)
-
-        images_router = APIRouter()
-        images_router.add_api_route(
-            f"/{Gui.__CONTENT_ROOT}/{{path:path}}",
-            self.__serve_content,
-            methods=["GET"],
-            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
-        )
-        fastapi_router.append(images_router)
-
-        upload_router = APIRouter()
-        upload_router.add_api_route(
-            f"/{Gui.__UPLOAD_URL}",
-            self.__upload_files,
-            methods=["POST"],
-            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
-        )
-        fastapi_router.append(upload_router)
-
-        user_content_router = APIRouter()
-        user_content_router.add_api_route(
-            f"/{Gui.__USER_CONTENT_URL}/{{path:path}}",
-            self.__serve_user_content,
-            methods=["GET"],
-            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
-        )
-        fastapi_router.append(user_content_router)
-
-        extension_router = APIRouter()
-        extension_router.add_api_route(
-            f"/{Gui._EXTENSION_ROOT}/{{path:path}}",
-            self.__serve_extension,
-            methods=["GET"],
-            dependencies=[Depends(request_dependency), Depends(request_meta_dependency)],
-        )
-        fastapi_router.append(extension_router)
-
-        fastapi_router.append(
-            self._server._get_default_handler(
-                static_folder=self._get_webapp_path(),
-                template_folder=self._get_webapp_path(),
-                title=self._get_config("title", "Taipy App"),
-                favicon=self._get_config("favicon", Gui.__DEFAULT_FAVICON_URL),
-                root_margin=self._get_config("margin", None),
-                scripts=scripts,
-                styles=styles,
-                version=self.__get_version(),
-                client_config=self.__get_client_config(),
-                watermark=self._get_config("watermark", None),
-                css_vars=self.__get_css_vars(),
-                base_url=self._get_config("base_url", "/"),
-            )
-        )
-
-        _Hooks()._add_external_router(self, __name__, router=fastapi_router)
-
-        for router in fastapi_router:
-            t.cast(FastAPI, self._server.get_server_instance()).include_router(router)
+        self._server.register_routes(styles, scripts)
 
     def _get_accessor(self):
         if self.__accessors is None:
@@ -2940,7 +2806,7 @@ class Gui:
         run_in_thread: bool = False,
         async_mode: str = "gevent",
         **kwargs,
-    ) -> t.Union[Flask, FastAPI, None]:
+    ) -> t.Union[None, t.Any]:
         """Start the server that delivers pages to web clients.
 
         Once you enter `run()`, users can run web browsers and point to the web server

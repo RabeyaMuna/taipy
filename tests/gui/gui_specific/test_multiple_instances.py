@@ -20,13 +20,13 @@ def test_multiple_instance(gui_server, helpers):
     gui2.run(run_server=False)
     client1 = gui1._server.test_client()
     client2 = gui2._server.test_client()
-    assert_multiple_instance(client1, helpers, 'value="gui1"')
-    assert_multiple_instance(client2, helpers, 'value="gui2"')
+    assert_multiple_instance(gui1, client1, helpers, 'value="gui1"')
+    assert_multiple_instance(gui2, client2, helpers, 'value="gui2"')
 
 
-def assert_multiple_instance(client, helpers, expected_value):
+def assert_multiple_instance(gui, client, helpers, expected_value):
     response = client.get("/taipy-jsx/TaiPy_root_page")
-    response_data = helpers.get_response_data(response)
+    response_data = helpers.get_response_data(response, gui)
     assert response.status_code == 200
     assert isinstance(response_data, dict)
     assert "jsx" in response_data

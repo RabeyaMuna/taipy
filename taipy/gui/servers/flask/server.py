@@ -40,35 +40,40 @@ from werkzeug.serving import is_running_from_reloader
 import __main__
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
+from ..._hook import _Hooks
 from ..._renderers.json import _TaipyJsonProvider
 from ...config import ServerConfig
 from ...utils import _is_in_notebook, _is_port_open, _RuntimeManager
 from ..server import _Server
-from .request import RequestAccessorFlask
+from .request import _RequestAccessorFlask
 
 if t.TYPE_CHECKING:
     from ...gui import Gui
 
 
-class FlaskServer(_Server):
+class _FlaskServer(_Server):
+    type = "flask"
+    server_base_class = Flask
+
     def __init__(
         self,
-        gui: Gui,
+        gui: "Gui",
         server: t.Optional[Flask] = None,
         path_mapping: t.Optional[dict] = None,
         async_mode: t.Optional[str] = None,
         allow_upgrades: bool = True,
         server_config: t.Optional[ServerConfig] = None,
     ):
-        self.request = RequestAccessorFlask()
+        self.request = _RequestAccessorFlask()
         self._gui = gui
         server_config = server_config or {}
-        self._server = server
-        if self._server is None:
+        if server is None:
             flask_config: t.Dict[str, t.Any] = {"import_name": "Taipy"}
             if "flask" in server_config and isinstance(server_config["flask"], dict):
                 flask_config.update(server_config["flask"])
             self._server = Flask(**flask_config)
+        else:
+            self._server = server
         if "SECRET_KEY" not in self._server.config or not self._server.config["SECRET_KEY"]:
             self._server.config["SECRET_KEY"] = "TaIpY"
 
@@ -174,7 +179,7 @@ class FlaskServer(_Server):
             if (file_path := str(os.path.normpath((base_path := static_folder + os.path.sep) + path))).startswith(
                 base_path
             ) and os.path.isfile(file_path):
-                return self.send_from_directory(base_path, path)
+                return send_from_directory(base_path, path)
             # use the path mapping to detect and find resources
             for k, v in self.__path_mapping.items():
                 if (
@@ -184,7 +189,7 @@ class FlaskServer(_Server):
                     ).startswith(base_path)
                     and os.path.isfile(file_path)
                 ):
-                    return self.send_from_directory(base_path, path[len(k) + 1 :])
+                    return send_from_directory(base_path, path[len(k) + 1 :])
             if (
                 hasattr(__main__, "__file__")
                 and (
@@ -195,7 +200,7 @@ class FlaskServer(_Server):
                 and os.path.isfile(file_path)
                 and not self._is_ignored(file_path)
             ):
-                return self.send_from_directory(base_path, path)
+                return send_from_directory(base_path, path)
             if (
                 (
                     file_path := str(os.path.normpath((base_path := self._gui._root_dir + os.path.sep) + path))  # type: ignore[attr-defined]
@@ -203,7 +208,7 @@ class FlaskServer(_Server):
                 and os.path.isfile(file_path)
                 and not self._is_ignored(file_path)
             ):
-                return self.send_from_directory(base_path, path)
+                return send_from_directory(base_path, path)
             return ("", 404)
 
         return taipy_bp
@@ -213,6 +218,9 @@ class FlaskServer(_Server):
 
     def get_server_instance(self):
         return self._server
+
+    def get_app_context(self):
+        return self._server.app_context()
 
     def get_port(self):
         return self._port
@@ -264,6 +272,67 @@ class FlaskServer(_Server):
 
     def is_running_from_reloader(self):
         return is_running_from_reloader()
+
+    def create_http_response(self, message, status_code=200, headers=None):
+        if headers is None:
+            headers = {}
+        return (message, status_code, headers)
+
+    def register_routes(self, styles: t.List[str], scripts: t.List[str]):
+        from ...gui import Gui
+
+        gui = self._gui
+        flask_blueprint: t.List[Blueprint] = []
+
+        pages_bp = Blueprint("taipy_pages", __name__)
+        # Run parse markdown to force variables binding at runtime
+        pages_bp.add_url_rule(f"/{Gui._JSX_URL}/<path:page_name>", view_func=gui._render_page)
+        # server URL Rule for flask rendered react-router
+        pages_bp.add_url_rule(f"/{Gui._INIT_URL}", view_func=gui._init_route)
+        flask_blueprint.append(pages_bp)
+
+        # server URL Rule for taipy images
+        images_bp = Blueprint("taipy_images", __name__)
+        images_bp.add_url_rule(f"/{Gui._CONTENT_ROOT}/<path:path>", view_func=gui._serve_content)
+        flask_blueprint.append(images_bp)
+
+        # server URL for uploaded files
+        upload_bp = Blueprint("taipy_upload", __name__)
+        upload_bp.add_url_rule(f"/{Gui._UPLOAD_URL}", view_func=gui._upload_files, methods=["POST"])
+        flask_blueprint.append(upload_bp)
+
+        # server URL for user content
+        user_content_bp = Blueprint("taipy_user_content", __name__)
+        user_content_bp.add_url_rule(f"/{Gui._USER_CONTENT_URL}/<path:path>", view_func=gui._serve_user_content)
+        flask_blueprint.append(user_content_bp)
+
+        # server URL for extension resources
+        extension_bp = Blueprint("taipy_extensions", __name__)
+        extension_bp.add_url_rule(f"/{Gui._EXTENSION_ROOT}/<path:path>", view_func=gui._serve_extension)
+        flask_blueprint.append(extension_bp)
+
+        flask_blueprint.append(
+            self._get_default_handler(
+                static_folder=gui._get_webapp_path(),
+                template_folder=gui._get_webapp_path(),
+                title=gui._get_config("title", "Taipy App"),
+                favicon=gui._get_config("favicon", Gui._DEFAULT_FAVICON_URL),
+                root_margin=gui._get_config("margin", None),
+                scripts=scripts,
+                styles=styles,
+                version=gui._get_version(),
+                client_config=gui._get_client_config(),
+                watermark=gui._get_config("watermark", None),
+                css_vars=gui._get_css_vars(),
+                base_url=gui._get_config("base_url", "/"),
+            )
+        )
+
+        _Hooks()._add_external_routes(gui, type=self.type, router=flask_blueprint)
+
+        # Register Flask Blueprint if available
+        for bp in flask_blueprint:
+            self._server.register_blueprint(bp)
 
     def run(
         self,

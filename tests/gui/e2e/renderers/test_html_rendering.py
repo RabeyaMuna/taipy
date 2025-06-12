@@ -18,14 +18,12 @@ from urllib.request import urlopen
 
 import pytest
 
-from taipy.gui.servers.utils import get_server_type
-
 if util.find_spec("playwright"):
     from playwright._impl._page import Page
 
 from taipy.gui import Gui, Html
-from taipy.gui.servers.fastapi import FastAPIServer
-from taipy.gui.servers.flask import FlaskServer
+from taipy.gui.servers.fastapi import _FastAPIServer
+from taipy.gui.servers.flask import _FlaskServer
 
 
 @pytest.mark.teste2e
@@ -101,9 +99,9 @@ def test_html_render_bind_assets(page: "Page", gui: Gui, helpers, e2e_base_url, 
 
 
 @pytest.mark.teste2e
-def test_html_render_path_mapping(page: "Page", gui: Gui, helpers, e2e_base_url, e2e_port):
-    if get_server_type() == "flask":
-        gui._server = FlaskServer(
+def test_html_render_path_mapping(page: "Page", gui: Gui, helpers, e2e_base_url, e2e_port, gui_server):
+    if gui_server == "flask":
+        gui._server = _FlaskServer(
             gui,
             path_mapping={
                 "style": f"{Path(Path(__file__).parent.resolve())}{os.path.sep}test-assets{os.path.sep}style"
@@ -112,7 +110,7 @@ def test_html_render_path_mapping(page: "Page", gui: Gui, helpers, e2e_base_url,
             async_mode="gevent",
         )
     else:
-        gui._server = FastAPIServer(
+        gui._server = _FastAPIServer(
             gui,
             path_mapping={
                 "style": f"{Path(Path(__file__).parent.resolve())}{os.path.sep}test-assets{os.path.sep}style"

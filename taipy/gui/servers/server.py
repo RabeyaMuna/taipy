@@ -23,8 +23,7 @@ import __main__
 
 from ..utils import _is_port_open, _RuntimeManager
 from ..utils._css import get_style
-from ..utils.singleton import _Singleton
-from .request import BaseRequestAccessor
+from .request import _BaseRequestAccessor
 
 
 class _Server(ABC):
@@ -33,7 +32,9 @@ class _Server(ABC):
     _OPENING_CURLY = r"\1&#x7B;"
     _CLOSING_CURLY = r"&#x7D;\2"
     _RESOURCE_HANDLER_ARG = "tprh"
-    request: BaseRequestAccessor = BaseRequestAccessor()  # type: ignore[assignment]
+    request: _BaseRequestAccessor = _BaseRequestAccessor()
+    type: str = ""
+    server_base_class: t.Optional[t.Any] = None
 
     def _is_ignored(self, file_path: str) -> bool:
         if not hasattr(self, "_ignore_matches"):
@@ -71,6 +72,10 @@ class _Server(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def get_app_context(self) -> t.Any:
+        raise NotImplementedError
+
+    @abstractmethod
     def get_port(self) -> int:
         raise NotImplementedError
 
@@ -100,6 +105,10 @@ class _Server(ABC):
 
     @abstractmethod
     def is_running_from_reloader(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def register_routes(self, styles: t.List[str], scripts: t.List[str]):
         raise NotImplementedError
 
     @staticmethod
@@ -151,6 +160,12 @@ class _Server(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def create_http_response(
+        self, message: str, status_code: int = 200, headers: t.Optional[t.Dict[str, t.Any]] = None
+    ):
+        raise NotImplementedError
+
+    @abstractmethod
     def run(
         self,
         host,
@@ -173,28 +188,3 @@ class _Server(ABC):
     @abstractmethod
     def stop_thread(self):
         raise NotImplementedError
-
-
-ServerFrameworks = t.Literal["flask", "fastapi"]
-
-
-class ServerManager(object, metaclass=_Singleton):
-    def __init__(self):
-        self._server: t.Optional[_Server] = None
-        self._framework: t.Optional[ServerFrameworks] = None
-
-    def set_server(self, server: _Server):
-        self._server = server
-
-    def get_server(self) -> _Server:
-        if self._server is None:
-            raise RuntimeError("Server is not set")
-        return self._server
-
-    def set_server_type(self, framework: ServerFrameworks):
-        self._framework = framework
-
-    def get_server_type(self) -> ServerFrameworks:
-        if self._framework is None:
-            raise RuntimeError("Server type is not set")
-        return self._framework

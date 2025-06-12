@@ -15,7 +15,7 @@ from contextvars import ContextVar
 from fastapi import Request
 from flask.ctx import _AppCtxGlobals
 
-from ..request import BaseRequestAccessor
+from ..request import _BaseRequestAccessor
 from .utils import run_async
 
 request: ContextVar[t.Optional[Request]] = ContextVar("request", default=None)
@@ -23,7 +23,7 @@ request_meta: ContextVar[t.Optional[_AppCtxGlobals]] = ContextVar("request_meta"
 sid: ContextVar[t.Optional[str]] = ContextVar("sid", default=None)
 
 
-class RequestAccessorFastAPI(BaseRequestAccessor):
+class _RequestAccessorFastAPI(_BaseRequestAccessor):
     def args(self, to_dict=False):
         fastapi_r = request.get()
         return {} if fastapi_r is None else fastapi_r.query_params if to_dict is False else dict(fastapi_r.query_params)
