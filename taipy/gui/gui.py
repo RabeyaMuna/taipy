@@ -23,7 +23,6 @@ import time
 import typing as t
 import warnings
 from importlib import metadata, util
-from importlib.util import find_spec
 from inspect import currentframe, getabsfile, iscoroutinefunction, ismethod, ismodule
 from pathlib import Path
 from threading import Thread, Timer
@@ -35,6 +34,7 @@ import tzlocal
 from werkzeug.utils import secure_filename
 
 import __main__  # noqa: F401
+from taipy.common import _module_exists
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
 if util.find_spec("pyngrok"):
@@ -513,7 +513,7 @@ class Gui:
             provider_fn = Gui.__content_providers.get(type(content))
             if provider_fn is None:
                 # try plotly
-                if find_spec("plotly") and find_spec("plotly.graph_objs"):
+                if _module_exists("plotly.graph_objs"):
                     from plotly.graph_objs import Figure as PlotlyFigure  # type: ignore[reportMissingImports]
 
                     if isinstance(content, PlotlyFigure):
@@ -525,7 +525,7 @@ class Gui:
                         provider_fn = get_plotly_content
             if provider_fn is None:
                 # try matplotlib
-                if find_spec("matplotlib") and find_spec("matplotlib.figure"):
+                if _module_exists("matplotlib.figure"):
                     from matplotlib.figure import Figure as MatplotlibFigure
 
                     if isinstance(content, MatplotlibFigure):
