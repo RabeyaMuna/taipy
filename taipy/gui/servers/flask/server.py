@@ -328,7 +328,7 @@ class _FlaskServer(_Server):
             )
         )
 
-        _Hooks()._add_external_routes(gui, type=self.type, router=flask_blueprint)
+        _Hooks()._add_external_routes(gui, type=self.type, routers=flask_blueprint)
 
         # Register Flask Blueprint if available
         for bp in flask_blueprint:

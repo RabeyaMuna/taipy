@@ -63,7 +63,6 @@ from .servers import (
     _Server,
     get_server_request_accessor,
 )
-from .servers.fastapi import _FastAPIServer
 from .servers.flask import _FlaskServer
 from .state import State, _AsyncState, _GuiState
 from .types import _WsType
@@ -223,8 +222,8 @@ class Gui:
             script_paths (Union[str, Path, List[Union[str, Path]], None]):
                 Specifies the path(s) to the JavaScript files or external resources used by the application.
                 It can be a single URL or path, or a list containing multiple URLs and/or paths.
-            server (Union[str, Any]): The server type to use for the application.<br/>
-                It can be `flask` or `fastapi`, or a Flask or FastAPI instance.<br/>
+            server (Union[str, Any]): The server to use for the application.<br/>
+                It can be a string representing the type of the server or a server instance.<br/>
                 The default value is `flask`.<br/>
         """
         # store suspected local containing frame
@@ -243,10 +242,10 @@ class Gui:
 
         # Server config
         self._server_instance: t.Any = None
+        _additional_supported_server: t.List[t.Type[_Server]] = _Hooks()._get_additional_supported_server() or []
         _supported_server: t.List[t.Type[_Server]] = [
             _FlaskServer,
-            _FastAPIServer,
-        ]
+        ] + _additional_supported_server
         _server_class: t.Optional[t.Type[_Server]] = None
         for server_class in _supported_server:
             if isinstance(server, str) and server == server_class.type:
