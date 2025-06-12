@@ -12,7 +12,6 @@
 import os
 import re
 import typing as t
-from importlib.util import find_spec
 
 import pytz
 import tzlocal
@@ -282,14 +281,13 @@ class _Config(object):
                         )
 
         # Taipy-config
-        if find_spec("taipy") and find_spec("taipy.common.config"):
-            from taipy.common.config import Config as TaipyConfig
+        from taipy.common.config import Config as TaipyConfig
 
-            try:
-                section = TaipyConfig.unique_sections["gui"]
-                self.config.update(section._to_dict())
-            except KeyError:
-                _warn("taipy-common section for taipy-gui is not initialized.")
+        try:
+            section = TaipyConfig.unique_sections["gui"]
+            self.config.update(section._to_dict())
+        except KeyError:
+            _warn("taipy-common section for taipy-gui is not initialized.")
 
         # Load from system arguments
         self._handle_argparse()
