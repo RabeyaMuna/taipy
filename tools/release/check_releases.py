@@ -19,7 +19,7 @@
 import os
 import sys
 
-from common import PACKAGES
+from common import Package
 
 
 def usage() -> None:
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     _path = sys.argv[1]
     _version = sys.argv[2]
 
-    for package in [f"taipy-{_version}.tar.gz"] + [f"taipy-{p}-{_version}.tar.gz" for p in PACKAGES]:
+    for package in [f"taipy-{_version}.tar.gz"] + [f"taipy-{p}-{_version}.tar.gz" for p in Package.NAMES]:
         if not os.path.exists(os.path.join(_path, package)):
             print(f"Package {package} does not exist")  # noqa: T201
             sys.exit(1)
