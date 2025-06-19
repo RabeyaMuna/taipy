@@ -99,7 +99,7 @@ class EventProcessor(_CoreEventConsumerBase):
             if __name__ == "__main__":
                 event_processor = EventProcessor()
                 event_processor.on_event(callback=on_entity_creation, operation=EventOperation.CREATION)
-                event_processor.on_event(callback=scenario_event, entity_type=EventEntityType.SCENARIO)
+                event_processor.on_event(callback=on_scenario, entity_type=EventEntityType.SCENARIO)
                 event_processor.start()
             ```
 
@@ -386,7 +386,7 @@ class EventProcessor(_CoreEventConsumerBase):
 
         !!! example
 
-            === "Two callbacks for all scenario creations"
+            === "A callback for all scenario creations"
 
                 ```python
                 import taipy as tp
