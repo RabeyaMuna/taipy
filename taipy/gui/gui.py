@@ -85,6 +85,7 @@ from .utils import (
     _hasscopeattr,
     _is_function,
     _is_in_notebook,
+    _is_plotly_figure,
     _is_unnamed_function,
     _LocalsContext,
     _MapDict,
@@ -97,6 +98,7 @@ from .utils import (
     _TaipyData,
     _TaipyLov,
     _TaipyLovValue,
+    _TaipyToJson,
     _to_camel_case,
     _variable_decode,
     is_debugging,
@@ -883,6 +885,7 @@ class Gui:
             if derived_modified is not None:
                 self.__send_var_list_update(list(derived_modified), var_name)
 
+
     def _get_real_var_name(self, var_name: str) -> t.Tuple[str, str]:
         if not var_name:
             return (var_name, var_name)
@@ -1187,6 +1190,7 @@ class Gui:
             ):  # type: ignore
                 newvalue = {"__taipy_refresh": True}
             else:
+                is_json = False
                 if isinstance(newvalue, (_TaipyContent, _TaipyContentImage)):
                     ret_value = self.__get_content_accessor().get_info(
                         t.cast(str, front_var), newvalue.get(), isinstance(newvalue, _TaipyContentImage)
@@ -1204,14 +1208,17 @@ class Gui:
                         newvalue.get_name(), newvalue.get(), id_only=isinstance(newvalue, _TaipyLovValue)
                     )
                 elif isinstance(newvalue, _TaipyBase):
+                    is_json = isinstance(newvalue, _TaipyToJson)
                     newvalue = newvalue.get()
                 # Skip in taipy-gui, available in custom frontend
                 if isinstance(newvalue, (dict, _MapDict)) and not _Hooks()._is_in_custom_page_context():
                     continue
+                if _is_plotly_figure(newvalue):
+                        continue
                 if isinstance(newvalue, float) and math.isnan(newvalue):
                     # do not let NaN go through json, it is not handle well (dies silently through websocket)
                     newvalue = None
-                if newvalue is not None and not isinstance(newvalue, str):
+                if newvalue is not None and not isinstance(newvalue, str) and not is_json:
                     debug_warnings: t.List[warnings.WarningMessage] = []
                     with warnings.catch_warnings(record=True) as warns:
                         warnings.resetwarnings()
@@ -2612,7 +2619,7 @@ class Gui:
         ):
             return _Hooks()._handle_custom_page_render(self, page_name, pr)
         # Handle page rendering
-        context = page.render(self)  # type: ignore[arg-type]
+        context = page.render(self)
         if (
             nav_page == Gui.__root_page_name
             and page._rendered_jsx is not None
