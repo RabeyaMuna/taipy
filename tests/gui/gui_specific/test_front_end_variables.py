@@ -9,18 +9,18 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-import inspect
 
-from taipy.gui import Gui, Html
+from taipy.gui import Gui, Markdown
 
 
-def test_simple_html(gui: Gui, helpers):
-    # html_string = "<html><head></head><body><h1>test</h1><taipy:field value=\"test\"/></body></html>"
-    html_string = "<html><head></head><body><h1>test</h1></body></html>"
-    gui._set_frame(inspect.currentframe())
-    gui.add_page("test", Html(html_string))
-    gui.run(run_server=False)
+def test_variable_binding(helpers, gui_server):
+    x = "a string"  # noqa: F841
+    gui = Gui(server=gui_server)
+    gui.add_page("test", Markdown("<|{not x}|>"))
+    gui.run(run_server=False, single_client=True)
     client = gui._server.test_client()
-    response = client.get(f"/{Gui._JSX_URL}/test")
-    jsx = helpers.get_response_data(response, gui)["jsx"]
-    assert jsx == "<h1>test</h1>"
+    client.get(f"/{Gui._JSX_URL}/test")
+    fv_set = gui._Gui__front_end_variables # type: ignore[reportAttributeAccessIssue]
+    assert len(fv_set) == 1
+    assert "x" not in fv_set
+    helpers.test_cleanup()
