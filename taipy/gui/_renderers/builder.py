@@ -467,7 +467,8 @@ class _Builder:
     ):
         if is_var and isinstance(value, str):
             self.__gui._add_front_end_variable(value)
-            value = _get_client_var_name(value) if client_var_name else value
+        if is_var and isinstance(value, str) and client_var_name:
+            value = _get_client_var_name(value)
         return self.set_attribute(name, "{!" + (str(value).lower() if isinstance(value, bool) else str(value)) + "!}")
 
     @staticmethod
