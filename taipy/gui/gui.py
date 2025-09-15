@@ -446,7 +446,10 @@ class Gui:
             ]
         )
 
+        # Init Event Manager
         self.__event_manager = _EventManager()
+
+        self.__front_end_variables: t.Set[str] = set()
 
         # Init Gui Hooks
         _Hooks()._init(self)
@@ -1183,6 +1186,9 @@ class Gui:
             elif isinstance(v, _DoNotUpdate):
                 modified_vars.remove(k)
         for _var in modified_vars:
+            if not self.__is_front_end_variable(_var):
+                _TaipyLogger._get_logger().debug(f"Skipping variable '{_var}' not in front-end.")
+                continue
             newvalue = values.get(_var)
             custom_page_filtered_types = _Hooks()._get_resource_handler_data_layer_supported_types()
             if isinstance(newvalue, (_TaipyData)) or (
@@ -3107,3 +3113,9 @@ class Gui:
         finally:
             if this_sid:
                 get_server_request_accessor(self).set_sid(this_sid)
+
+    def _add_front_end_variable(self, var_name: str):
+        self.__front_end_variables.add(var_name)
+
+    def __is_front_end_variable(self, var_name: str) -> bool:
+        return var_name in self.__front_end_variables
