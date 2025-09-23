@@ -553,7 +553,6 @@ export const taipyReducer = (state: TaipyState, baseAction: TaipyBaseAction): Ta
             return { ...state, data: data };
         }
         case Types.Patch:
-            console.log("Patch", action);
             const patchDesc = action as unknown as TaipyPatchAction;
             if (patchDesc.names && patchDesc.names.length > 0 && (patchDesc.change || patchDesc.remove)) {
                 const patchedData = {} as typeof state.data;
