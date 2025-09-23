@@ -39,6 +39,7 @@ from .html import _get_css_var_value
 from .is_debugging import is_debugging
 from .is_port_open import _is_port_open
 from .isnotebook import _is_in_notebook
+from .patch import _patch_value
 from .types import (
     _DoNotUpdate,
     _TaipyBase,

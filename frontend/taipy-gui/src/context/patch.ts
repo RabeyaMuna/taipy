@@ -1,0 +1,119 @@
+/*
+ * Copyright 2021-2025 Avaiga Private Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+
+export interface PatchChange {
+    [key: string | number]: string | number | boolean | null | PatchChange;
+}
+export interface PatchRemove {
+    [key: string | number]: null | PatchRemove;
+}
+
+const ONLY_DIGITS = /^\d+$/;
+
+export const patchValue = <T>(toBePatched: T, change?: PatchChange, remove?: PatchRemove): T => {
+    let patchedValue = toBePatched;
+    if (change) {
+        // Apply changes
+        Object.entries(change).forEach(([k, v]) => {
+            const idx = Number(k);
+            if (ONLY_DIGITS.test(k) && Array.isArray(toBePatched) && toBePatched.length > idx) {
+                const oldValue = (toBePatched as Array<unknown>)[idx];
+                if (oldValue !== v) {
+                    if (Array.isArray(v) && v.length > 0) {
+                        if (patchedValue === toBePatched) {
+                            patchedValue = [...toBePatched] as T;
+                        }
+                        (patchedValue as Array<unknown>).splice(idx, v.length, ...v);
+                    } else if (oldValue !== null && typeof oldValue === "object" && v !== null && typeof v === "object") {
+                        const newValue = patchValue(oldValue, v);
+                        if (newValue !== oldValue) {
+                            if (patchedValue === toBePatched) {
+                                patchedValue = [...toBePatched] as T;
+                            }
+                            (patchedValue as Array<unknown>)[idx] = newValue;
+                        }
+                    } else if ((oldValue === null || typeof oldValue !== "object") && (v === null || typeof v !== "object")) {
+                        if (patchedValue === toBePatched) {
+                            patchedValue = [...toBePatched] as T;
+                        }
+                        (patchedValue as Array<unknown>)[idx] = v;
+                    }
+                }
+            } else if (toBePatched && typeof toBePatched === "object" && !Array.isArray(toBePatched)) {
+                const oldValue = (toBePatched as Record<string, unknown>)[k];
+                if (oldValue !== v) {
+                    if (Array.isArray(v) && v.length > 0) {
+                        if (patchedValue === toBePatched) {
+                            patchedValue = { ...toBePatched };
+                        }
+                        (patchedValue as Record<string, unknown>)[k] = v;
+                    } else if (oldValue !== null && typeof oldValue === "object" && v !== null && typeof v === "object") {
+                        const newValue = patchValue(oldValue, v);
+                        if (newValue !== oldValue) {
+                            if (patchedValue === toBePatched) {
+                                patchedValue = { ...toBePatched };
+                            }
+                            (patchedValue as Record<string, unknown>)[k] = newValue;
+                        }
+                    } else if ((oldValue === null || typeof oldValue !== "object") && (v === null || typeof v !== "object")) {
+                        if (patchedValue === toBePatched) {
+                            patchedValue = { ...toBePatched };
+                        }
+                        (patchedValue as Record<string, unknown>)[k] = v;
+                    }
+                }
+            }
+        });
+    }
+    if (remove) {
+        // Apply removals
+        Object.entries(remove).forEach(([k, v]) => {
+            const idx = Number(k);
+            if (ONLY_DIGITS.test(k) && Array.isArray(toBePatched) && toBePatched.length > idx) {
+                const oldValue = (toBePatched as Array<unknown>)[idx];
+                if (v === null) {
+                    if (patchedValue === toBePatched) {
+                        patchedValue = [...toBePatched] as T;
+                    }
+                    (patchedValue as Array<unknown>).splice(idx, 1);
+                } else if (typeof v === "object" && !Array.isArray(v)) {
+                    const newValue = patchValue(oldValue, undefined, v);
+                    if (newValue !== oldValue) {
+                        if (patchedValue === toBePatched) {
+                            patchedValue = [...toBePatched] as T;
+                        }
+                        (patchedValue as Array<unknown>)[idx] = newValue;
+                    }
+                }
+            } else if (toBePatched && typeof toBePatched === "object" && !Array.isArray(toBePatched)) {
+                const oldValue = (toBePatched as Record<string, unknown>)[k];
+                if (v === null) {
+                    if (patchedValue === toBePatched) {
+                        patchedValue = { ...toBePatched };
+                    }
+                    delete (patchedValue as Record<string, unknown>)[k];
+                } else if (typeof v === "object" && !Array.isArray(v)) {
+                    const newValue = patchValue(oldValue, undefined, v);
+                    if (newValue !== oldValue) {
+                        if (patchedValue === toBePatched) {
+                            patchedValue = { ...toBePatched };
+                        }
+                        (patchedValue as Record<string, unknown>)[k] = newValue;
+                    }
+                }
+            }
+        });
+    }
+    return patchedValue;
+};
+

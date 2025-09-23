@@ -51,6 +51,7 @@ class _WsType(Enum):
     FAVICON = "FV"
     BROADCAST = "BC"
     LOCAL_STORAGE = "LS"
+    PATCH = "PT"
 
 
 NumberTypes = {"int", "int64", "float", "float64"}

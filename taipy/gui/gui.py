@@ -88,6 +88,7 @@ from .utils import (
     _is_unnamed_function,
     _LocalsContext,
     _MapDict,
+    _patch_value,
     _setscopeattr,
     _setscopeattr_drill,
     _TaipyBase,
@@ -887,7 +888,6 @@ class Gui:
             if derived_modified is not None:
                 self.__send_var_list_update(list(derived_modified), var_name)
 
-
     def _get_real_var_name(self, var_name: str) -> t.Tuple[str, str]:
         if not var_name:
             return (var_name, var_name)
@@ -1454,6 +1454,16 @@ class Gui:
             }
         )
 
+    def __send_ws_patch(self, names: t.List[str], change: t.Optional[dict] = None, remove: t.Optional[dict] = None):
+        self.__send_ws(
+            {
+                "type": _WsType.PATCH.value,
+                "names": names,
+                "change": change,
+                "remove": remove,
+            }
+        )
+
     def __send_ws_block(
         self,
         action: t.Optional[str] = None,
@@ -1818,6 +1828,9 @@ class Gui:
         if self.__evaluator is None:
             return False
         return self.__evaluator._is_expression(expr)
+
+    def _get_variable_dependencies(self, var_name: str) -> t.Set[str]:
+        return self.__evaluator._get_variable_dependencies(var_name)
 
     # make components resettable
     def _set_building(self, building: bool):
@@ -3117,3 +3130,19 @@ class Gui:
 
     def __is_front_end_variable(self, var_name: str) -> bool:
         return var_name in self.__front_end_variables
+
+    def _patch_variable(
+        self, var_name: str, change: t.Optional[dict] = None, remove: t.Optional[dict] = None, value: t.Any = None
+    ):
+        if value and (change or remove):
+            # patch local variable
+            _patch_value(value, change, remove)
+            var_name = self._bind_var(var_name)
+            deps = [dep for dep in self._get_variable_dependencies(var_name) if dep in self.__front_end_variables]
+            if deps:
+                # send patch to client
+                self.__send_ws_patch(
+                    deps,
+                    change,
+                    remove,
+                )
