@@ -34,8 +34,26 @@ export const patchValue = <T>(toBePatched: T, change?: PatchChange, remove?: Pat
                         if (patchedValue === toBePatched) {
                             patchedValue = [...toBePatched] as T;
                         }
-                        (patchedValue as Array<unknown>).splice(idx, v.length, ...v);
-                    } else if (oldValue !== null && typeof oldValue === "object" && v !== null && typeof v === "object") {
+                        const newArray = (v as Array<unknown>).map((item, j) => {
+                            const oldItem = (toBePatched as Array<unknown>)[idx + j];
+                            if (
+                                typeof item === "object" &&
+                                item !== null &&
+                                typeof oldItem === "object" &&
+                                oldItem !== null
+                            ) {
+                                return patchValue(oldItem, item as PatchChange);
+                            } else {
+                                return item;
+                            }
+                        });
+                        (patchedValue as Array<unknown>).splice(idx, newArray.length, ...newArray);
+                    } else if (
+                        oldValue !== null &&
+                        typeof oldValue === "object" &&
+                        v !== null &&
+                        typeof v === "object"
+                    ) {
                         const newValue = patchValue(oldValue, v);
                         if (newValue !== oldValue) {
                             if (patchedValue === toBePatched) {
@@ -43,7 +61,10 @@ export const patchValue = <T>(toBePatched: T, change?: PatchChange, remove?: Pat
                             }
                             (patchedValue as Array<unknown>)[idx] = newValue;
                         }
-                    } else if ((oldValue === null || typeof oldValue !== "object") && (v === null || typeof v !== "object")) {
+                    } else if (
+                        (oldValue === null || typeof oldValue !== "object") &&
+                        (v === null || typeof v !== "object")
+                    ) {
                         if (patchedValue === toBePatched) {
                             patchedValue = [...toBePatched] as T;
                         }
@@ -58,7 +79,12 @@ export const patchValue = <T>(toBePatched: T, change?: PatchChange, remove?: Pat
                             patchedValue = { ...toBePatched };
                         }
                         (patchedValue as Record<string, unknown>)[k] = v;
-                    } else if (oldValue !== null && typeof oldValue === "object" && v !== null && typeof v === "object") {
+                    } else if (
+                        oldValue !== null &&
+                        typeof oldValue === "object" &&
+                        v !== null &&
+                        typeof v === "object"
+                    ) {
                         const newValue = patchValue(oldValue, v);
                         if (newValue !== oldValue) {
                             if (patchedValue === toBePatched) {
@@ -66,7 +92,10 @@ export const patchValue = <T>(toBePatched: T, change?: PatchChange, remove?: Pat
                             }
                             (patchedValue as Record<string, unknown>)[k] = newValue;
                         }
-                    } else if ((oldValue === null || typeof oldValue !== "object") && (v === null || typeof v !== "object")) {
+                    } else if (
+                        (oldValue === null || typeof oldValue !== "object") &&
+                        (v === null || typeof v !== "object")
+                    ) {
                         if (patchedValue === toBePatched) {
                             patchedValue = { ...toBePatched };
                         }
@@ -117,4 +146,3 @@ export const patchValue = <T>(toBePatched: T, change?: PatchChange, remove?: Pat
     }
     return patchedValue;
 };
-

@@ -60,6 +60,13 @@ describe("patchValue", () => {
             expect(newObj.a.b[2].c).toBe(-1);
         });
 
+        it("should update an array of objects", () => {
+            const obj = { a: { b: [{c: 1}, {c: 2, d: 3}, {c: 4}] } };
+            const newObj = patchValue(obj, { a: { b: { 1: [{c: -1}] as unknown as number } } });
+            expect(newObj.a.b[1].c).toBe(-1);
+            expect(newObj.a.b[1].d).toBe(3);
+        });
+
         it("should not create nested arrays if they don't exist", () => {
             const obj = {};
             const originalObj = JSON.stringify(obj);
