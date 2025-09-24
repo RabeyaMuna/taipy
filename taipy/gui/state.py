@@ -155,10 +155,10 @@ class State(SimpleNamespace, metaclass=ABCMeta):
 
     @abstractmethod
     def patch(self, name: str, change: t.Optional[dict] = None, remove: t.Optional[dict] = None):
-        """Patch a variable on all clients.
+        """Patch a variable on a client.
 
-        All connected clients will receive an update of the variable called *name* with the
-        provided change and/or remove description, even if it is not shared.
+        The connected client will receive an update of the variable called *name* with the
+        provided change and/or remove description.
 
         Arguments:
             name (str): The variable name to update.
@@ -166,6 +166,9 @@ class State(SimpleNamespace, metaclass=ABCMeta):
                 Defaults to None.
             remove (dict, optional): A dictionary describing the elements to remove from the variable.
                 Defaults to None.
+
+        TODO: Add examples here.
+        state.patch("data", change={"y": 4: 50})
         """
         ...
 

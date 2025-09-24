@@ -15,41 +15,43 @@ from . import _MapDict
 
 
 def _patch_value(value: t.Any, change: t.Optional[dict] = None, remove: t.Optional[dict] = None) -> t.Any:  # noqa: C901
-  if isinstance(value, _MapDict):
-      value = value._dict
-  if isinstance(value, dict):
-      if change:
-          for k, v in change.items():
-              if k in value:
-                if isinstance(v, dict):
-                    value[k] = _patch_value(value[k], v)
-                else:
-                    value[k] = v
-      if remove:
-          for k, v in remove.items():
-              if k in value:
-                if isinstance(v, dict):
-                    value[k] = _patch_value(value[k], remove=v)
-                else:
-                    del value[k]
-  elif isinstance(value, list):
-      if change:
-          for k, v in change.items():
-              if isinstance(k, int) and 0 <= k < len(value):
-                  if isinstance(v, dict):
-                      value[k] = _patch_value(value[k], v)
-                  else:
-                      if isinstance(v, list):
-                        value = value[:k] + v + value[k + 1 + len(v):]
-                      else:
+    original_value = value
+    if isinstance(value, _MapDict):
+        value = value._dict
+    # TODO handle dataframe
+    if isinstance(value, dict):
+        if change:
+            for k, v in change.items():
+                if k in value:
+                    if isinstance(v, dict):
+                        value[k] = _patch_value(value[k], v)
+                    else:
                         value[k] = v
-      if remove:
-          # To avoid index shift, we sort the keys in reverse order
-          for k in sorted(remove.keys(), reverse=True):
-              if isinstance(k, int) and 0 <= k < len(value):
-                  v = remove[k]
-                  if isinstance(v, dict):
-                      value[k] = _patch_value(value[k], remove=v)
-                  else:
-                      del value[k]
-  return value
+        if remove:
+            for k, v in remove.items():
+                if k in value:
+                    if isinstance(v, dict):
+                        value[k] = _patch_value(value[k], remove=v)
+                    else:
+                        del value[k]
+    elif isinstance(value, list):
+        if change:
+            for k, v in change.items():
+                if isinstance(k, int) and 0 <= k < len(value):
+                    if isinstance(v, dict):
+                        value[k] = _patch_value(value[k], v)
+                    else:
+                        if isinstance(v, list):
+                            value = value[:k] + v + value[k + 1 + len(v) :]
+                        else:
+                            value[k] = v
+        if remove:
+            # To avoid index shift, we sort the keys in reverse order
+            for k in sorted(remove.keys(), reverse=True):
+                if isinstance(k, int) and 0 <= k < len(value):
+                    v = remove[k]
+                    if isinstance(v, dict):
+                        value[k] = _patch_value(value[k], remove=v)
+                    else:
+                        del value[k]
+    return original_value

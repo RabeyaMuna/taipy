@@ -1454,7 +1454,9 @@ class Gui:
             }
         )
 
-    def __send_ws_patch(self, names: t.List[str], change: t.Optional[dict] = None, remove: t.Optional[dict] = None) -> None:
+    def __send_ws_patch(
+        self, names: t.List[str], change: t.Optional[dict] = None, remove: t.Optional[dict] = None
+    ) -> None:
         self.__send_ws(
             {
                 "type": _WsType.PATCH.value,

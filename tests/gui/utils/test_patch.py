@@ -39,3 +39,8 @@ def test_patch_remove_list():
     obj = { "a": { "b": { "c": [0, 1, 2] } } }
     new_obj = _patch_value(obj, None,  { "a": { "b": { "c": {1: None} } } })
     assert new_obj.get("a").get("b").get("c", "") == [0, 2]
+
+def test_patch_change_whole_list():
+    obj = { "a": { "b": { "c": [0, 2, 4] } } }
+    new_obj = _patch_value(obj, { "a": { "b": { "c": [1, 3, 5] } } })
+    assert new_obj.get("a").get("b").get("c") == [1, 3, 5]
