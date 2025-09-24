@@ -3133,7 +3133,7 @@ class Gui:
 
     def _patch_variable(
         self, var_name: str, change: t.Optional[dict] = None, remove: t.Optional[dict] = None, value: t.Any = None
-    ):
+    ) -> None:
         if value and (change or remove):
             # patch local variable
             _patch_value(value, change, remove)
