@@ -27,6 +27,7 @@ export const patchValue = <T>(toBePatched: T, change?: PatchChange, remove?: Pat
         Object.entries(change).forEach(([k, v]) => {
             const idx = Number(k);
             if (ONLY_DIGITS.test(k) && Array.isArray(toBePatched) && toBePatched.length > idx) {
+                // TODO deal with _tp_index
                 const oldValue = (toBePatched as Array<unknown>)[idx];
                 if (oldValue !== v) {
                     if (Array.isArray(v) && v.length > 0) {
