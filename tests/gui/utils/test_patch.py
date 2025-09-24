@@ -44,3 +44,9 @@ def test_patch_change_whole_list():
     obj = { "a": { "b": { "c": [0, 2, 4] } } }
     new_obj = _patch_value(obj, { "a": { "b": { "c": [1, 3, 5] } } })
     assert new_obj.get("a").get("b").get("c") == [1, 3, 5]
+
+def test_update_object_in_array():
+    obj = { "a": { "b": [{"c": 1}, {"c": 2}, {"c": 3}] } }
+    new_obj = _patch_value(obj, { "a": { "b": { 2: { "c": -1 } } } })
+    assert new_obj.get("a").get("b", [])[2].get("c") == -1
+    assert new_obj.get("a").get("b", [])[0].get("c") == 1
