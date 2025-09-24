@@ -168,7 +168,16 @@ class State(SimpleNamespace, metaclass=ABCMeta):
                 Defaults to None.
 
         TODO: Add examples here.
-        state.patch("data", change={"y": 4: 50})
+        state.patch("data", change={"y": "anything"})
+        state.patch("data", change={"a": {"b": "anything"}})
+        state.patch("data", change={"y": {4: "something"}})
+        state.patch("data", change={"y": {4: ["something", "else"]}})
+        state.patch("data", change={"y": {4: [{"b": "patch object in list", "c": "else"}]}})
+        state.patch("data", remove={"y": None})
+
+        Not supported yet:
+        patch dataframe on the back end (the data is patched on the front end)
+        patch sorted data in a table (the wrong data will be patched if the table is sorted)
         """
         ...
 
