@@ -34,12 +34,14 @@ describe("patchValue", () => {
             const newObj = patchValue(obj, { a: { b: { 1: 4 } } });
             expect(newObj.a.b[1]).toBe(4);
         });
+
         it("should replace array", () => {
             const obj = { a: { b: [1, 2, 3] } };
             const newObj = patchValue(obj, { a: { b: [0] as unknown as number } });
             expect(newObj.a.b.length).toBe(1);
             expect(newObj.a.b[0]).toBe(0);
         });
+
         it("should update array", () => {
             const obj = { a: { b: [1, 2, 3] } };
             const newObj = patchValue(obj, { a: { b: { 2: [-1, -2] as unknown as number } } });
@@ -49,6 +51,15 @@ describe("patchValue", () => {
             expect(newObj.a.b[2]).toBe(-1);
             expect(newObj.a.b[3]).toBe(-2);
         });
+
+        it("should update object in array", () => {
+            const obj = { a: { b: [{c: 1}, {c: 2}, {c: 3}] } };
+            const newObj = patchValue(obj, { a: { b: { 2: {c: -1} } } });
+            expect(newObj.a.b.length).toBe(3);
+            expect(newObj.a.b[0].c).toBe(1);
+            expect(newObj.a.b[2].c).toBe(-1);
+        });
+
         it("should not create nested arrays if they don't exist", () => {
             const obj = {};
             const originalObj = JSON.stringify(obj);
