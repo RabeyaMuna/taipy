@@ -82,7 +82,7 @@ export const patchValue = <T>(toBePatched: T, change?: PatchChange, remove?: Pat
                         (oldValue === null || typeof oldValue !== "object") &&
                         (v === null || typeof v !== "object")
                     ) {
-                        if (idx > (patchedValue as Array<unknown>).length) {
+                        if (idx >= (patchedValue as Array<unknown>).length) {
                             patchedValue = [...(patchedValue as Array<unknown>), v] as T;
                         } else {
                             if (patchedValue === toBePatched) {
