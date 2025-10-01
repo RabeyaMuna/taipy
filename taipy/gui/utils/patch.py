@@ -57,7 +57,7 @@ def _patch_value(value: t.Any, change: t.Optional[dict] = None, remove: t.Option
                                     else:
                                         value.append(nv)
                         else:
-                            value[k] = v
+                            value[idx] = v
                     else:
                         if isinstance(v, list):
                             value.extend(v)
