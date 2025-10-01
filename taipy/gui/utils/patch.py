@@ -37,22 +37,32 @@ def _patch_value(value: t.Any, change: t.Optional[dict] = None, remove: t.Option
     elif isinstance(value, list):
         if change:
             for k, v in change.items():
-                if isinstance(k, int) and 0 <= k < len(value):
-                    if isinstance(v, dict):
-                        value[k] = _patch_value(value[k], v)
-                    else:
+                if isinstance(k, int):
+                    insert = k < 0
+                    idx = k if k >= 0 else -1 - k
+                    if idx < len(value):
+                        if isinstance(v, dict):
+                            value[idx] = _patch_value(value[idx], v)
                         if isinstance(v, list):
-                            for idx, nv in enumerate(v, start=k):
-                                if idx < len(value):
-                                    value[idx] = (
-                                        _patch_value(value[idx], nv)
-                                        if isinstance(nv, dict)
-                                        else nv
-                                    )
-                                else:
-                                    value.append(nv)
+                            if insert:
+                                value[idx: idx] = v
+                            else:
+                                for jdx, nv in enumerate(v, start=idx):
+                                    if jdx < len(value):
+                                        value[jdx] = (
+                                            _patch_value(value[jdx], nv)
+                                            if isinstance(nv, dict)
+                                            else nv
+                                        )
+                                    else:
+                                        value.append(nv)
                         else:
                             value[k] = v
+                    else:
+                        if isinstance(v, list):
+                            value.extend(v)
+                        else:
+                            value.append(v)
         if remove:
             # To avoid index shift, we sort the keys in reverse order
             for k in sorted(remove.keys(), reverse=True):

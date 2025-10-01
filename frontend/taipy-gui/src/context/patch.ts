@@ -18,36 +18,53 @@ export interface PatchRemove {
     [key: string | number]: null | PatchRemove;
 }
 
-const ONLY_DIGITS = /^\d+$/;
+const RE_NUMBER = /^-?\d+$/;
 
 export const patchValue = <T>(toBePatched: T, change?: PatchChange, remove?: PatchRemove): T => {
     let patchedValue = toBePatched;
     if (change) {
         // Apply changes
         Object.entries(change).forEach(([k, v]) => {
-            const idx = Number(k);
-            if (ONLY_DIGITS.test(k) && Array.isArray(toBePatched) && toBePatched.length > idx) {
+            const sIdx = Number(k);
+            const idx = sIdx < 0 ? -1 - sIdx : sIdx;
+            const insert = sIdx < 0;
+            if (
+                Array.isArray(toBePatched) &&
+                RE_NUMBER.test(k) &&
+                (insert ? toBePatched.length > idx : toBePatched.length >= idx)
+            ) {
                 // TODO deal with _tp_index
-                const oldValue = (toBePatched as Array<unknown>)[idx];
+                const oldValue = toBePatched[idx];
                 if (oldValue !== v) {
                     if (Array.isArray(v) && v.length > 0) {
-                        if (patchedValue === toBePatched) {
-                            patchedValue = [...toBePatched] as T;
-                        }
-                        const newArray = (v as Array<unknown>).map((item, j) => {
-                            const oldItem = (toBePatched as Array<unknown>)[idx + j];
-                            if (
-                                typeof item === "object" &&
-                                item !== null &&
-                                typeof oldItem === "object" &&
-                                oldItem !== null
-                            ) {
-                                return patchValue(oldItem, item as PatchChange);
+                        if (insert) {
+                            if (idx > (patchedValue as Array<unknown>).length) {
+                                patchedValue = [...(patchedValue as Array<unknown>), ...v] as T;
                             } else {
-                                return item;
+                                if (patchedValue === toBePatched) {
+                                    patchedValue = [...toBePatched] as T;
+                                }
+                                (patchedValue as Array<unknown>).splice(idx, 0, ...v);
                             }
-                        });
-                        (patchedValue as Array<unknown>).splice(idx, newArray.length, ...newArray);
+                        } else {
+                            if (patchedValue === toBePatched) {
+                                patchedValue = [...toBePatched] as T;
+                            }
+                            const newArray = (v as Array<unknown>).map((item, j) => {
+                                const oldItem = (toBePatched as Array<unknown>)[idx + j];
+                                if (
+                                    typeof item === "object" &&
+                                    item !== null &&
+                                    typeof oldItem === "object" &&
+                                    oldItem !== null
+                                ) {
+                                    return patchValue(oldItem, item as PatchChange);
+                                } else {
+                                    return item;
+                                }
+                            });
+                            (patchedValue as Array<unknown>).splice(idx, newArray.length, ...newArray);
+                        }
                     } else if (
                         oldValue !== null &&
                         typeof oldValue === "object" &&
@@ -65,10 +82,14 @@ export const patchValue = <T>(toBePatched: T, change?: PatchChange, remove?: Pat
                         (oldValue === null || typeof oldValue !== "object") &&
                         (v === null || typeof v !== "object")
                     ) {
-                        if (patchedValue === toBePatched) {
-                            patchedValue = [...toBePatched] as T;
+                        if (idx > (patchedValue as Array<unknown>).length) {
+                            patchedValue = [...(patchedValue as Array<unknown>), v] as T;
+                        } else {
+                            if (patchedValue === toBePatched) {
+                                patchedValue = [...toBePatched] as T;
+                            }
+                            (patchedValue as Array<unknown>)[idx] = v;
                         }
-                        (patchedValue as Array<unknown>)[idx] = v;
                     }
                 }
             } else if (toBePatched && typeof toBePatched === "object" && !Array.isArray(toBePatched)) {
@@ -109,7 +130,7 @@ export const patchValue = <T>(toBePatched: T, change?: PatchChange, remove?: Pat
         // Apply removals
         Object.entries(remove).forEach(([k, v]) => {
             const idx = Number(k);
-            if (ONLY_DIGITS.test(k) && Array.isArray(toBePatched) && toBePatched.length > idx) {
+            if (RE_NUMBER.test(k) && Array.isArray(toBePatched) && toBePatched.length > idx) {
                 const oldValue = (toBePatched as Array<unknown>)[idx];
                 if (oldValue !== undefined) {
                     if (v !== null && typeof v === "object" && !Array.isArray(v)) {

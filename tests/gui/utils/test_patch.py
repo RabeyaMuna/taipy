@@ -56,3 +56,25 @@ def test_update_list_of_object():
     new_obj = _patch_value(obj, { "a": { "b": { 1: [{ "c": -1 }] } } })
     assert new_obj.get("a").get("b", [])[1].get("c") == -1
     assert new_obj.get("a").get("b", [])[1].get("d") == 3
+
+def test_insert_list():
+    obj = { "a": { "b": [0, 1, 2, 3] } }
+    new_obj = _patch_value(obj, { "a": { "b": { -1: [4, 5] } } })
+    assert new_obj.get("a").get("b") == [4, 5, 0, 1, 2, 3]
+
+    obj2 = { "a": { "b": [0, 1, 2, 3] } }
+    new_obj = _patch_value(obj2, { "a": { "b": { -3: [4, 5] } } })
+    assert new_obj.get("a").get("b") == [0, 1, 4, 5, 2, 3]
+
+def test_update_empty_list():
+    obj = { "a": { "b": [] } }
+    new_obj = _patch_value(obj, { "a": { "b": { 0: 1 } } })
+    assert new_obj.get("a").get("b", [])[0] == 1
+    assert len(new_obj.get("a").get("b", [])) == 1
+
+    obj2 = { "a": { "b": [] } }
+    new_obj = _patch_value(obj2, { "a": { "b": { 0: [1, 2] } } })
+    assert new_obj.get("a").get("b", [])[0] == 1
+    assert len(new_obj.get("a").get("b", [])) == 2
+
+

@@ -80,6 +80,33 @@ describe("patchValue", () => {
             const newObj = patchValue(obj, { a: { b: { c: 1 } } });
             expect(JSON.stringify(newObj)).toBe(originalObj);
         });
+
+        it("should insert in an array if index < 0", () => {
+            const obj = { a: { b: [0, 1, 2] } };
+            const newObj = patchValue(obj, { a: { b: { "-1": [3] as unknown as number } } });
+            expect(newObj.a.b[0]).toBe(3);
+            expect(newObj.a.b[1]).toBe(0);
+            expect(newObj.a.b.length).toBe(4);
+
+            const newObj2 = patchValue(obj, { a: { b: { "-3": [3] as unknown as number } } });
+            expect(newObj2.a.b[2]).toBe(3);
+            expect(newObj2.a.b[3]).toBe(2);
+            expect(newObj2.a.b.length).toBe(4);
+        });
+
+        it("should update an empty array", () => {
+            const obj = { a: { b: [] } };
+            const newObj = patchValue(obj, { a: { b: { 0: 1 as unknown as number } } });
+            expect(newObj.a.b[0]).toBe(1);
+            expect(newObj.a.b.length).toBe(1);
+
+            const newObj2 = patchValue(obj, { a: { b: { 0: [2, 3] as unknown as number } } });
+            expect(newObj2.a.b[0]).toBe(2);
+            expect(newObj2.a.b[1]).toBe(3);
+            expect(newObj2.a.b.length).toBe(2);
+
+        });
+
     });
     describe("remove", () => {
         it("should remove the value at the specified path", () => {
