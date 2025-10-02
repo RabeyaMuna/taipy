@@ -168,12 +168,17 @@ class State(SimpleNamespace, metaclass=ABCMeta):
                 Defaults to None.
 
         TODO: Add examples here.
-        state.patch("data", change={"y": "anything"})
-        state.patch("data", change={"a": {"b": "anything"}})
-        state.patch("data", change={"y": {4: "something"}})
-        state.patch("data", change={"y": {4: ["something", "else"]}})
+        state.patch("data", change={"y": "anything"}) # change the y value of the data dict
+        state.patch("data", change={"a": {"b": "anything"}}) # change the a.b value of the data dict
+        state.patch("data", change={"y": {4: "something"}}) # change the 4th index of the y list
+        state.patch("data", change={"y": {4: ["something", "else"]}}) # change the 4th and 5th indices of the y list
         state.patch("data", change={"y": {4: [{"b": "patch object in list", "c": "else"}]}})
-        state.patch("data", remove={"y": None})
+            # patch the 4th and 5th indices of the y list which is a list of object
+        state.patch("data", remove={"y": None}) # remove the y value of the data dict
+        state.patch("data", change={"a": {-1: [1,2]}}) # insert 2 elements at index 0 of list
+        state.patch("data", change={"a": {-10: [1,2]}})
+            # insert 2 elements at index 9 of list or append if len(list) < 9
+        state.patch("data", change={"a": {1000: [1,2]}}) # append 2 elements at the end of list if 1000 > len(list)
 
         Not supported yet:
         patch dataframe on the back end (the data is patched on the front end)
