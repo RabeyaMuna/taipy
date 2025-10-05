@@ -105,6 +105,7 @@ class _Factory:
                 ("on_action", PropertyType.function),
                 ("active", PropertyType.dynamic_boolean, True),
                 ("hover_text", PropertyType.dynamic_string),
+                ("auto_repeat", PropertyType.number),
                 ("width", PropertyType.string_or_number),
                 ("size", PropertyType.string),
                 ("variant", PropertyType.string),

@@ -466,7 +466,7 @@ class _Builder:
         self, name: str, value: t.Any, is_var: t.Optional[bool] = True, client_var_name: t.Optional[bool] = False
     ):
         if is_var and isinstance(value, str):
-            self.__gui._add_front_end_variable(value)
+            self.__gui._add_front_end_variable(value)  # type: ignore[attr-defined]
             if client_var_name:
                 value = _get_client_var_name(value)
         return self.set_attribute(name, "{!" + (str(value).lower() if isinstance(value, bool) else str(value)) + "!}")
