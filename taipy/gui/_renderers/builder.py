@@ -926,6 +926,9 @@ class _Builder:
                     self.__set_default_value(var_name, val, native_type=native_type)
                 else:
                     self.__set_default_value(var_name, var_type=var_type)
+        elif var_type == PropertyType.json:
+            # TODO - refactor with set_attributes
+            ...
         else:
             if var_type == PropertyType.data and (self.__control_type != "chart" or "figure" not in self.__prop_values):
                 _warn(f"{self.__control_type}.{var_name} property should be bound.")
@@ -1050,7 +1053,7 @@ class _Builder:
             self.__set_json_attribute(_to_camel_case(name), icons)
         return self
 
-    def set_attributes(self, attributes: t.List[tuple]):  # noqa: C901
+    def set_attributes(self, attributes: t.List[t.Union[str, t.Tuple[str, ...]]]):  # noqa: C901
         """
         TODO-undocumented
         Sets the attributes from the property with type and default value.
@@ -1066,8 +1069,12 @@ class _Builder:
             if not isinstance(attr, tuple):
                 attr = (attr,)
             var_type = _get_tuple_val(attr, 1, PropertyType.string)
-            if var_type == PropertyType.to_json:
+            is_dynamic_json = False
+            if var_type == PropertyType.json:
                 var_type = _TaipyToJson
+            elif var_type == PropertyType.dynamic_json:
+                var_type = _TaipyToJson
+                is_dynamic_json = True
             if var_type == PropertyType.any:
                 self.__set_any_attribute(attr[0], _get_tuple_val(attr, 2, None))
             elif var_type == PropertyType.dynamic_any:
@@ -1161,6 +1168,17 @@ class _Builder:
                     hash_name = self.__gui._evaluate_bind_holder(var_type, expr)  # type: ignore[attr-defined]
                     self.__update_vars.append(f"{prop_name}={hash_name}")
                     self.__set_react_attribute(prop_name, hash_name)
+                    if is_dynamic_json:
+                        val = self.__prop_values.get(attr[0])
+                        if val:
+                            json_val = var_type(val, "").get()  # type: ignore
+                            self.set_attribute(
+                                _to_camel_case(f"default_{prop_name}"),
+                                json.dumps(json_val),
+                            )
+                        else:
+                            # val is None
+                            ...
                 else:
                     val = self.__prop_values.get(attr[0])
                     self.set_attribute(

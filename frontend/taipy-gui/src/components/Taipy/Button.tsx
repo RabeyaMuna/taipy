@@ -36,6 +36,7 @@ const cardSx = { p: 0 };
 const initialRepeatDelay = 500; // Initial delay before auto-repeat starts (in ms)
 
 const Button = (props: ButtonProps) => {
+    // TODO: Allow default value for auto_repeat in the builder
     const { id, onAction = "", defaultLabel, size = "medium", variant = "outlined" } = props;
     const [value, setValue] = useState<stringIcon>("");
     const dispatch = useDispatch();
