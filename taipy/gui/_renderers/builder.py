@@ -211,22 +211,6 @@ class _Builder:
     def __set_json_attribute(self, name, value):
         return self.set_attribute(name, json.dumps(value, cls=_TaipyJsonEncoder))
 
-    def __set_any_attribute(self, name: str, default_value: t.Optional[str] = None):
-        value = self.__prop_values.get(name, default_value)
-        return self.__set_json_attribute(_to_camel_case(name), value)
-
-    def __set_dynamic_any_attribute(self, name: str, default_value: t.Optional[str] = None):
-        value = self.__prop_values.get(name, default_value)
-        self.__set_json_attribute(_to_camel_case(f"default_{name}"), value)
-
-        if hash := self.__hashes.get(name):
-            if isinstance(value, (dict, _MapDict)):
-                hash = self.__get_typed_hash_name(hash, PropertyType.dynamic_dict)
-            react_name = _to_camel_case(name)
-            self.__update_vars.append(f"{react_name}={hash}")
-            self.__set_react_attribute(react_name, hash)
-        return self
-
     def __get_boolean_attribute(self, name: str, default_value=False):
         bool_attr = self.__prop_values.get(name, default_value)
         return _is_true(bool_attr) if isinstance(bool_attr, str) else bool(bool_attr)
@@ -911,7 +895,7 @@ class _Builder:
                 )
                 native_type = True
         if var_type == PropertyType.dynamic_boolean:
-            return self.set_attributes([(var_name, var_type, bool(default_val), with_update)])
+            return self.set_attributes([(var_name, var_type, bool(default_val), with_update)])  # type: ignore
         if hash_name := self.__hashes.get(var_name):
             hash_name = self.__get_typed_hash_name(hash_name, var_type)
             self.__set_react_attribute(_to_camel_case(var_name), hash_name, client_var_name=True)
@@ -1075,11 +1059,7 @@ class _Builder:
             elif var_type == PropertyType.dynamic_json:
                 var_type = _TaipyToJson
                 is_dynamic_json = True
-            if var_type == PropertyType.any:
-                self.__set_any_attribute(attr[0], _get_tuple_val(attr, 2, None))
-            elif var_type == PropertyType.dynamic_any:
-                self.__set_dynamic_any_attribute(attr[0], _get_tuple_val(attr, 2, None))
-            elif var_type == PropertyType.boolean:
+            if var_type == PropertyType.boolean:
                 def_val = _get_tuple_val(attr, 2, False)
                 if isinstance(def_val, bool) or self.__prop_values.get(attr[0], None) is not None:
                     val = self.__get_boolean_attribute(attr[0], def_val)

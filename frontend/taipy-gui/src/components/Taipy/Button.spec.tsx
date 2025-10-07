@@ -15,7 +15,6 @@ import React from "react";
 import { render } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import userEvent from "@testing-library/user-event";
-
 import Button from "./Button";
 import { TaipyContext } from "../../context/taipyContext";
 import { TaipyState, INITIAL_STATE } from "../../context/taipyReducers";
@@ -106,7 +105,6 @@ describe("Button Component", () => {
         });
     });
     it("trigger once in auto-repeat mode after holding for less that half a second", async () => {
-        jest.useRealTimers();
         const dispatch = jest.fn();
         const state: TaipyState = INITIAL_STATE;
         const { getByText } = render(
@@ -116,23 +114,22 @@ describe("Button Component", () => {
         );
         const elt = getByText("Button");
         await userEvent.pointer([{ target: elt, keys: "[MouseLeft>]" }]);
-        jest.advanceTimersByTime(200);
+        await new Promise((r) => setTimeout(r, 50));
         await userEvent.pointer([{ target: elt, keys: "[/MouseLeft]" }]);
         const nCalls = dispatch.mock.calls.length;
         expect(nCalls).toBe(1);
     });
-    xit("trigger multiple times in auto-repeat mode after holding for 1 second", async () => {
-        jest.useRealTimers();
+    it("trigger multiple times in auto-repeat mode after holding for 1 second", async () => {
         const dispatch = jest.fn();
         const state: TaipyState = INITIAL_STATE;
         const { getByText } = render(
             <TaipyContext.Provider value={{ state, dispatch }}>
-                <Button label="Button" onAction="on_action" autoRepeat={200} />
+                <Button label="Button" onAction="on_action" autoRepeat={100} />
             </TaipyContext.Provider>
         );
         const elt = getByText("Button");
         await userEvent.pointer([{ target: elt, keys: "[MouseLeft>]" }]);
-        jest.advanceTimersByTime(500);
+        await new Promise((r) => setTimeout(r, 1000));
         await userEvent.pointer([{ target: elt, keys: "[/MouseLeft]" }]);
         const nCalls = dispatch.mock.calls.length;
         expect(nCalls).toBeGreaterThan(1);

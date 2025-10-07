@@ -71,14 +71,6 @@ class PropertyType(Enum):
     See `ElementProperty^` for more details.
     """
 
-    any = "any"
-    """
-    The property holds a value of any serializable type.
-    """
-    dynamic_any = "dynamicany"
-    """
-    The property is dynamic and holds a value of any serializable type.
-    """
     boolean = "boolean"
     """
     The property holds a Boolean value.
