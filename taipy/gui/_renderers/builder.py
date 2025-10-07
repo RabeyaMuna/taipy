@@ -1042,10 +1042,7 @@ class _Builder:
         attributes: t.List[
             t.Union[
                 str,  # -> PropertyType.string
-                tuple[str, ...],
-                tuple[str, PropertyType],
-                tuple[str, PropertyType, t.Any],  # With default value
-                tuple[str, PropertyType, bool, bool, bool],  # PropertyType.dynamic_boolean
+                tuple,  # -> (property name, property_type, [default value, ...])
             ]
         ],
     ):
