@@ -1037,7 +1037,7 @@ class _Builder:
             self.__set_json_attribute(_to_camel_case(name), icons)
         return self
 
-    def set_attributes(self, attributes: t.List[tuple]):
+    def set_attributes(self, attributes: t.List[tuple]):  # noqa: C901
         """
         TODO-undocumented
         Sets the attributes from the property with type and default value.
