@@ -1037,7 +1037,18 @@ class _Builder:
             self.__set_json_attribute(_to_camel_case(name), icons)
         return self
 
-    def set_attributes(self, attributes: t.List[t.Union[str, t.Tuple[str, ...]]]):  # noqa: C901
+    def set_attributes(
+        self,
+        attributes: t.List[
+            t.Union[
+                str,  # -> PropertyType.string
+                tuple[str, ...],
+                tuple[str, PropertyType],
+                tuple[str, PropertyType, t.Any],  # With default value
+                tuple[str, PropertyType, bool, bool, bool],  # PropertyType.dynamic_boolean
+            ]
+        ],
+    ):
         """
         TODO-undocumented
         Sets the attributes from the property with type and default value.

@@ -123,12 +123,12 @@ class _Factory:
                 ("with_input", PropertyType.dynamic_boolean, True),
                 ("users", PropertyType.lov),
                 ("sender_id",),
-                ("height",),
+                "height",
                 ("page_size", PropertyType.number),
                 ("max_file_size", PropertyType.number),
                 ("show_sender", PropertyType.boolean, False),
                 ("allow_send_images", PropertyType.boolean, True),
-                ("mode",),
+                "mode",
             ]
         ),
         "chart": lambda gui, control_type, attrs: _Builder(
@@ -177,9 +177,9 @@ class _Factory:
                 ("max", PropertyType.dynamic_date),
                 ("editable", PropertyType.dynamic_boolean, True),
                 ("hover_text", PropertyType.dynamic_string),
-                ("label",),
+                "label",
                 ("on_change", PropertyType.function),
-                ("format",),
+                "format",
                 ("width", PropertyType.string_or_number),
             ]
         )
@@ -198,10 +198,10 @@ class _Factory:
                 ("analogic", PropertyType.boolean),
                 ("editable", PropertyType.dynamic_boolean, True),
                 ("hover_text", PropertyType.dynamic_string),
-                ("label_start",),
+                "label_start",
                 ("label_end",),
                 ("on_change", PropertyType.function),
-                ("format",),
+                "format",
                 ("width", PropertyType.string_or_number),
             ]
         )
@@ -216,8 +216,8 @@ class _Factory:
         ._set_partial()  # partial should be set before page
         .set_attributes(
             [
-                ("page",),
-                ("title",),
+                "page",
+                "title",
                 ("on_action", PropertyType.function),
                 ("close_label", PropertyType.string),
                 ("labels", PropertyType.string_list),
@@ -237,7 +237,7 @@ class _Factory:
         ._set_partial()  # partial should be set before page
         .set_attributes(
             [
-                ("page",),
+                "page",
                 ("expanded", PropertyType.dynamic_boolean, True, True, False),
                 ("hover_text", PropertyType.dynamic_string),
                 ("on_change", PropertyType.function),
@@ -258,7 +258,7 @@ class _Factory:
                 ("render", PropertyType.dynamic_boolean, True),
                 ("auto", PropertyType.boolean, False),
                 ("bypass_preview", PropertyType.boolean, True),
-                ("name",),
+                "name",
                 ("hover_text", PropertyType.dynamic_string),
                 ("width", PropertyType.string_or_number),
             ]
@@ -277,8 +277,8 @@ class _Factory:
                 ("active", PropertyType.dynamic_boolean, True),
                 ("multiple", PropertyType.boolean, False),
                 ("selection_type", PropertyType.string),
-                ("extensions",),
-                ("drop_message",),
+                "extensions",
+                "drop_message",
                 ("hover_text", PropertyType.dynamic_string),
                 ("notify", PropertyType.boolean, True),
                 ("width", PropertyType.string_or_number),
@@ -296,8 +296,8 @@ class _Factory:
             [
                 ("on_action", PropertyType.function),
                 ("active", PropertyType.dynamic_boolean, True),
-                ("width",),
-                ("height",),
+                "width",
+                "height",
                 ("hover_text", PropertyType.dynamic_string),
             ]
         ),
@@ -334,8 +334,8 @@ class _Factory:
                 ("hover_text", PropertyType.dynamic_string),
                 ("on_change", PropertyType.function),
                 ("on_action", PropertyType.function),
-                ("action_keys",),
-                ("label",),
+                "action_keys",
+                "label",
                 ("change_delay", PropertyType.number, gui._get_config("change_delay", None)),
                 ("action_on_blur", PropertyType.boolean, False),
                 ("multiline", PropertyType.boolean, False),
@@ -350,8 +350,8 @@ class _Factory:
         .set_value_and_default(with_default=False)
         .set_attributes(
             [
-                ("columns[mobile]",),
-                ("gap",),
+                "columns[mobile]",
+                "gap",
             ]
         ),
         "login": lambda gui, control_type, attrs: _Builder(
@@ -374,14 +374,14 @@ class _Factory:
         .set_attributes(
             [
                 ("lov", PropertyType.lov),
-                ("label",),
+                "label",
                 ("on_action", PropertyType.function),
                 ("selected", PropertyType.dynamic_list),
                 ("inactive_ids", PropertyType.dynamic_list),
                 ("active", PropertyType.dynamic_boolean, True),
                 ("hover_text", PropertyType.dynamic_string),
-                ("width",),
-                ("width[mobile]",),
+                "width",
+                "width[mobile]",
                 ("expanded", PropertyType.boolean, False),
             ]
         )
@@ -395,7 +395,7 @@ class _Factory:
         .set_value_and_default(var_type=PropertyType.dynamic_number, native_type=True)
         .set_attributes(
             [
-                ("title",),
+                "title",
                 ("active", PropertyType.dynamic_boolean, True),
                 ("layout", PropertyType.dynamic_dict),
                 ("type", PropertyType.string, "circular"),
@@ -447,7 +447,7 @@ class _Factory:
                 ("hover_text", PropertyType.dynamic_string),
                 ("on_change", PropertyType.function),
                 ("on_action", PropertyType.function),
-                ("label",),
+                "label",
                 ("change_delay", PropertyType.number, gui._get_config("change_delay", None)),
                 ("action_on_blur", PropertyType.boolean, False),
                 ("width", PropertyType.string_or_number),
@@ -460,7 +460,7 @@ class _Factory:
         ._set_partial()  # partial should be set before page
         .set_attributes(
             [
-                ("page",),
+                "page",
                 ("anchor", PropertyType.string, "left"),
                 ("on_close", PropertyType.function),
                 ("persistent", PropertyType.boolean, False),
@@ -519,8 +519,8 @@ class _Factory:
                 ("multiple", PropertyType.boolean),
                 ("width", PropertyType.string_or_number),
                 ("on_change", PropertyType.function),
-                ("label",),
-                ("mode",),
+                "label",
+                "mode",
                 ("lov", PropertyType.lov),
                 ("selection_message", PropertyType.dynamic_string),
                 ("show_select_all", PropertyType.boolean),
@@ -539,13 +539,13 @@ class _Factory:
         .set_attributes(
             [
                 ("active", PropertyType.dynamic_boolean, True),
-                ("height",),
+                "height",
                 ("hover_text", PropertyType.dynamic_string),
                 ("value_by_id", PropertyType.boolean),
                 ("max", PropertyType.number, 100),
                 ("min", PropertyType.number, 0),
                 ("step", PropertyType.number, 1),
-                ("orientation",),
+                "orientation",
                 ("width", PropertyType.string, "300px"),
                 ("on_change", PropertyType.function),
                 ("continuous", PropertyType.boolean, None),
@@ -593,10 +593,10 @@ class _Factory:
                 ("on_delete", PropertyType.function, gui._get_call_method_name("table_on_delete")),
                 ("on_add", PropertyType.function, gui._get_call_method_name("table_on_add")),
                 ("on_action", PropertyType.function),
-                ("nan_value",),
+                "nan_value",
                 ("filter", PropertyType.boolean),
                 ("hover_text", PropertyType.dynamic_string),
-                ("size",),
+                "size",
                 ("downloadable", PropertyType.boolean),
                 ("use_checkbox", PropertyType.boolean),
                 ("sortable", PropertyType.boolean, True),
@@ -614,7 +614,7 @@ class _Factory:
         ._set_dataType()
         .set_attributes(
             [
-                ("format",),
+                "format",
                 ("hover_text", PropertyType.dynamic_string),
                 ("raw", PropertyType.boolean, False),
                 ("mode",),
@@ -635,8 +635,8 @@ class _Factory:
                 ("analogic", PropertyType.boolean),
                 ("editable", PropertyType.dynamic_boolean, True),
                 ("hover_text", PropertyType.dynamic_string),
-                ("label",),
-                ("format",),
+                "label",
+                "format",
                 ("width", PropertyType.string_or_number),
             ]
         )
@@ -653,7 +653,7 @@ class _Factory:
                 ("value_by_id", PropertyType.boolean),
                 ("allow_unselect", PropertyType.boolean),
                 ("on_change", PropertyType.function),
-                ("mode",),
+                "mode",
                 ("lov", PropertyType.single_lov),
                 ("width", PropertyType.string_or_number),
             ]
