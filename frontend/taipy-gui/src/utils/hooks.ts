@@ -163,7 +163,7 @@ export const useClassNames = (libClassName?: string, dynamicClassName?: string, 
 export const useWhyDidYouUpdate = (name: string, props: Record<string, unknown>): void => {
     // Get a mutable ref object where we can store props ...
     // ... for comparison next time this hook runs.
-    const previousProps = useRef<Record<string, unknown>>();
+    const previousProps = useRef<Record<string, unknown>>(null);
     useEffect(() => {
         if (previousProps.current) {
             // Get all keys from previous and current props
