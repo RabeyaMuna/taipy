@@ -76,7 +76,7 @@ describe("JSX Parser", () => {
     it("parse jsx with property and interpolation", async () => {
         const state = { property: "prop", objectProp: { subProp: "subProperty" }, numProp: 1, boolProp: true };
         const elements = parseJSX(
-            '<MyComponent prop="{!property!}" objectProp="{!objectProp!}" numProp="{!numProp!}" numProp2="{!100!}" boolProp="{!boolProp!}" boolProp2="{!false!}">Hello World</MyComponent>',
+            '<MyComponent prop="{!property!}" objectProp="{!objectProp!}" numProp="{!numProp!}" numProp2="{!-100.1!}" boolProp="{!boolProp!}" boolProp2="{!false!}">Hello World</MyComponent>',
             state
         );
         expect(elements).not.toBeNull();
@@ -91,6 +91,6 @@ describe("JSX Parser", () => {
         expect((elements[0].props as any).boolProp).toBe(true);
         expect((elements[0].props as any).noProp).toBeUndefined();
         expect((elements[0].props as any).boolProp2).toBe(false);
-        expect((elements[0].props as any).numProp2).toBe(100);
+        expect((elements[0].props as any).numProp2).toBe(-100.1);
     });
 });

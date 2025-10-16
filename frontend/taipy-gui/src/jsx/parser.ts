@@ -12,7 +12,8 @@
  */
 import React from "react";
 
-const JSX_INTERPOLATION = /\{\!([a-zA-Z0-9_\.]+)\!\}/gs;
+const JSX_INTERPOLATION = /\{\!([a-zA-Z0-9_\.\-]+)\!\}/gs;
+const IS_NUMBER = /^-?\d+(\.\d+)?$/;
 
 const parseText = (txt: string, state?: Record<string, unknown>) => {
     if (!JSX_INTERPOLATION.test(txt)) {
@@ -26,30 +27,36 @@ const replaceInterpolations = (txt: string, state?: Record<string, unknown>) => 
     JSX_INTERPOLATION.lastIndex = 0; // reset the regex state https://stackoverflow.com/questions/4724701/regexp-exec-returns-null-sporadically
     let interpolations = JSX_INTERPOLATION.exec(txt);
     if (interpolations && interpolations[0] === txt) {
-        if (state && state[interpolations[1]] !== undefined) {
-            return state[interpolations[1]];
+        const interpolationName = interpolations[1];
+        if (state && state[interpolationName] !== undefined) {
+            return state[interpolationName];
         } else {
-            if (interpolations[1] === "true") {
+            if (interpolationName === "true") {
                 return true;
             }
-            if (interpolations[1] === "false") {
+            if (interpolationName === "false") {
                 return false;
             }
-            if (interpolations[1] === "null") {
+            if (interpolationName === "null") {
                 return null;
             }
-            if (!isNaN(Number(interpolations[1]))) {
-                return Number(interpolations[1]);
+            if (IS_NUMBER.test(interpolationName)) {
+                const interpolationNumber = Number(interpolationName);
+                if (!isNaN(interpolationNumber)) {
+                    return interpolationNumber;
+                }
             }
             return undefined;
         }
     }
-    while ((interpolations)) {
+    while (interpolations) {
+        const interpolationName = interpolations[1];
         txt = txt.replace(
-            `{!${interpolations[1]}!}`,
-            state && state[interpolations[1]] !== undefined ? "" + state[interpolations[1]] : "undefined"
+            `{!${interpolationName}}!}`,
+            state && state[interpolationName] !== undefined ? "" + state[interpolationName] : "undefined"
         );
-        interpolations = JSX_INTERPOLATION.exec(txt)
+        JSX_INTERPOLATION.lastIndex = 0; // reset the regex state https://stackoverflow.com/questions/4724701/regexp-exec-returns-null-sporadically
+        interpolations = JSX_INTERPOLATION.exec(txt);
     }
     return txt;
 };
