@@ -63,7 +63,7 @@ const translate = (
 
     if (root.nodeType == 3) {
         //Textnodes
-        if (root.textContent.trim() === "") return null;
+        if (!root.textContent || root.textContent.trim() === "") return null;
         return "" + parseText(root.textContent, state);
     }
     const children =
