@@ -52,7 +52,7 @@ runs:
     - uses: actions/setup-node@v4
       if: inputs.install-gui
       with:
-        node-version: 20
+        node-version: 22
         cache: 'npm'
         cache-dependency-path: '**/package-lock.json'
 

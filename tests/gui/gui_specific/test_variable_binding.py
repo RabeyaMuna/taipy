@@ -30,7 +30,7 @@ def test_variable_binding(helpers, gui_server):
     client = gui._server.test_client()
     response = client.get(f"/{Gui._JSX_URL}/test")
     jsx = helpers.get_response_data(response, gui)["jsx"]
-    for expected in ["<Button", 'defaultLabel="button label"', "label={tpec_TpExPr_z_TPMDL_0}"]:
+    for expected in ["<Button", 'defaultLabel="button label"', 'label="{!tpec_TpExPr_z_TPMDL_0']:
         assert expected in jsx
     assert gui._bindings().x == x # type: ignore[reportAttributeAccessIssue]
     assert gui._bindings().y == y # type: ignore[reportAttributeAccessIssue]
