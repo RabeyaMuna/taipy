@@ -61,7 +61,7 @@ const translate = (
 ): React.ReactNode | null => {
     if (Array.isArray(root) && root.length == 0) return;
 
-    if (root.nodeType == 3) {
+    if (root.nodeType === 3) {
         //Textnodes
         if (!root.textContent || root.textContent.trim() === "") return null;
         return "" + parseText(root.textContent, state);
