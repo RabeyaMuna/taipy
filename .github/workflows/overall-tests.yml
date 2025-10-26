@@ -1,11 +1,6 @@
 name: Overall Test Workflow
 
-on:
-  push:
-    branches: [ develop, dev/*, release/* ]
-  pull_request:
-    branches: [ develop, dev/*, release/* ]
-  workflow_dispatch:
+on: push
 
 permissions:
   pull-requests: write
@@ -21,42 +16,44 @@ jobs:
     timeout-minutes: 50
     runs-on: ubuntu-latest
 
-    if: github.event_name == 'pull_request' && github.event.pull_request.base.repo.full_name == github.event.pull_request.head.repo.full_name
+    if: github.event_name == 'pull_request' && 
+      github.event.pull_request.base.repo.full_name == 
+      github.event.pull_request.head.repo.full_name
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Fetch full history to enable proper diff
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0    # Fetch full history to enable proper diff
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
-      - name: Install dependencies
-        id: install-dependencies
-        uses: ./.github/actions/install
-        with:
-          python-version: '3.11'
-          os: 'ubuntu-latest'
-          pipfile-version: 'min'
+    - name: Install dependencies
+      id: install-dependencies
+      uses: ./.github/actions/install
+      with:
+        python-version: '3.11'
+        os: ubuntu-latest
+        pipfile-version: min
 
-      - name: Pytest
-        run: |
-          python -m pip install xmltodict
-          pipenv run pytest --cov=taipy --cov-report=xml:${{ github.workspace }}/coverage.xml --cov-config=.coveragerc
-
-
-      - name: Fetch base branch
-        run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }}:refs/remotes/origin/${{ github.event.pull_request.base.ref }}
+    - name: Pytest
+      run: |
+        python -m pip install xmltodict
+        pipenv run pytest --cov=taipy --cov-report=xml:${{ github.workspace }}/coverage.xml --cov-config=.coveragerc
 
 
-      - name: Check total project coverage
-        run: |
-          python tools/coverage_check.py check-total --coverage-file ${{ github.workspace }}/coverage.xml --threshold 80
+    - name: Fetch base branch
+      run: |
+        git fetch origin ${{ github.event.pull_request.base.ref }}:refs/remotes/origin/${{ github.event.pull_request.base.ref }}
 
-      - name: Check pull request coverage
-        run: |
-          python tools/coverage_check.py check-changed --coverage-file ${{ github.workspace }}/coverage.xml --threshold 80 --base-branch ${{ github.event.pull_request.base.ref }}
+
+    - name: Check total project coverage
+      run: |
+        python tools/coverage_check.py check-total --coverage-file ${{ github.workspace }}/coverage.xml --threshold 80
+
+    - name: Check pull request coverage
+      run: |
+        python tools/coverage_check.py check-changed --coverage-file ${{ github.workspace }}/coverage.xml --threshold 80 --base-branch ${{ github.event.pull_request.base.ref }}
 
   overall-tests:
     needs: [partial-tests]
@@ -66,25 +63,25 @@ jobs:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
         os: [ubuntu-latest, windows-latest, macos-13]
-        pipfile-version: ['min', 'max']
+        pipfile-version: [min, max]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{matrix.python-version}}
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{matrix.python-version}}
 
-      - name: Install dependencies
-        id: install-dependencies
-        uses: ./.github/actions/install
-        with:
-          python-version: ${{ matrix.python-version }}
-          os: ${{ matrix.os }}
-          pipfile-version: ${{ matrix.pipfile-version }}
+    - name: Install dependencies
+      id: install-dependencies
+      uses: ./.github/actions/install
+      with:
+        python-version: ${{ matrix.python-version }}
+        os: ${{ matrix.os }}
+        pipfile-version: ${{ matrix.pipfile-version }}
 
-      - name: Pytest
-        run: |
-          pipenv run pytest -m "not orchestrator_dispatcher and not standalone and not teste2e" tests
+    - name: Pytest
+      run: |
+        pipenv run pytest -m "not orchestrator_dispatcher and not standalone and not teste2e" tests
 
   intermittent-tests:
     needs: [partial-tests]
@@ -94,22 +91,22 @@ jobs:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12']
         os: [ubuntu-latest, windows-latest, macos-13]
-        orchestrator: ['orchestrator_dispatcher', 'standalone']
-        pipfile-version: ['min', 'max']
+        orchestrator: [orchestrator_dispatcher, standalone]
+        pipfile-version: [min, max]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{matrix.python-version}}
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{matrix.python-version}}
 
-      - name: Install dependencies
-        uses: ./.github/actions/install
-        with:
-          os: ${{ matrix.os }}
-          install-gui: false
-          python-version: ${{ matrix.python-version }}
-          pipfile-version: ${{ matrix.pipfile-version }}
+    - name: Install dependencies
+      uses: ./.github/actions/install
+      with:
+        os: ${{ matrix.os }}
+        install-gui: false
+        python-version: ${{ matrix.python-version }}
+        pipfile-version: ${{ matrix.pipfile-version }}
 
-      - name: Pytest Core orchestrator_dispatcher
-        run: pipenv run pytest -m "${{ matrix.orchestrator }}" tests/core
+    - name: Pytest Core orchestrator_dispatcher
+      run: pipenv run pytest -m "${{ matrix.orchestrator }}" tests/core
