@@ -14,7 +14,7 @@ import json
 import typing as t
 from abc import ABC, abstractmethod
 from datetime import datetime
-from inspect import ismethod, signature
+from inspect import ismethod
 
 from .._warnings import _warn
 from ..json_properties import JsonProperty
