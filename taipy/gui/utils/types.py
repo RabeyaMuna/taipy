@@ -229,9 +229,10 @@ class _TaipyToJson(_TaipyBase):
             except Exception as e:
                 _warn("Issue while serializing 'JsonProperty'.", e)
         elif method := getattr(val, "to_json", None):
-            if ismethod(method) and len(signature(method).parameters) == 0:
+            if ismethod(method):
                 try:
-                    return method()
+                    json_val = method()
+                    return json.loads(json_val) if isinstance(json_val, str) else json_val
                 except Exception as e:
                     _warn("Issue while serializing object.", e)
             else:
