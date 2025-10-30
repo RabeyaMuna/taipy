@@ -52,7 +52,6 @@ def test_taipy_date():
     assert _TaipyDate(None, "x").get() is None
     _TaipyDate("", "x").cast_value("2022-03-03 00:00:00 UTC")
     _TaipyDate("", "x").cast_value(_string_to_date("2022-03-03 00:00:00 UTC"))
-
 def test_taipy_to_json():
     class TestJson(JsonProperty):
         def to_json(self):
