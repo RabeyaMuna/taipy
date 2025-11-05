@@ -31,15 +31,7 @@ from urllib.parse import unquote, urlencode, urlparse
 
 import markdown as md_lib
 import tzlocal
-from flask import (
-    Blueprint,
-    Flask,
-    g,
-    jsonify,
-    request,
-    send_file,
-    send_from_directory,
-)
+from flask import Blueprint, Flask, g, jsonify, request, send_file, send_from_directory
 from werkzeug.utils import secure_filename
 
 import __main__  # noqa: F401
@@ -144,10 +136,14 @@ class Gui:
     __DO_NOT_UPDATE_VALUE = _DoNotUpdate()
     _HTML_CONTENT_KEY = "__taipy_html_content"
     __USER_CONTENT_CB = "custom_user_content_cb"
-    __ROBOTO_FONT = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+    __ROBOTO_FONT = (
+        "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+    )
     __DOWNLOAD_ACTION = "__Taipy__download_csv"
     __DOWNLOAD_DELETE_ACTION = "__Taipy__download_delete_csv"
-    __DEFAULT_FAVICON_URL = "https://raw.githubusercontent.com/Avaiga/taipy-assets/develop/favicon.png"
+    __DEFAULT_FAVICON_URL = (
+        "https://raw.githubusercontent.com/Avaiga/taipy-assets/develop/favicon.png"
+    )
 
     __RE_HTML = re.compile(r"(.*?)\.html$")
     __RE_MD = re.compile(r"(.*?)\.md$")
@@ -415,7 +411,9 @@ class Gui:
             for library in libraries:
                 Gui.add_library(library)
 
-    def __load_scripts(self, script_paths: t.Union[str, Path, t.List[t.Union[str, Path]], None]):
+    def __load_scripts(
+        self, script_paths: t.Union[str, Path, t.List[t.Union[str, Path]], None]
+    ):
         if script_paths is None:
             return
         else:
@@ -438,7 +436,9 @@ class Gui:
                 ):
                     self.__script_files.append(str(script_path))
                 else:
-                    _warn(f"Script path '{script_path}' does not exist, is not a file, or is not a JavaScript file.")
+                    _warn(
+                        f"Script path '{script_path}' does not exist, is not a file, or is not a JavaScript file."
+                    )
 
             if not self.__script_files:
                 _warn("No JavaScript files found in the specified script paths.")
@@ -467,14 +467,18 @@ class Gui:
                     libs.append(library)
                 _ElementApiGenerator().add_library(library)
             else:
-                raise NameError(f"ElementLibrary passed to add_library() has an invalid name: '{library_name}'")
+                raise NameError(
+                    f"ElementLibrary passed to add_library() has an invalid name: '{library_name}'"
+                )
         else:  # pragma: no cover
             raise RuntimeError(
                 f"add_library() argument should be a subclass of ElementLibrary instead of '{type(library)}'"
             )
 
     @staticmethod
-    def register_content_provider(content_type: type, content_provider: t.Callable[..., str]) -> None:
+    def register_content_provider(
+        content_type: type, content_provider: t.Callable[..., str]
+    ) -> None:
         """Add a custom content provider.
 
         The application can use custom content for the `part` block when its *content* property
@@ -492,7 +496,9 @@ class Gui:
             return
         Gui.__content_providers[content_type] = content_provider
 
-    def __process_content_provider(self, state: State, path: str, query: t.Dict[str, str]):
+    def __process_content_provider(
+        self, state: State, path: str, query: t.Dict[str, str]
+    ):
         variable_name = query.get("variable_name")
         content = None
         if variable_name:
@@ -528,7 +534,9 @@ class Gui:
                             data = base64.b64encode(buf.getbuffer()).decode("ascii")
                             return f'<img src="data:image/png;base64,{data}"/>'
 
-                        Gui.register_content_provider(MatplotlibFigure, get_matplotlib_content)
+                        Gui.register_content_provider(
+                            MatplotlibFigure, get_matplotlib_content
+                        )
                         provider_fn = get_matplotlib_content
 
             if _is_function(provider_fn):
@@ -538,7 +546,11 @@ class Gui:
                     _warn(f"Error in content provider for type {str(type(content))}", e)
         return (
             '<div style="background:white;color:red;">'
-            + (f"No valid provider for type {type(content).__name__}" if content else "Wrong context.")
+            + (
+                f"No valid provider for type {type(content).__name__}"
+                if content
+                else "Wrong context."
+            )
             + "</div>"
         )
 
@@ -581,7 +593,9 @@ class Gui:
 
     def __get_content_accessor(self):
         if self.__content_accessor is None:
-            self.__content_accessor = _ContentAccessor(self._get_config("data_url_max_size", 50 * 1024))
+            self.__content_accessor = _ContentAccessor(
+                self._get_config("data_url_max_size", 50 * 1024)
+            )
         return self.__content_accessor
 
     def _bindings(self):
@@ -625,7 +639,9 @@ class Gui:
             else getattr(g, Gui.__ARG_CLIENT_ID, "unknown id")
         )
 
-    def __set_client_id_in_context(self, client_id: t.Optional[str] = None, force=False):
+    def __set_client_id_in_context(
+        self, client_id: t.Optional[str] = None, force=False
+    ):
         if not client_id and request:
             client_id = request.args.get(Gui.__ARG_CLIENT_ID, "")
         if not client_id and (ws_client_id := getattr(g, "ws_client_id", None)):
@@ -642,7 +658,9 @@ class Gui:
                 sids.add(sid)
         g.client_id = client_id
 
-    def __is_var_modified_in_context(self, var_name: str, derived_vars: t.Set[str]) -> bool:
+    def __is_var_modified_in_context(
+        self, var_name: str, derived_vars: t.Set[str]
+    ) -> bool:
         modified_vars: t.Optional[t.Set[str]] = getattr(g, "modified_vars", None)
         der_vars: t.Optional[t.Set[str]] = getattr(g, "derived_vars", None)
         setattr(g, "update_count", getattr(g, "update_count", 0) + 1)  # noqa: B010
@@ -675,7 +693,9 @@ class Gui:
 
     def _handle_disconnect(self):
         _Hooks()._handle_disconnect(self)
-        if (sid := getattr(request, "sid", None)) and (st_to := self._get_config("state_retention_period", 0)) > 0:
+        if (sid := getattr(request, "sid", None)) and (
+            st_to := self._get_config("state_retention_period", 0)
+        ) > 0:
             for cl_id, sids in self.__client_id_2_sid.items():
                 if sid in sids:
                     if len(sids) == 1:
@@ -701,9 +721,13 @@ class Gui:
                     payload.get("id", "") if isinstance(payload, dict) else str(payload)
                 )
                 client_id = res[0] if res[1] else None
-                front_gui_addr = payload.get("gui_addr", None) if isinstance(payload, dict) else None
+                front_gui_addr = (
+                    payload.get("gui_addr", None) if isinstance(payload, dict) else None
+                )
                 if front_gui_addr is not None:
-                    self.__handle_ws_gui_addr({"name": message.get("name"), "payload": front_gui_addr})
+                    self.__handle_ws_gui_addr(
+                        {"name": message.get("name"), "payload": front_gui_addr}
+                    )
             expected_client_id = client_id or message.get(Gui.__ARG_CLIENT_ID)
             self.__set_client_id_in_context(expected_client_id)
             g.ws_client_id = expected_client_id
@@ -721,7 +745,9 @@ class Gui:
                     elif msg_type == _WsType.ACTION.value:
                         self.__on_action(message.get("name"), message.get("payload"))
                     elif msg_type == _WsType.DATA_UPDATE.value:
-                        self.__request_data_update(str(message.get("name")), message.get("payload"))
+                        self.__request_data_update(
+                            str(message.get("name")), message.get("payload")
+                        )
                     elif msg_type == _WsType.REQUEST_UPDATE.value:
                         self.__request_var_update(message.get("payload"))
                     elif msg_type == _WsType.GUI_ADDR.value:
@@ -774,7 +800,9 @@ class Gui:
             if isinstance(lov_holder, _TaipyLov):
                 if isinstance(value, (str, list)):
                     val = value if isinstance(value, list) else [value]
-                    elt_4_ids = self.__adapter._get_elt_per_ids(lov_holder.get_name(), lov_holder.get())
+                    elt_4_ids = self.__adapter._get_elt_per_ids(
+                        lov_holder.get_name(), lov_holder.get()
+                    )
                     ret_val = [elt_4_ids.get(x, x) for x in val]
                     if isinstance(value, list):
                         value = ret_val
@@ -783,7 +811,11 @@ class Gui:
         elif isinstance(current_value, _TaipyBase):
             value = current_value.cast_value(value)
         self._update_var(
-            var_name, value, propagate, current_value if isinstance(current_value, _TaipyBase) else None, on_change
+            var_name,
+            value,
+            propagate,
+            current_value if isinstance(current_value, _TaipyBase) else None,
+            on_change,
         )
 
     def _update_var(
@@ -816,11 +848,11 @@ class Gui:
             if not var_modified:
                 self._call_on_change(
                     var_name,
-                    value.get()
-                    if isinstance(value, _TaipyBase)
-                    else value._dict
-                    if isinstance(value, _MapDict)
-                    else value,
+                    (
+                        value.get()
+                        if isinstance(value, _TaipyBase)
+                        else value._dict if isinstance(value, _MapDict) else value
+                    ),
                     on_change,
                 )
             derived_modified = self.__clean_vars_on_exit()
@@ -841,7 +873,9 @@ class Gui:
             first_dot_index = var_name.index(".")
             suffix_var_name = var_name[first_dot_index + 1 :]
             var_name = var_name[:first_dot_index]
-        var_name_decode, module_name = _variable_decode(self._get_expr_from_hash(var_name))
+        var_name_decode, module_name = _variable_decode(
+            self._get_expr_from_hash(var_name)
+        )
         current_context = self._get_locals_context()
         # #583: allow module resolution for var_name in current_context root_page context
         if (
@@ -850,13 +884,19 @@ class Gui:
             and self._config.root_page._renderer
             and self._config.root_page._renderer._get_module_name() == module_name
         ):
-            return f"{var_name_decode}.{suffix_var_name}" if suffix_var_name else var_name_decode, module_name
+            return (
+                f"{var_name_decode}.{suffix_var_name}"
+                if suffix_var_name
+                else var_name_decode
+            ), module_name
         if module_name == current_context:
             var_name = var_name_decode
         # only strict checking for cross-context linked variable when the context has been properly set
         elif self._has_set_context():
             if var_name not in self.__var_dir._var_head:
-                raise NameError(f"Can't find matching variable for {var_name} on context: {current_context}")
+                raise NameError(
+                    f"Can't find matching variable for {var_name} on context: {current_context}"
+                )
             _found = False
             for k, v in self.__var_dir._var_head[var_name]:
                 if v == current_context:
@@ -864,10 +904,16 @@ class Gui:
                     _found = True
                     break
             if not _found:  # pragma: no cover
-                raise NameError(f"Can't find matching variable for {var_name} on context: {current_context}")
-        return f"{var_name}.{suffix_var_name}" if suffix_var_name else var_name, current_context
+                raise NameError(
+                    f"Can't find matching variable for {var_name} on context: {current_context}"
+                )
+        return (
+            f"{var_name}.{suffix_var_name}" if suffix_var_name else var_name
+        ), current_context
 
-    def _call_on_change(self, var_name: str, value: t.Any, on_change: t.Optional[str] = None):
+    def _call_on_change(
+        self, var_name: str, value: t.Any, on_change: t.Optional[str] = None
+    ):
         try:
             var_name, current_context = self._get_real_var_name(var_name)
         except Exception as e:  # pragma: no cover
@@ -878,14 +924,23 @@ class Gui:
             on_change_fn = self._get_user_function("on_change")
         if _is_function(on_change_fn):
             try:
-                self._call_function_with_state(t.cast(t.Callable, on_change_fn), [var_name, value, current_context])
+                self._call_function_with_state(
+                    t.cast(t.Callable, on_change_fn), [var_name, value, current_context]
+                )
             except Exception as e:  # pragma: no cover
                 if not self._call_on_exception(on_change or "on_change", e):
-                    _warn(f"{on_change or 'on_change'}(): callback function raised an exception", e)
+                    _warn(
+                        f"{on_change or 'on_change'}(): callback function raised an exception",
+                        e,
+                    )
 
     def _get_content(self, var_name: str, value: t.Any, image: bool) -> t.Any:
         ret_value = self.__get_content_accessor().get_info(var_name, value, image)
-        return f"/{Gui.__CONTENT_ROOT}/{ret_value[0]}" if isinstance(ret_value, tuple) else ret_value
+        return (
+            f"/{Gui.__CONTENT_ROOT}/{ret_value[0]}"
+            if isinstance(ret_value, tuple)
+            else ret_value
+        )
 
     def __serve_content(self, path: str) -> t.Any:
         self.__set_client_id_in_context()
@@ -896,11 +951,15 @@ class Gui:
                 path[: -len(file_name) - 1], file_name, request.args.get("bypass")
             )
             if dir_path:
-                return send_from_directory(str(dir_path), file_name, as_attachment=as_attachment)
+                return send_from_directory(
+                    str(dir_path), file_name, as_attachment=as_attachment
+                )
         return ("", 404)
 
     def _get_user_content_url(
-        self, path: t.Optional[str] = None, query_args: t.Optional[t.Dict[str, str]] = None
+        self,
+        path: t.Optional[str] = None,
+        query_args: t.Optional[t.Dict[str, str]] = None,
     ) -> t.Optional[str]:
         q_args = query_args or {}
         q_args.update({Gui.__ARG_CLIENT_ID: self._get_client_id()})
@@ -931,7 +990,9 @@ class Gui:
                             if base and (meth := getattr(base, parts[1], None)):
                                 cb_function = meth
                 if not _is_function(cb_function):
-                    _warn(f"{cb_function_name}() callback function has not been defined.")
+                    _warn(
+                        f"{cb_function_name}() callback function has not been defined."
+                    )
                     cb_function = None
         if cb_function is None:
             cb_function_name = "on_user_content"
@@ -946,14 +1007,20 @@ class Gui:
                     args.append(path)
                 if len(q_args):
                     args.append(q_args)
-                ret = self._call_function_with_state(t.cast(t.Callable, cb_function), args)
+                ret = self._call_function_with_state(
+                    t.cast(t.Callable, cb_function), args
+                )
                 if ret is None:
-                    _warn(f"{cb_function_name}() callback function must return a value.")
+                    _warn(
+                        f"{cb_function_name}() callback function must return a value."
+                    )
                 else:
                     return (ret, 200)
             except Exception as e:  # pragma: no cover
                 if not self._call_on_exception(cb_function_name, e):
-                    _warn(f"{cb_function_name}() callback function raised an exception", e)
+                    _warn(
+                        f"{cb_function_name}() callback function raised an exception", e
+                    )
         return ("", 404)
 
     def __serve_extension(self, path: str) -> t.Any:
@@ -969,7 +1036,9 @@ class Gui:
                         return send_file(resource_name)
                 except Exception as e:
                     last_error = f"\n{e}"  # Check if the resource is served by another library with the same name
-        _warn(f"Resource '{resource_name or path}' not accessible for library '{parts[0]}'{last_error}")
+        _warn(
+            f"Resource '{resource_name or path}' not accessible for library '{parts[0]}'{last_error}"
+        )
         return ("", 404)
 
     def __get_version(self) -> str:
@@ -986,7 +1055,9 @@ class Gui:
                     libs = []
                     libraries[lib.get_name()] = libs
                 elements: t.List[t.Dict[str, str]] = []
-                libs.append({"js module": lib.get_js_module_name(), "elements": elements})
+                libs.append(
+                    {"js module": lib.get_js_module_name(), "elements": elements}
+                )
                 for element_name, elt in lib.get_elements().items():
                     if not isinstance(elt, Element):
                         continue
@@ -999,7 +1070,9 @@ class Gui:
         status.update({"libraries": libraries})
 
     def _serve_status(self, template: Path) -> t.Dict[str, t.Dict[str, str]]:
-        base_json: t.Dict[str, t.Any] = {"user_status": str(self.__call_on_status() or "")}
+        base_json: t.Dict[str, t.Any] = {
+            "user_status": str(self.__call_on_status() or "")
+        }
         if self._get_config("extended_status", False):
             base_json.update(
                 {
@@ -1052,13 +1125,17 @@ class Gui:
                 complete = part == total - 1
 
         # Extract upload path (when single file is selected, path="" does not change the path)
-        upload_root = os.path.abspath(self._get_config("upload_folder", tempfile.gettempdir()))
+        upload_root = os.path.abspath(
+            self._get_config("upload_folder", tempfile.gettempdir())
+        )
         upload_path = os.path.abspath(os.path.join(upload_root, os.path.dirname(path)))
         if upload_path.startswith(upload_root):
             upload_path = Path(upload_path).resolve()
             os.makedirs(upload_path, exist_ok=True)
             # Save file into upload_path directory
-            file_path = _get_non_existent_file_path(upload_path, secure_filename(file.filename))
+            file_path = _get_non_existent_file_path(
+                upload_path, secure_filename(file.filename)
+            )
             file.save(os.path.join(upload_path, (file_path.name + suffix)))
         else:
             _warn(f"upload files: Path {path} points outside of upload root.")
@@ -1075,8 +1152,13 @@ class Gui:
                             # remove file_path after it is merged
                             part_file_path.unlink()
                 except EnvironmentError as ee:  # pragma: no cover
-                    _warn(f"Cannot group file after chunk upload for {file.filename}", ee)
-                    return (f"Cannot group file after chunk upload for {file.filename}", 500)
+                    _warn(
+                        f"Cannot group file after chunk upload for {file.filename}", ee
+                    )
+                    return (
+                        f"Cannot group file after chunk upload for {file.filename}",
+                        500,
+                    )
             # Notify when file is uploaded
             newvalue = str(file_path)
             if multiple and var_name:
@@ -1098,7 +1180,10 @@ class Gui:
                     if not _is_function(file_fn):
                         file_fn = _getscopeattr(self, on_upload_action)  # type: ignore[arg-type]
                     if _is_function(file_fn):
-                        self._call_function_with_state(t.cast(t.Callable, file_fn), ["file_upload", {"args": [data]}])
+                        self._call_function_with_state(
+                            t.cast(t.Callable, file_fn),
+                            ["file_upload", {"args": [data]}],
+                        )
                 else:
                     setattr(self._bindings(), var_name, newvalue)
         return ("", 200)
@@ -1114,21 +1199,29 @@ class Gui:
         if not values:
             return
         for k, v in values.items():
-            if isinstance(v, (_TaipyData, _TaipyContentHtml)) and v.get_name() in modified_vars:
+            if (
+                isinstance(v, (_TaipyData, _TaipyContentHtml))
+                and v.get_name() in modified_vars
+            ):
                 modified_vars.remove(v.get_name())
             elif isinstance(v, _DoNotUpdate):
                 modified_vars.remove(k)
         for _var in modified_vars:
             newvalue = values.get(_var)
-            custom_page_filtered_types = _Hooks()._get_resource_handler_data_layer_supported_types()
+            custom_page_filtered_types = (
+                _Hooks()._get_resource_handler_data_layer_supported_types()
+            )
             if isinstance(newvalue, (_TaipyData)) or (
-                custom_page_filtered_types and isinstance(newvalue, custom_page_filtered_types)
+                custom_page_filtered_types
+                and isinstance(newvalue, custom_page_filtered_types)
             ):  # type: ignore
                 newvalue = {"__taipy_refresh": True}
             else:
                 if isinstance(newvalue, (_TaipyContent, _TaipyContentImage)):
                     ret_value = self.__get_content_accessor().get_info(
-                        t.cast(str, front_var), newvalue.get(), isinstance(newvalue, _TaipyContentImage)
+                        t.cast(str, front_var),
+                        newvalue.get(),
+                        isinstance(newvalue, _TaipyContentImage),
                     )
                     if isinstance(ret_value, tuple):
                         newvalue = f"/{Gui.__CONTENT_ROOT}/{ret_value[0]}"
@@ -1136,16 +1229,25 @@ class Gui:
                         newvalue = ret_value
                 elif isinstance(newvalue, _TaipyContentHtml):
                     newvalue = self._get_user_content_url(
-                        None, {"variable_name": str(_var), Gui._HTML_CONTENT_KEY: str(time.time())}
+                        None,
+                        {
+                            "variable_name": str(_var),
+                            Gui._HTML_CONTENT_KEY: str(time.time()),
+                        },
                     )
                 elif isinstance(newvalue, (_TaipyLov, _TaipyLovValue)):
                     newvalue = self.__adapter.run(
-                        newvalue.get_name(), newvalue.get(), id_only=isinstance(newvalue, _TaipyLovValue)
+                        newvalue.get_name(),
+                        newvalue.get(),
+                        id_only=isinstance(newvalue, _TaipyLovValue),
                     )
                 elif isinstance(newvalue, _TaipyBase):
                     newvalue = newvalue.get()
                 # Skip in taipy-gui, available in custom frontend
-                if isinstance(newvalue, (dict, _MapDict)) and not _Hooks()._is_in_custom_page_context():
+                if (
+                    isinstance(newvalue, (dict, _MapDict))
+                    and not _Hooks()._is_in_custom_page_context()
+                ):
                     continue
                 if isinstance(newvalue, float) and math.isnan(newvalue):
                     # do not let NaN go through json, it is not handle well (dies silently through websocket)
@@ -1160,7 +1262,10 @@ class Gui:
                             for w in warns:
                                 if is_debugging():
                                     debug_warnings.append(w)
-                                if w.category is not DeprecationWarning and w.category is not PendingDeprecationWarning:
+                                if (
+                                    w.category is not DeprecationWarning
+                                    and w.category is not PendingDeprecationWarning
+                                ):
                                     keep_value = False
                                     break
                             if not keep_value:
@@ -1180,7 +1285,9 @@ class Gui:
                 self._update_var(var, val, True, forward=False)
 
     @staticmethod
-    def set_unsupported_data_converter(converter: t.Optional[t.Callable[[t.Any], t.Any]]) -> None:
+    def set_unsupported_data_converter(
+        converter: t.Optional[t.Callable[[t.Any], t.Any]],
+    ) -> None:
         """Set a custom converter for unsupported data types.
 
         This function allows specifying a custom conversion function for data types that cannot
@@ -1216,7 +1323,9 @@ class Gui:
     def __request_data_update(self, var_name: str, payload: t.Any) -> None:
         # Use custom attrgetter function to allow value binding for _MapDict
         newvalue = _getscopeattr_drill(self, var_name)  # type: ignore[arg-type]
-        custom_page_filtered_types = _Hooks()._get_resource_handler_data_layer_supported_types()
+        custom_page_filtered_types = (
+            _Hooks()._get_resource_handler_data_layer_supported_types()
+        )
         if (
             not isinstance(newvalue, _TaipyData)
             and custom_page_filtered_types
@@ -1236,7 +1345,9 @@ class Gui:
                             with contextlib.suppress(NameError):
                                 # ignore name error and keep var_name
                                 user_var_name = self._get_real_var_name(var_name)[0]
-                            ret_payload = lib.get_data(lib_name, payload, user_var_name, newvalue)
+                            ret_payload = lib.get_data(
+                                lib_name, payload, user_var_name, newvalue
+                            )
                             if ret_payload:
                                 break
                         except Exception as e:  # pragma: no cover
@@ -1292,17 +1403,26 @@ class Gui:
         if not keys:
             return None
         if len(keys) == 1:
-            if keys[0] in self._get_data_scope_metadata()[_DataScopes._META_LOCAL_STORAGE]:
-                return self._get_data_scope_metadata()[_DataScopes._META_LOCAL_STORAGE][keys[0]]
+            if (
+                keys[0]
+                in self._get_data_scope_metadata()[_DataScopes._META_LOCAL_STORAGE]
+            ):
+                return self._get_data_scope_metadata()[_DataScopes._META_LOCAL_STORAGE][
+                    keys[0]
+                ]
             return None
         # case of multiple keys
         ls_items = {}
         for key in keys:
             if key in self._get_data_scope_metadata()[_DataScopes._META_LOCAL_STORAGE]:
-                ls_items[key] = self._get_data_scope_metadata()[_DataScopes._META_LOCAL_STORAGE][key]
+                ls_items[key] = self._get_data_scope_metadata()[
+                    _DataScopes._META_LOCAL_STORAGE
+                ][key]
         return ls_items
 
-    def __send_ws(self, payload: dict, allow_grouping=True, send_back_only=False) -> None:
+    def __send_ws(
+        self, payload: dict, allow_grouping=True, send_back_only=False
+    ) -> None:
         grouping_message = self.__get_message_grouping() if allow_grouping else None
         if grouping_message is None:
             try:
@@ -1313,17 +1433,28 @@ class Gui:
                 )
                 time.sleep(0.001)
             except Exception as e:  # pragma: no cover
-                _warn(f"Exception raised in WebSocket communication in '{self.__frame.f_code.co_name}'", e)
+                _warn(
+                    f"Exception raised in WebSocket communication in '{self.__frame.f_code.co_name}'",
+                    e,
+                )
         else:
             grouping_message.append(payload)
 
     def __broadcast_ws(self, payload: dict, client_id: t.Optional[str] = None):
         try:
             to = list(self.__get_sids(client_id)) if client_id else []
-            self._server._ws.emit("message", payload, to=t.cast(str, to) if to else None, include_self=True)
+            self._server._ws.emit(
+                "message",
+                payload,
+                to=t.cast(str, to) if to else None,
+                include_self=True,
+            )
             time.sleep(0.001)
         except Exception as e:  # pragma: no cover
-            _warn(f"Exception raised in WebSocket communication in '{self.__frame.f_code.co_name}'", e)
+            _warn(
+                f"Exception raised in WebSocket communication in '{self.__frame.f_code.co_name}'",
+                e,
+            )
 
     def __send_ack(self, ack_id: t.Optional[str]) -> None:
         if ack_id:
@@ -1335,7 +1466,10 @@ class Gui:
                 )
                 time.sleep(0.001)
             except Exception as e:  # pragma: no cover
-                _warn(f"Exception raised in WebSocket communication (send ack) in '{self.__frame.f_code.co_name}'", e)
+                _warn(
+                    f"Exception raised in WebSocket communication (send ack) in '{self.__frame.f_code.co_name}'",
+                    e,
+                )
 
     def _send_ws_id(self, id: str) -> None:
         self.__send_ws(
@@ -1346,7 +1480,9 @@ class Gui:
             allow_grouping=False,
         )
 
-    def __send_ws_download(self, content: str, name: str, on_action: str, module: str) -> None:
+    def __send_ws_download(
+        self, content: str, name: str, on_action: str, module: str
+    ) -> None:
         self.__send_ws(
             {
                 "type": _WsType.DOWNLOAD_FILE.value,
@@ -1359,7 +1495,12 @@ class Gui:
         )
 
     def __send_ws_notification(
-        self, type: str, message: str, system_notification: bool, duration: int, notification_id: t.Optional[str] = None
+        self,
+        type: str,
+        message: str,
+        system_notification: bool,
+        duration: int,
+        notification_id: t.Optional[str] = None,
     ) -> None:
         payload = {
             "type": _WsType.ALERT.value,
@@ -1408,15 +1549,28 @@ class Gui:
         tab: t.Optional[str],
         force: bool,
     ):
-        self.__send_ws({"type": _WsType.NAVIGATE.value, "to": to, "params": params, "tab": tab, "force": force})
+        self.__send_ws(
+            {
+                "type": _WsType.NAVIGATE.value,
+                "to": to,
+                "params": params,
+                "tab": tab,
+                "force": force,
+            }
+        )
 
     def __send_ws_update_with_dict(self, modified_values: dict) -> None:
         payload = [
-            {"name": _get_client_var_name(k), "payload": v if isinstance(v, dict) and "value" in v else {"value": v}}
+            {
+                "name": _get_client_var_name(k),
+                "payload": v if isinstance(v, dict) and "value" in v else {"value": v},
+            }
             for k, v in modified_values.items()
         ]
         if self._is_broadcasting():
-            self.__broadcast_ws({"type": _WsType.MULTIPLE_UPDATE.value, "payload": payload})
+            self.__broadcast_ws(
+                {"type": _WsType.MULTIPLE_UPDATE.value, "payload": payload}
+            )
             self._set_broadcast(False)
         else:
             self.__send_ws({"type": _WsType.MULTIPLE_UPDATE.value, "payload": payload})
@@ -1430,14 +1584,20 @@ class Gui:
     ):
         self.__broadcast_ws(
             {
-                "type": _WsType.BROADCAST.value if message_type is None else message_type.value,
+                "type": (
+                    _WsType.BROADCAST.value
+                    if message_type is None
+                    else message_type.value
+                ),
                 "name": _get_broadcast_var_name(var_name),
                 "payload": {"value": var_value},
             },
             client_id,
         )
 
-    def __get_ws_receiver(self, send_back_only=False) -> t.Union[t.List[str], t.Any, None]:
+    def __get_ws_receiver(
+        self, send_back_only=False
+    ) -> t.Union[t.List[str], t.Any, None]:
         if self._bindings()._is_single_client():
             return None
         sid = getattr(request, "sid", None) if request else None
@@ -1481,11 +1641,18 @@ class Gui:
         if grouping_message is not None:
             _delscopeattr(self, Gui.__MESSAGE_GROUPING_NAME)  # type: ignore[arg-type]
             if len(grouping_message):
-                self.__send_ws({"type": _WsType.MULTIPLE_MESSAGE.value, "payload": grouping_message})
+                self.__send_ws(
+                    {
+                        "type": _WsType.MULTIPLE_MESSAGE.value,
+                        "payload": grouping_message,
+                    }
+                )
 
     def _get_user_function(self, func_name: str) -> t.Union[t.Callable, str]:
         func = (
-            getattr(self, func_name.split(".", 2)[1], func_name) if func_name.startswith(f"{Gui.__SELF_VAR}.") else None
+            getattr(self, func_name.split(".", 2)[1], func_name)
+            if func_name.startswith(f"{Gui.__SELF_VAR}.")
+            else None
         )
         if not _is_function(func):
             func = _getscopeattr(self, func_name, None)  # type: ignore[arg-type]
@@ -1495,7 +1662,9 @@ class Gui:
             func = self.__locals_context.get_default().get(func_name)
         return t.cast(t.Callable, func) if _is_function(func) else func_name
 
-    def _get_user_instance(self, class_name: str, class_type: type) -> t.Union[object, str]:
+    def _get_user_instance(
+        self, class_name: str, class_type: type
+    ) -> t.Union[object, str]:
         cls = _getscopeattr(self, class_name, None)  # type: ignore[arg-type]
         if not isinstance(cls, class_type):
             cls = self._get_locals_bind().get(class_name)
@@ -1518,7 +1687,10 @@ class Gui:
 
     def __delete_csv(self, state: State, var_name: str, payload: dict):
         try:
-            (Path(tempfile.gettempdir()) / t.cast(str, payload.get("args", [])[-1]).split("/")[-1]).unlink(True)
+            (
+                Path(tempfile.gettempdir())
+                / t.cast(str, payload.get("args", [])[-1]).split("/")[-1]
+            ).unlink(True)
         except Exception:
             pass
 
@@ -1537,12 +1709,16 @@ class Gui:
                 action_fn = self.__delete_csv
             else:
                 action_fn = self._get_user_function(action)
-            if self.__call_function_with_args(action_function=action_fn, id=id, payload=payload):
+            if self.__call_function_with_args(
+                action_function=action_fn, id=id, payload=payload
+            ):
                 return
             else:  # pragma: no cover
                 _warn(f"on_action(): '{action}' is not a valid function.")
         if getattr(self, "on_action", None) is not None:
-            self.__call_function_with_args(action_function=self.on_action, id=id, payload=payload)
+            self.__call_function_with_args(
+                action_function=self.on_action, id=id, payload=payload
+            )
 
     def __call_function_with_args(self, **kwargs):
         action_function = kwargs.get("action_function")
@@ -1555,20 +1731,29 @@ class Gui:
                     args = [self._get_real_var_name(id)[0], payload]
                 except Exception:
                     args = [id, payload]
-                self._call_function_with_state(t.cast(t.Callable, action_function), args)
+                self._call_function_with_state(
+                    t.cast(t.Callable, action_function), args
+                )
             except Exception as e:  # pragma: no cover
                 if not self._call_on_exception(action_function, e):
-                    _warn(f"on_action(): Exception raised in '{_function_name(action_function)}()'", e)
+                    _warn(
+                        f"on_action(): Exception raised in '{_function_name(action_function)}()'",
+                        e,
+                    )
             return True
         return False
 
-    def _call_function_with_state(self, user_function: t.Callable, args: t.Optional[t.List[t.Any]] = None) -> t.Any:
+    def _call_function_with_state(
+        self, user_function: t.Callable, args: t.Optional[t.List[t.Any]] = None
+    ) -> t.Any:
         cp_args = [] if args is None else args.copy()
         cp_args.insert(
             0,
-            _AsyncState(t.cast(_GuiState, self.__get_state()))
-            if iscoroutinefunction(user_function)
-            else self.__get_state(),
+            (
+                _AsyncState(t.cast(_GuiState, self.__get_state()))
+                if iscoroutinefunction(user_function)
+                else self.__get_state()
+            ),
         )
         argcount = user_function.__code__.co_argcount
         if argcount > 0 and ismethod(user_function):
@@ -1583,8 +1768,14 @@ class Gui:
             else:
                 return user_function(*cp_args)
 
-    def _set_module_context(self, module_context: t.Optional[str]) -> t.ContextManager[None]:
-        return self._set_locals_context(module_context) if module_context is not None else contextlib.nullcontext()
+    def _set_module_context(
+        self, module_context: t.Optional[str]
+    ) -> t.ContextManager[None]:
+        return (
+            self._set_locals_context(module_context)
+            if module_context is not None
+            else contextlib.nullcontext()
+        )
 
     def _invoke_method(self, state_id: str, method: t.Callable, *args):
         this_sid = None
@@ -1640,7 +1831,9 @@ class Gui:
                     if not _is_function(callback):
                         _warn(f"invoke_callback(): {callback} is not callable.")
                         return None
-                    return self._call_function_with_state(t.cast(t.Callable, callback), list(args) if args else None)
+                    return self._call_function_with_state(
+                        t.cast(t.Callable, callback), list(args) if args else None
+                    )
         except Exception as e:  # pragma: no cover
             if not self._call_on_exception(callback, e):
                 _warn(
@@ -1673,7 +1866,11 @@ class Gui:
         """
         # Iterate over all the scopes
         res = {}
-        for id in [id for id in self.__bindings._get_all_scopes() if id != _DataScopes._GLOBAL_ID]:
+        for id in [
+            id
+            for id in self.__bindings._get_all_scopes()
+            if id != _DataScopes._GLOBAL_ID
+        ]:
             ret = self.invoke_callback(id, callback, args, module_context)
             res[id] = ret
         return res
@@ -1726,7 +1923,10 @@ class Gui:
 
     # Proxy methods for Evaluator
     def _evaluate_expr(
-        self, expr: str, lazy_declare: t.Optional[bool] = False, lambda_expr: t.Optional[bool] = False
+        self,
+        expr: str,
+        lazy_declare: t.Optional[bool] = False,
+        lambda_expr: t.Optional[bool] = False,
     ) -> t.Any:
         return self.__evaluator.evaluate_expr(self, expr, lazy_declare, lambda_expr)  # type: ignore[arg-type]
 
@@ -1760,7 +1960,9 @@ class Gui:
     def _get_call_method_name(self, name: str):
         return f"{Gui.__SELF_VAR}.{name}"
 
-    def __get_attributes(self, attr_json: str, hash_json: str, args_dict: t.Dict[str, t.Any]):
+    def __get_attributes(
+        self, attr_json: str, hash_json: str, args_dict: t.Dict[str, t.Any]
+    ):
         attributes: t.Dict[str, t.Any] = json.loads(unquote(attr_json))
         hashes: t.Dict[str, str] = json.loads(unquote(hash_json))
         attributes.update({k: args_dict.get(v) for k, v in hashes.items()})
@@ -1791,12 +1993,23 @@ class Gui:
                 - *"tz"*: Specifies the timezone to be used, if applicable.
         """
         try:
-            setattr(state, var_name, self._get_accessor().on_edit(getattr(state, var_name), payload))
+            setattr(
+                state,
+                var_name,
+                self._get_accessor().on_edit(getattr(state, var_name), payload),
+            )
         except Exception as e:
-            _warn("Gui.table_on_edit() failed potentially from a table's on_edit callback.", e)
+            _warn(
+                "Gui.table_on_edit() failed potentially from a table's on_edit callback.",
+                e,
+            )
 
     def table_on_add(
-        self, state: State, var_name: str, payload: t.Dict[str, t.Any], new_row: t.Optional[t.List[t.Any]] = None
+        self,
+        state: State,
+        var_name: str,
+        payload: t.Dict[str, t.Any],
+        new_row: t.Optional[t.List[t.Any]] = None,
     ):
         """Default implementation of the `on_add` callback for tables.
 
@@ -1812,9 +2025,16 @@ class Gui:
                 to 0, with the exact meaning depending on the column data type.
         """
         try:
-            setattr(state, var_name, self._get_accessor().on_add(getattr(state, var_name), payload, new_row))
+            setattr(
+                state,
+                var_name,
+                self._get_accessor().on_add(getattr(state, var_name), payload, new_row),
+            )
         except Exception as e:
-            _warn("Gui.table_on_add() failed potentially from a table's on_add callback.", e)
+            _warn(
+                "Gui.table_on_add() failed potentially from a table's on_add callback.",
+                e,
+            )
 
     def table_on_delete(self, state: State, var_name: str, payload: t.Dict[str, t.Any]):
         """Default implementation of the `on_delete` callback for tables.
@@ -1828,27 +2048,45 @@ class Gui:
             payload: The payload dictionary received from the `on_delete` callback.
         """
         try:
-            setattr(state, var_name, self._get_accessor().on_delete(getattr(state, var_name), payload))
+            setattr(
+                state,
+                var_name,
+                self._get_accessor().on_delete(getattr(state, var_name), payload),
+            )
         except Exception as e:
-            _warn("Gui.table_on_delete() failed potentially from a table's on_delete callback.", e)
+            _warn(
+                "Gui.table_on_delete() failed potentially from a table's on_delete callback.",
+                e,
+            )
 
     def _tbl_cols(
-        self, rebuild: bool, rebuild_val: t.Optional[bool], attr_json: str, hash_json: str, **kwargs
+        self,
+        rebuild: bool,
+        rebuild_val: t.Optional[bool],
+        attr_json: str,
+        hash_json: str,
+        **kwargs,
     ) -> t.Union[str, _DoNotUpdate]:
         if not self.__is_building():
             try:
                 rebuild = rebuild_val if rebuild_val is not None else rebuild
                 if rebuild:
-                    attributes, hashes = self.__get_attributes(attr_json, hash_json, kwargs)
+                    attributes, hashes = self.__get_attributes(
+                        attr_json, hash_json, kwargs
+                    )
                     data_hash = hashes.get("data", "")
                     data = kwargs.get(data_hash)
                     col_dict = _get_columns_dict(
                         attributes.get("columns", {}),
-                        self._get_accessor().get_cols_description(data_hash, _TaipyData(data, data_hash)),
+                        self._get_accessor().get_cols_description(
+                            data_hash, _TaipyData(data, data_hash)
+                        ),
                         attributes.get("date_format"),
                         attributes.get("number_format"),
                     )
-                    _enhance_columns(attributes, hashes, t.cast(dict, col_dict), "table(cols)")
+                    _enhance_columns(
+                        attributes, hashes, t.cast(dict, col_dict), "table(cols)"
+                    )
 
                     return json.dumps(col_dict, cls=_TaipyJsonEncoder)
             except Exception as e:  # pragma: no cover
@@ -1856,16 +2094,25 @@ class Gui:
         return Gui.__DO_NOT_UPDATE_VALUE
 
     def _chart_conf(
-        self, rebuild: bool, rebuild_val: t.Optional[bool], attr_json: str, hash_json: str, **kwargs
+        self,
+        rebuild: bool,
+        rebuild_val: t.Optional[bool],
+        attr_json: str,
+        hash_json: str,
+        **kwargs,
     ) -> t.Union[str, _DoNotUpdate]:
         if not self.__is_building():
             try:
                 rebuild = rebuild_val if rebuild_val is not None else rebuild
                 if rebuild:
-                    attributes, hashes = self.__get_attributes(attr_json, hash_json, kwargs)
+                    attributes, hashes = self.__get_attributes(
+                        attr_json, hash_json, kwargs
+                    )
                     idx = 0
                     data_hashes = []
-                    while data_hash := hashes.get("data" if idx == 0 else f"data[{idx}]", ""):
+                    while data_hash := hashes.get(
+                        "data" if idx == 0 else f"data[{idx}]", ""
+                    ):
                         data_hashes.append(data_hash)
                         idx += 1
                     config = _build_chart_config(
@@ -1899,18 +2146,26 @@ class Gui:
         return self.__adapter._get_unique_type(type_name)
 
     def _run_adapter(
-        self, adapter: t.Optional[t.Callable], value: t.Any, var_name: str, id_only=False
+        self,
+        adapter: t.Optional[t.Callable],
+        value: t.Any,
+        var_name: str,
+        id_only=False,
     ) -> t.Union[t.Tuple[str, ...], str, None]:
         return self.__adapter._run(adapter, value, var_name, id_only)
 
-    def _get_valid_adapter_result(self, value: t.Any, id_only=False) -> t.Union[t.Tuple[str, ...], str, None]:
+    def _get_valid_adapter_result(
+        self, value: t.Any, id_only=False
+    ) -> t.Union[t.Tuple[str, ...], str, None]:
         return self.__adapter._get_valid_result(value, id_only)
 
     def _is_ui_blocked(self):
         return _getscopeattr(self, Gui.__UI_BLOCK_NAME, False)  # type: ignore[arg-type]
 
     def __get_on_cancel_block_ui(self, callback: t.Optional[str]):
-        def _taipy_on_cancel_block_ui(a_state: State, id: t.Optional[str], payload: t.Any):
+        def _taipy_on_cancel_block_ui(
+            a_state: State, id: t.Optional[str], payload: t.Any
+        ):
             gui_app = a_state.get_gui()
             if _hasscopeattr(gui_app, Gui.__UI_BLOCK_NAME):
                 _setscopeattr(gui_app, Gui.__UI_BLOCK_NAME, False)
@@ -1925,21 +2180,35 @@ class Gui:
         for file_name in list_of_files:
             if file_name.startswith("__"):
                 continue
-            if (re_match := Gui.__RE_HTML.match(file_name)) and f"{re_match.group(1)}.py" not in list_of_files:
+            if (
+                re_match := Gui.__RE_HTML.match(file_name)
+            ) and f"{re_match.group(1)}.py" not in list_of_files:
                 _renderers = Html(os.path.join(folder_path, file_name), frame=None)
                 _renderers.modify_taipy_base_url(folder_name)
-                self.add_page(name=f"{folder_name}/{re_match.group(1)}", page=_renderers)
-            elif (re_match := Gui.__RE_MD.match(file_name)) and f"{re_match.group(1)}.py" not in list_of_files:
-                _renderers_md = Markdown(os.path.join(folder_path, file_name), frame=None)
-                self.add_page(name=f"{folder_name}/{re_match.group(1)}", page=_renderers_md)
+                self.add_page(
+                    name=f"{folder_name}/{re_match.group(1)}", page=_renderers
+                )
+            elif (
+                re_match := Gui.__RE_MD.match(file_name)
+            ) and f"{re_match.group(1)}.py" not in list_of_files:
+                _renderers_md = Markdown(
+                    os.path.join(folder_path, file_name), frame=None
+                )
+                self.add_page(
+                    name=f"{folder_name}/{re_match.group(1)}", page=_renderers_md
+                )
             elif re_match := Gui.__RE_PY.match(file_name):
                 module_name = re_match.group(1)
-                module_path = os.path.join(folder_name, module_name).replace(os.path.sep, ".")
+                module_path = os.path.join(folder_name, module_name).replace(
+                    os.path.sep, "."
+                )
                 try:
                     module = importlib.import_module(module_path)
                     page_instance = _get_page_from_module(module)
                     if page_instance is not None:
-                        self.add_page(name=f"{folder_name}/{module_name}", page=page_instance)
+                        self.add_page(
+                            name=f"{folder_name}/{module_name}", page=page_instance
+                        )
                 except Exception as e:
                     _warn(f"Error while importing module '{module_path}'", e)
             elif os.path.isdir(child_dir_path := os.path.join(folder_path, file_name)):
@@ -1959,12 +2228,18 @@ class Gui:
     def _get_default_locals_bind(self) -> t.Dict[str, t.Any]:
         return self.__locals_context.get_default()
 
-    def _get_locals_bind_from_context(self, context: t.Optional[str]) -> t.Dict[str, t.Any]:
+    def _get_locals_bind_from_context(
+        self, context: t.Optional[str]
+    ) -> t.Dict[str, t.Any]:
         return self.__locals_context._get_locals_bind_from_context(context)
 
     def _get_locals_context(self) -> str:
         current_context = self.__locals_context.get_context()
-        return current_context if current_context is not None else t.cast(str, self.__default_module_name)
+        return (
+            current_context
+            if current_context is not None
+            else t.cast(str, self.__default_module_name)
+        )
 
     def _set_locals_context(self, context: t.Optional[str]) -> t.ContextManager[None]:
         return self.__locals_context.set_locals_context(context)
@@ -2041,9 +2316,13 @@ class Gui:
                 f'Page name "{name}" is invalid. It must only contain letters, digits, dash (-), underscore (_), and forward slash (/) characters.'  # noqa: E501
             )
         if name.startswith("/"):  # pragma: no cover
-            raise SyntaxError(f'Page name "{name}" cannot start with forward slash (/) character.')
+            raise SyntaxError(
+                f'Page name "{name}" cannot start with forward slash (/) character.'
+            )
         if name in self._config.routes:  # pragma: no cover
-            raise Exception(f'Page name "{name if name != Gui.__root_page_name else "/"}" is already defined.')
+            raise Exception(
+                f'Page name "{name if name != Gui.__root_page_name else "/"}" is already defined.'
+            )
         if isinstance(page, str):
             from ._renderers import Markdown
 
@@ -2085,7 +2364,9 @@ class Gui:
             self.__var_dir.add_frame(page._frame)
         return module_name
 
-    def add_pages(self, pages: t.Union[t.Mapping[str, t.Union[str, Page]], str, None] = None) -> None:
+    def add_pages(
+        self, pages: t.Union[t.Mapping[str, t.Union[str, Page]], str, None] = None
+    ) -> None:
         """Add several pages to the Graphical User Interface.
 
         Arguments:
@@ -2159,14 +2440,22 @@ class Gui:
         elif isinstance(folder_name := pages, str):
             if not hasattr(self, "_root_dir"):
                 self._root_dir = os.path.dirname(getabsfile(self.__frame))
-            folder_path = folder_name if os.path.isabs(folder_name) else os.path.join(self._root_dir, folder_name)
+            folder_path = (
+                folder_name
+                if os.path.isabs(folder_name)
+                else os.path.join(self._root_dir, folder_name)
+            )
             folder_name = os.path.basename(folder_path)
             if not os.path.isdir(folder_path):  # pragma: no cover
                 raise RuntimeError(f"Path {folder_path} is not a valid directory")
             if folder_name in self.__directory_name_of_pages:  # pragma: no cover
-                raise Exception(f"Base directory name {folder_name} of path {folder_path} is not unique")
+                raise Exception(
+                    f"Base directory name {folder_name} of path {folder_path} is not unique"
+                )
             if folder_name in Gui.__reserved_routes:  # pragma: no cover
-                raise Exception(f"Invalid directory. Directory {folder_name} is a reserved route")
+                raise Exception(
+                    f"Invalid directory. Directory {folder_name} is a reserved route"
+                )
             self.__directory_name_of_pages.append(folder_name)
             self.__add_pages_in_folder(folder_name, folder_path)
 
@@ -2197,7 +2486,8 @@ class Gui:
         new_partial = Partial()
         # Validate name
         if (
-            new_partial._route in self._config.partial_routes or new_partial._route in self._config.routes
+            new_partial._route in self._config.partial_routes
+            or new_partial._route in self._config.routes
         ):  # pragma: no cover
             _warn(f'Partial name "{new_partial._route}" is already defined.')
         if isinstance(page, str):
@@ -2224,7 +2514,9 @@ class Gui:
         partials = _getscopeattr(self, Partial._PARTIALS, {})  # type: ignore[arg-type]
         partial = partials.get(route)
         if partial is None:
-            partial = next((p for p in self._config.partials if p._route == route), None)
+            partial = next(
+                (p for p in self._config.partials if p._route == route), None
+            )
             partials[route] = partial
             _setscopeattr(self, Partial._PARTIALS, partials)  # type: ignore[arg-type]
         return partial
@@ -2235,7 +2527,9 @@ class Gui:
         if var_name in self._get_locals_bind().keys():
             bind_context = self._get_locals_context()
         if bind_context is None:
-            encoded_var_name = self.__var_dir.add_var(var_name, self._get_locals_context(), var_name)
+            encoded_var_name = self.__var_dir.add_var(
+                var_name, self._get_locals_context(), var_name
+            )
         else:
             encoded_var_name = self.__var_dir.add_var(var_name, bind_context)
         if not hasattr(self._bindings(), encoded_var_name):
@@ -2261,7 +2555,9 @@ class Gui:
     def __bind_local_func(self, name: str):
         func = getattr(self, name, None)
         if func is not None and not _is_function(func):  # pragma: no cover
-            _warn(f"{self.__class__.__name__}.{name}: {func} should be a function; looking for {name} in the script.")
+            _warn(
+                f"{self.__class__.__name__}.{name}: {func} should be a function; looking for {name} in the script."
+            )
             func = None
         if func is None:
             func = self._get_locals_bind().get(name)
@@ -2308,7 +2604,12 @@ class Gui:
         except RuntimeError:
             return False
 
-    def _download(self, content: t.Any, name: t.Optional[str] = "", on_action: t.Union[str, t.Callable, None] = ""):
+    def _download(
+        self,
+        content: t.Any,
+        name: t.Optional[str] = "",
+        on_action: t.Union[str, t.Callable, None] = "",
+    ):
         if _is_function(on_action):
             on_action_name = (
                 _get_lambda_id(t.cast(LambdaType, on_action))
@@ -2316,14 +2617,19 @@ class Gui:
                 else _get_expr_var_name(t.cast(t.Callable, on_action).__name__)
             )
             if on_action_name:
-                encoded_action_name = self.__var_dir.add_var(on_action_name, self._get_locals_context())
+                encoded_action_name = self.__var_dir.add_var(
+                    on_action_name, self._get_locals_context()
+                )
                 self._bind_var_val(encoded_action_name, on_action)
                 on_action = encoded_action_name
             else:
                 _warn("download() on_action is invalid.")
         content_str = self._get_content("Gui.download", content, False)
         self.__send_ws_download(
-            content_str, str(name), str(on_action) if on_action is not None else "", self._get_locals_context()
+            content_str,
+            str(name),
+            str(on_action) if on_action is not None else "",
+            self._get_locals_context(),
         )
 
     def _notify(
@@ -2337,8 +2643,16 @@ class Gui:
         self.__send_ws_notification(
             notification_type,
             message,
-            self._get_config("system_notification", False) if system_notification is None else system_notification,
-            self._get_config("notification_duration", 3000) if duration is None else duration,
+            (
+                self._get_config("system_notification", False)
+                if system_notification is None
+                else system_notification
+            ),
+            (
+                self._get_config("notification_duration", 3000)
+                if duration is None
+                else duration
+            ),
             notification_id,
         )
         return notification_id
@@ -2366,7 +2680,9 @@ class Gui:
             self._bind_var_val(action_name, callback)
         else:
             action_name = (
-                callback if isinstance(callback, str) else (callback.__name__ if callback is not None else None)
+                callback
+                if isinstance(callback, str)
+                else (callback.__name__ if callback is not None else None)
             )
         func = self.__get_on_cancel_block_ui(action_name)
         def_action_name = func.__name__
@@ -2376,7 +2692,9 @@ class Gui:
             _setscopeattr(self, Gui.__UI_BLOCK_NAME, True)  # type: ignore[arg-type]
         else:
             self._bind(Gui.__UI_BLOCK_NAME, True)
-        self.__send_ws_block(action=def_action_name, message=message, cancel=bool(action_name))
+        self.__send_ws_block(
+            action=def_action_name, message=message, cancel=bool(action_name)
+        )
 
     def _resume_actions(self):  # pragma: no cover
         if _hasscopeattr(self, Gui.__UI_BLOCK_NAME):  # type: ignore[arg-type]
@@ -2391,10 +2709,18 @@ class Gui:
         force: t.Optional[bool] = False,
     ):
         to = to or Gui.__root_page_name
-        if not to.startswith("/") and to not in self._config.routes and not urlparse(to).netloc:
-            _warn(f'Cannot navigate to "{to if to != Gui.__root_page_name else "/"}": unknown page.')
+        if (
+            not to.startswith("/")
+            and to not in self._config.routes
+            and not urlparse(to).netloc
+        ):
+            _warn(
+                f'Cannot navigate to "{to if to != Gui.__root_page_name else "/"}": unknown page.'
+            )
             return False
-        self.__send_ws_navigate(to if to != Gui.__root_page_name else "/", params, tab, force or False)
+        self.__send_ws_navigate(
+            to if to != Gui.__root_page_name else "/", params, tab, force or False
+        )
         return True
 
     def __init_libs(self):
@@ -2424,9 +2750,13 @@ class Gui:
 
     def _call_on_exception(self, function: t.Any, exception: Exception) -> bool:
         if hasattr(self, "on_exception") and _is_function(self.on_exception):
-            function_name = _function_name(function) if callable(function) else str(function)
+            function_name = (
+                _function_name(function) if callable(function) else str(function)
+            )
             try:
-                self._call_function_with_state(t.cast(t.Callable, self.on_exception), [function_name, exception])
+                self._call_function_with_state(
+                    t.cast(t.Callable, self.on_exception), [function_name, exception]
+                )
             except Exception as e:  # pragma: no cover
                 _warn("Exception raised in on_exception()", e)
             return True
@@ -2435,7 +2765,9 @@ class Gui:
     def __call_on_status(self) -> t.Optional[str]:
         if hasattr(self, "on_status") and _is_function(self.on_status):
             try:
-                return self._call_function_with_state(t.cast(t.Callable, self.on_status))
+                return self._call_function_with_state(
+                    t.cast(t.Callable, self.on_status)
+                )
             except Exception as e:  # pragma: no cover
                 if not self._call_on_exception("on_status", e):
                     _warn("Exception raised in on_status", e)
@@ -2455,7 +2787,9 @@ class Gui:
                         and _Hooks()._get_custom_page_type()
                         and isinstance(page._renderer, _Hooks()._get_custom_page_type())  # type: ignore[arg-type]
                     ):
-                        _Hooks()._bind_custom_page_variables(self, page._renderer, self._get_client_id())
+                        _Hooks()._bind_custom_page_variables(
+                            self, page._renderer, self._get_client_id()
+                        )
                     else:
                         page.render(self, silent=True)  # type: ignore[arg-type]
         if additional_pages := _Hooks()._get_additional_pages():
@@ -2467,7 +2801,9 @@ class Gui:
                             and _Hooks()._get_custom_page_type()
                             and isinstance(page, _Hooks()._get_custom_page_type())  # type: ignore[arg-type]
                         ):
-                            _Hooks()._bind_custom_page_variables(self, page, self._get_client_id())
+                            _Hooks()._bind_custom_page_variables(
+                                self, page, self._get_client_id()
+                            )
                         else:
                             new_page = _Page()
                             new_page._renderer = page
@@ -2491,9 +2827,14 @@ class Gui:
                 if nav_page != page_name:
                     if isinstance(nav_page, str):
                         if self._navigate(nav_page):
-                            return ("Root page cannot be re-routed by on_navigate().", 302)
+                            return (
+                                "Root page cannot be re-routed by on_navigate().",
+                                302,
+                            )
                     else:
-                        _warn(f"on_navigate() returned an invalid page name '{nav_page}'.")
+                        _warn(
+                            f"on_navigate() returned an invalid page name '{nav_page}'."
+                        )
                     nav_page = page_name
             except Exception as e:  # pragma: no cover
                 if not self._call_on_exception("on_navigate", e):
@@ -2507,13 +2848,18 @@ class Gui:
         if not _is_function(on_page_load_fn):
             return
         try:
-            self._call_function_with_state(t.cast(t.Callable, on_page_load_fn), [page_name])
+            self._call_function_with_state(
+                t.cast(t.Callable, on_page_load_fn), [page_name]
+            )
         except Exception as e:
             if not self._call_on_exception("on_page_load", e):
                 _warn("Exception raised in on_page_load()", e)
 
     def _get_page(self, page_name: str):
-        return next((page_i for page_i in self._config.pages if page_i._route == page_name), None)
+        return next(
+            (page_i for page_i in self._config.pages if page_i._route == page_name),
+            None,
+        )
 
     def __render_page(self, page_name: str) -> t.Any:
         self.__set_client_id_in_context()
@@ -2564,7 +2910,8 @@ class Gui:
         return self._server._direct_render_json(
             {
                 "locations": {
-                    "/" if route == Gui.__root_page_name else f"/{route}": f"/{route}" for route in self._config.routes
+                    "/" if route == Gui.__root_page_name else f"/{route}": f"/{route}"
+                    for route in self._config.routes
                 },
                 "blockUI": self._is_ui_blocked(),
             }
@@ -2580,14 +2927,18 @@ class Gui:
         """
         if hasattr(self, "_server"):
             return t.cast(Flask, self._server.get_flask())
-        raise RuntimeError("get_flask_app() cannot be invoked before run() has been called.")
+        raise RuntimeError(
+            "get_flask_app() cannot be invoked before run() has been called."
+        )
 
     def _get_port(self) -> int:
         return self._server.get_port()
 
     def _set_frame(self, frame: t.Optional[FrameType]):
         if not isinstance(frame, FrameType):  # pragma: no cover
-            raise RuntimeError("frame must be a FrameType where Gui can collect the local variables.")
+            raise RuntimeError(
+                "frame must be a FrameType where Gui can collect the local variables."
+            )
         self.__frame = frame
         self.__default_module_name = _get_module_name_from_frame(self.__frame)
 
@@ -2610,7 +2961,9 @@ class Gui:
 
     def _get_webapp_path(self):
         _conf_webapp_path = (
-            Path(self._get_config("webapp_path", None)) if self._get_config("webapp_path", None) else None
+            Path(self._get_config("webapp_path", None))
+            if self._get_config("webapp_path", None)
+            else None
         )
         _webapp_path = str((Path(__file__).parent / "webapp").resolve())
         if _conf_webapp_path:
@@ -2635,7 +2988,9 @@ class Gui:
             config["extensions"] = {}
             for libs in self.__extensions.values():
                 for lib in libs:
-                    config["extensions"][f"./{Gui._EXTENSION_ROOT}/{lib.get_js_module_name()}"] = [
+                    config["extensions"][
+                        f"./{Gui._EXTENSION_ROOT}/{lib.get_js_module_name()}"
+                    ] = [
                         e._get_js_name(n)
                         for n, e in lib.get_elements().items()
                         if isinstance(e, Element) and not e._is_server_only()
@@ -2665,7 +3020,9 @@ class Gui:
             )
 
         # Stop and reinitialize the server if it is still running as a thread
-        if (_is_in_notebook() or app_config.get("run_in_thread")) and hasattr(self._server, "_thread"):
+        if (_is_in_notebook() or app_config.get("run_in_thread")) and hasattr(
+            self._server, "_thread"
+        ):
             self.stop()
             self._flask_blueprint = []
             self._server = _Server(
@@ -2683,16 +3040,24 @@ class Gui:
         if hasattr(self, "_ngrok"):
             # Keep the ngrok instance if token has not changed
             if app_config.get("ngrok_token") == self._ngrok[1]:
-                _TaipyLogger._get_logger().info(f" * NGROK Public Url: {self._ngrok[0].public_url}")
+                _TaipyLogger._get_logger().info(
+                    f" * NGROK Public Url: {self._ngrok[0].public_url}"
+                )
                 return
             # Close the old tunnel so new tunnel can open for new token
             ngrok.disconnect(self._ngrok[0].public_url)  # type: ignore[reportPossiblyUnboundVariable]
-        if app_config.get("run_server") and (token := app_config.get("ngrok_token")):  # pragma: no cover
+        if app_config.get("run_server") and (
+            token := app_config.get("ngrok_token")
+        ):  # pragma: no cover
             if not util.find_spec("pyngrok"):
-                raise RuntimeError("Cannot use ngrok as pyngrok package is not installed.")
+                raise RuntimeError(
+                    "Cannot use ngrok as pyngrok package is not installed."
+                )
             ngrok.set_auth_token(token)  # type: ignore[reportPossiblyUnboundVariable]
             self._ngrok = (ngrok.connect(app_config.get("port"), "http"), token)  # type: ignore[reportPossiblyUnboundVariable]
-            _TaipyLogger._get_logger().info(f" * NGROK Public Url: {self._ngrok[0].public_url}")
+            _TaipyLogger._get_logger().info(
+                f" * NGROK Public Url: {self._ngrok[0].public_url}"
+            )
 
     def __bind_default_function(self):
         with self.get_flask_app().app_context():
@@ -2728,30 +3093,47 @@ class Gui:
 
         # server URL Rule for taipy images
         images_bp = Blueprint("taipy_images", __name__)
-        images_bp.add_url_rule(f"/{Gui.__CONTENT_ROOT}/<path:path>", view_func=self.__serve_content)
+        images_bp.add_url_rule(
+            f"/{Gui.__CONTENT_ROOT}/<path:path>", view_func=self.__serve_content
+        )
         self._flask_blueprint.append(images_bp)
 
         # server URL for uploaded files
         upload_bp = Blueprint("taipy_upload", __name__)
-        upload_bp.add_url_rule(f"/{Gui.__UPLOAD_URL}", view_func=self.__upload_files, methods=["POST"])
+        upload_bp.add_url_rule(
+            f"/{Gui.__UPLOAD_URL}", view_func=self.__upload_files, methods=["POST"]
+        )
         self._flask_blueprint.append(upload_bp)
 
         # server URL for user content
         user_content_bp = Blueprint("taipy_user_content", __name__)
-        user_content_bp.add_url_rule(f"/{Gui.__USER_CONTENT_URL}/<path:path>", view_func=self.__serve_user_content)
+        user_content_bp.add_url_rule(
+            f"/{Gui.__USER_CONTENT_URL}/<path:path>",
+            view_func=self.__serve_user_content,
+        )
         self._flask_blueprint.append(user_content_bp)
 
         # server URL for extension resources
         extension_bp = Blueprint("taipy_extensions", __name__)
-        extension_bp.add_url_rule(f"/{Gui._EXTENSION_ROOT}/<path:path>", view_func=self.__serve_extension)
+        extension_bp.add_url_rule(
+            f"/{Gui._EXTENSION_ROOT}/<path:path>", view_func=self.__serve_extension
+        )
         scripts = [
-            s if bool(urlparse(s).netloc) else f"{Gui._EXTENSION_ROOT}/{name}/{s}{lib.get_query(s)}"
+            (
+                s
+                if bool(urlparse(s).netloc)
+                else f"{Gui._EXTENSION_ROOT}/{name}/{s}{lib.get_query(s)}"
+            )
             for name, libs in Gui.__extensions.items()
             for lib in libs
             for s in (lib._do_get_relative_paths(lib.get_scripts()))
         ]
         styles = [
-            s if bool(urlparse(s).netloc) else f"{Gui._EXTENSION_ROOT}/{name}/{s}{lib.get_query(s)}"
+            (
+                s
+                if bool(urlparse(s).netloc)
+                else f"{Gui._EXTENSION_ROOT}/{name}/{s}{lib.get_query(s)}"
+            )
             for name, libs in Gui.__extensions.items()
             for lib in libs
             for s in (lib._do_get_relative_paths(lib.get_styles()))
@@ -2788,7 +3170,9 @@ class Gui:
         )
 
         # Run parse markdown to force variables binding at runtime
-        pages_bp.add_url_rule(f"/{Gui.__JSX_URL}/<path:page_name>", view_func=self.__render_page)
+        pages_bp.add_url_rule(
+            f"/{Gui.__JSX_URL}/<path:page_name>", view_func=self.__render_page
+        )
 
         # server URL Rule for flask rendered react-router
         pages_bp.add_url_rule(f"/{Gui.__INIT_URL}", view_func=self.__init_route)
@@ -2896,7 +3280,9 @@ class Gui:
 
         locals_bind = _filter_locals(self.__frame.f_locals)
 
-        self.__locals_context.set_default(locals_bind, t.cast(str, self.__default_module_name))
+        self.__locals_context.set_default(
+            locals_bind, t.cast(str, self.__default_module_name)
+        )
 
         self.__var_dir.set_default(self.__frame)
 
@@ -2919,10 +3305,14 @@ class Gui:
             """
 
         # Base global ctx is TaipyHolder classes + script modules and callables
-        glob_ctx: t.Dict[str, t.Any] = {t.__name__: t for t in _TaipyBase.__subclasses__()}
+        glob_ctx: t.Dict[str, t.Any] = {
+            t.__name__: t for t in _TaipyBase.__subclasses__()
+        }
         glob_ctx[Gui.__SELF_VAR] = self
         glob_ctx["state"] = self.__state
-        glob_ctx.update({k: v for k, v in locals_bind.items() if ismodule(v) or callable(v)})
+        glob_ctx.update(
+            {k: v for k, v in locals_bind.items() if ismodule(v) or callable(v)}
+        )
 
         # Call on_init on each library
         for name, libs in self.__extensions.items():
@@ -2938,7 +3328,9 @@ class Gui:
                         and lib_context[0].isidentifier()
                     ):
                         if lib_context[0] in glob_ctx:
-                            _warn(f"Method {name}.on_init() returned a name already defined '{lib_context[0]}'.")
+                            _warn(
+                                f"Method {name}.on_init() returned a name already defined '{lib_context[0]}'."
+                            )
                         else:
                             glob_ctx[lib_context[0]] = lib_context[1]
                     elif lib_context:
@@ -2956,7 +3348,9 @@ class Gui:
 
         # Register data accessor communication data format (JSON, Apache Arrow)
         self._get_accessor().set_data_format(
-            _DataFormat.APACHE_ARROW if app_config.get("use_arrow") else _DataFormat.JSON
+            _DataFormat.APACHE_ARROW
+            if app_config.get("use_arrow")
+            else _DataFormat.JSON
         )
 
         # Use multi user or not
@@ -2987,7 +3381,11 @@ class Gui:
         `(Gui.)run^` method was set to True, or you are running in an IPython notebook
         context.
         """
-        if hasattr(self, "_server") and hasattr(self._server, "_thread") and self._server._is_running:
+        if (
+            hasattr(self, "_server")
+            and hasattr(self._server, "_thread")
+            and self._server._is_running
+        ):
             self._server.stop_thread()
             self.run(**self.__run_kwargs, _reload=True)
             _TaipyLogger._get_logger().info("Gui server has been reloaded.")
@@ -3000,18 +3398,29 @@ class Gui:
         `(Gui.)run()^` method was set to True, or you are running in an IPython notebook
         context.
         """
-        if hasattr(self, "_server") and hasattr(self._server, "_thread") and self._server._is_running:
+        if (
+            hasattr(self, "_server")
+            and hasattr(self._server, "_thread")
+            and self._server._is_running
+        ):
             self._server.stop_thread()
             _TaipyLogger._get_logger().info("Gui server has been stopped.")
 
-    def _get_authorization(self, client_id: t.Optional[str] = None, system: t.Optional[bool] = False):
+    def _get_authorization(
+        self, client_id: t.Optional[str] = None, system: t.Optional[bool] = False
+    ):
         try:
-            return _Hooks()._get_authorization(self, client_id, system) or contextlib.nullcontext()
+            return (
+                _Hooks()._get_authorization(self, client_id, system)
+                or contextlib.nullcontext()
+            )
         except Exception as e:
             _warn("Hooks:", e)
             return contextlib.nullcontext()
 
-    def set_favicon(self, favicon_path: t.Union[str, Path], state: t.Optional[State] = None):
+    def set_favicon(
+        self, favicon_path: t.Union[str, Path], state: t.Optional[State] = None
+    ):
         """Change the favicon for all clients.
 
         This function dynamically changes the favicon (the icon associated with the application's
@@ -3030,21 +3439,28 @@ class Gui:
                 self.__favicon = favicon_path
             url = self._get_content("__taipy_favicon", favicon_path, True)
             self._broadcast(
-                "taipy_favicon", url, self._get_client_id() if state else None, message_type=_WsType.FAVICON
+                "taipy_favicon",
+                url,
+                self._get_client_id() if state else None,
+                message_type=_WsType.FAVICON,
             )
 
     @staticmethod
     def _add_event_listener(
         event_name: str,
         listener: t.Union[
-            t.Callable[[str, t.Dict[str, t.Any]], None], t.Callable[[State, str, t.Dict[str, t.Any]], None]
+            t.Callable[[str, t.Dict[str, t.Any]], None],
+            t.Callable[[State, str, t.Dict[str, t.Any]], None],
         ],
         with_state: t.Optional[bool] = False,
     ):
         _Hooks()._add_event_listener(event_name, listener, with_state)
 
     def _fire_event(
-        self, event_name: str, client_id: t.Optional[str] = None, payload: t.Optional[t.Dict[str, t.Any]] = None
+        self,
+        event_name: str,
+        client_id: t.Optional[str] = None,
+        payload: t.Optional[t.Dict[str, t.Any]] = None,
     ):
         # the event manager will take care of starting the thread
         # once the current callback (or the next one) is finished
@@ -3056,7 +3472,10 @@ class Gui:
         )
 
     def __do_fire_event(
-        self, event_name: str, client_id: t.Optional[str] = None, payload: t.Optional[t.Dict[str, t.Any]] = None
+        self,
+        event_name: str,
+        client_id: t.Optional[str] = None,
+        payload: t.Optional[t.Dict[str, t.Any]] = None,
     ):
         this_sid = None
         if request:

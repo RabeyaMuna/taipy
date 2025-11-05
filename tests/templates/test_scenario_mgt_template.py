@@ -41,11 +41,14 @@ def test_scenario_management_with_toml_config(tmpdir):
         assert 'Config.load("config/config.toml")' in config_file.read()
 
     taipy_path = os.getcwd()
-    stdout = _run_template(taipy_path, os.path.join(tmpdir, "foo_app"), "main.py")
+    stdout = _run_template(taipy_path, os.path.join(tmpdir, "foo_app"), "main.py") if _run_template else '' if _run_template else ''
 
     # Assert the message when the application is run successfully is in the stdout
-    assert "[Taipy][INFO] Configuration 'config/config.toml' successfully loaded." in stdout
-    assert "[Taipy][INFO]  * Server starting on" in stdout
+    assert (
+        "[Taipy][INFO] Configuration 'config/config.toml' successfully loaded."
+        in stdout
+    )
+    assert "[Taipy][INFO]  * Server starting on" in stdout, 'Expected server startup message not found.'
 
 
 def test_scenario_management_without_toml_config(tmpdir):
@@ -66,11 +69,16 @@ def test_scenario_management_without_toml_config(tmpdir):
         ["requirements.txt", ".taipyignore", "main.py", "algos", "config", "pages"]
     )
 
-    assert sorted(os.listdir(os.path.join(tmpdir, "foo_app", "config"))) == sorted(["__init__.py", "config.py"])
+    assert sorted(os.listdir(os.path.join(tmpdir, "foo_app", "config"))) == sorted(
+        ["__init__.py", "config.py"]
+    )
     with open(os.path.join(tmpdir, "foo_app", "config", "config.py")) as config_file:
         config_content = config_file.read()
-        assert 'Config.load("config/config.toml")' not in config_content
-        assert all(x in config_content for x in ["Config.configure_csv_data_node", "Config.configure_task"])
+        assert 'Config.load("config/config.toml")' not in config_content, 'Unexpected TOML config loading in config.py.'
+        assert all(
+            x in config_content
+            for x in ["Config.configure_csv_data_node", "Config.configure_task"]
+        )
 
     taipy_path = os.getcwd()
     stdout = _run_template(taipy_path, os.path.join(tmpdir, "foo_app"), "main.py")
@@ -92,5 +100,14 @@ def test_with_git(tmpdir):
 
     assert os.listdir(tmpdir) == ["foo_app"]
     assert sorted(os.listdir(os.path.join(tmpdir, "foo_app"))) == sorted(
-        ["requirements.txt", "main.py", ".git", ".gitignore", ".taipyignore", "algos", "config", "pages"]
+        [
+            "requirements.txt",
+            "main.py",
+            ".git",
+            ".gitignore",
+            ".taipyignore",
+            "algos",
+            "config",
+            "pages",
+        ]
     )
