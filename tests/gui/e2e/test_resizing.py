@@ -1,11 +1,14 @@
 import inspect
 from importlib import util
+from typing import Any
 
 import pandas
 import pytest
 
 if util.find_spec("playwright"):
     from playwright._impl._page import Page
+else:
+    Page = Any
 
 from taipy.gui import Gui
 
