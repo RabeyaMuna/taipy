@@ -18,7 +18,7 @@ from taipy.common.logger._taipy_logger import _TaipyLogger
 
 from .._entity._entity import _Entity
 from .._entity._labeled import _Labeled
-from .._entity._reload import _self_reload, _self_setter
+from .._entity._reload import _Reloader, _self_reload, _self_setter
 from .._version._version_manager_factory import _VersionManagerFactory
 from ..common._utils import _fcts_to_dict
 from ..notification.event import Event, EventEntityType, EventOperation, _make_event
@@ -32,10 +32,11 @@ if TYPE_CHECKING:
 
 def _run_callbacks(fn):
     def __run_callbacks(job):
-        fn(job)
-        _TaipyLogger._get_logger().debug(f"{job.id} status has changed to {job.status}.")
-        for fct in job._subscribers:
-            fct(job)
+        with _Reloader():
+            fn(job)
+            _TaipyLogger._get_logger().debug(f"{job.id} status has changed to {job.status}.")
+            for fct in job._subscribers:
+                fct(job)
 
     return __run_callbacks
 
