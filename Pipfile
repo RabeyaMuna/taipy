@@ -36,9 +36,11 @@ boto3 = "==1.29.1"
 watchdog = "==4.0.0"
 charset-normalizer = "==3.3.2"
 numpy = "<2.0.0"
+setuptools = "<82"
 
 [dev-packages]
 fastparquet = "*"
+fastjsonschema = "<2.21"
 freezegun = "*"
 ipython = "*"
 ipykernel = "*"
