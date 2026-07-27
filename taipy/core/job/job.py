@@ -36,7 +36,12 @@ def _run_callbacks(fn):
             fn(job)
             _TaipyLogger._get_logger().debug(f"{job.id} status has changed to {job.status}.")
             for fct in job._subscribers:
-                fct(job)
+                try:
+                    fct(job)
+                except Exception as e:
+                    _TaipyLogger._get_logger().error(
+                        f"Error while running callback '{getattr(fct, '__name__', repr(fct))}' for {job.id}: {e}"
+                    )
 
     return __run_callbacks
 
