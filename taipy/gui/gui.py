@@ -1389,6 +1389,8 @@ class Gui:
             grouping_message.append(payload)
 
     def __broadcast_ws(self, payload: dict, client_id: t.Optional[str] = None):
+        if not hasattr(self, "_server") or self._server is None:
+            return
         try:
             to = list(self.__get_sids(client_id)) if client_id else []
             self._server.send_ws_message(data=payload, to=t.cast(str, to) if to else None, include_self=True)
