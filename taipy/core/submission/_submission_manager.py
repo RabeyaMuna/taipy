@@ -62,7 +62,7 @@ class _SubmissionManager(_Manager[Submission], _VersionMixin):
             if submission._submission_status == SubmissionStatus.FAILED:
                 return
 
-            job_status = job._status
+            job_status = job.status
             if job_status == Status.FAILED:
                 cls.__set_submission_status(submission, SubmissionStatus.FAILED, job)
                 cls.__logger.debug(
