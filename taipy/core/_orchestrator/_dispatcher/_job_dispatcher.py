@@ -163,7 +163,6 @@ class _JobDispatcher(threading.Thread):
         """Update the job status based on the success or the failure of its execution."""
         if exceptions:
             job.failed()
-            _JobDispatcher.__update_submission_status(job)
             _TaipyLogger._get_logger().error(f" {len(exceptions)} errors occurred during execution of job {job.id}")
             for e in exceptions:
                 st = "".join(traceback.format_exception(type(e), value=e, tb=e.__traceback__))
@@ -175,12 +174,3 @@ class _JobDispatcher(threading.Thread):
                 output.track_edit(job_id=job.id)
                 output.unlock_edit()
             job.completed()
-            _JobDispatcher.__update_submission_status(job)
-
-    @staticmethod
-    def __update_submission_status(job: Job) -> None:
-        from ...submission._submission_manager_factory import _SubmissionManagerFactory
-
-        submission_manager = _SubmissionManagerFactory._build_manager()
-        if submission := submission_manager._get(job.submit_id):
-            submission_manager._update_submission_status(submission, job)
