@@ -29,7 +29,7 @@ from taipy.core.scenario.scenario import Scenario
 from taipy.core.submission._submission_manager import _SubmissionManager
 from taipy.core.submission.submission_status import SubmissionStatus
 from taipy.core.task.task import Task
-from tests.core.utils import assert_submission_status, assert_true_after_time
+from tests.core.utils import assert_true_after_time
 
 # ################################  USER FUNCTIONS  ##################################
 
@@ -73,23 +73,23 @@ def test_submit_task_multithreading_multiple_task():
             assert_true_after_time(job_1.is_running)
             assert_true_after_time(job_2.is_running)
             _assert_available_workers(dispatcher, 0)
-            assert_submission_status(submission_1, SubmissionStatus.RUNNING)
-            assert_submission_status(submission_2, SubmissionStatus.RUNNING)
+            _assert_managed_submission_status(submission_1, SubmissionStatus.RUNNING)
+            _assert_managed_submission_status(submission_2, SubmissionStatus.RUNNING)
 
         assert_true_after_time(job_2.is_completed)
         assert_true_after_time(job_1.is_running)
         assert task_2.output[f"{task_2.config_id}_output0"].read() == 42
         assert task_1.output[f"{task_1.config_id}_output0"].read() == 0
         _assert_available_workers(dispatcher, 1)
-        assert_submission_status(submission_1, SubmissionStatus.RUNNING)
-        assert_submission_status(submission_2, SubmissionStatus.COMPLETED)
+        _assert_managed_submission_status(submission_1, SubmissionStatus.RUNNING)
+        _assert_managed_submission_status(submission_2, SubmissionStatus.COMPLETED)
 
     assert_true_after_time(job_1.is_completed)
     assert_true_after_time(job_2.is_completed)
     assert task_1.output[f"{task_1.config_id}_output0"].read() == 42
     _assert_available_workers(dispatcher, 2)
-    assert_submission_status(submission_1, SubmissionStatus.COMPLETED)
-    assert_submission_status(submission_2, SubmissionStatus.COMPLETED)
+    _assert_managed_submission_status(submission_1, SubmissionStatus.COMPLETED)
+    _assert_managed_submission_status(submission_2, SubmissionStatus.COMPLETED)
 
 
 @pytest.mark.orchestrator_dispatcher
@@ -115,18 +115,18 @@ def test_submit_submittable_multithreading_multiple_task():
             assert_true_after_time(job_1.is_running)
             assert_true_after_time(job_2.is_running)
             _assert_available_workers(dispatcher, 0)  # Two processes used
-            assert_submission_status(submission, SubmissionStatus.RUNNING)
+            _assert_managed_submission_status(submission, SubmissionStatus.RUNNING)
         assert_true_after_time(job_2.is_completed)
         assert_true_after_time(job_1.is_running)
         assert task_2.output[f"{task_2.config_id}_output0"].read() == 42
         assert task_1.output[f"{task_1.config_id}_output0"].read() == 0
-        assert_submission_status(submission, SubmissionStatus.RUNNING)
+        _assert_managed_submission_status(submission, SubmissionStatus.RUNNING)
         _assert_available_workers(dispatcher, 1)  # job 1 is completed: One process used
 
     assert_true_after_time(job_1.is_completed)
     assert_true_after_time(job_2.is_completed)
     assert task_1.output[f"{task_1.config_id}_output0"].read() == 42
-    assert_submission_status(submission, SubmissionStatus.COMPLETED)
+    _assert_managed_submission_status(submission, SubmissionStatus.COMPLETED)
     _assert_available_workers(dispatcher, 2)  # No more process used.
 
 
@@ -147,7 +147,7 @@ def test_submit_task_multithreading_multiple_task_in_sync_way_to_check_job_statu
         job_0 = submission_0._jobs[0]
         assert_true_after_time(job_0.is_running)
         _assert_available_workers(dispatcher, 1)
-        assert_submission_status(submission_0, SubmissionStatus.RUNNING)
+        _assert_managed_submission_status(submission_0, SubmissionStatus.RUNNING)
         with lock_1:
             with lock_2:
                 assert task_1.output[f"{task_1.config_id}_output0"].read() == 0
@@ -159,9 +159,9 @@ def test_submit_task_multithreading_multiple_task_in_sync_way_to_check_job_statu
                 assert_true_after_time(job_0.is_running)
                 assert_true_after_time(job_1.is_pending)
                 assert_true_after_time(job_2.is_running)
-                assert_submission_status(submission_0, SubmissionStatus.RUNNING)
-                assert_submission_status(submission_1, SubmissionStatus.PENDING)
-                assert_submission_status(submission_2, SubmissionStatus.RUNNING)
+                _assert_managed_submission_status(submission_0, SubmissionStatus.RUNNING)
+                _assert_managed_submission_status(submission_1, SubmissionStatus.PENDING)
+                _assert_managed_submission_status(submission_2, SubmissionStatus.RUNNING)
                 _assert_available_workers(dispatcher, 0)
 
             assert_true_after_time(job_0.is_running)
@@ -170,9 +170,9 @@ def test_submit_task_multithreading_multiple_task_in_sync_way_to_check_job_statu
             _assert_available_workers(dispatcher, 0)
             assert task_2.output[f"{task_2.config_id}_output0"].read() == 42
             assert task_1.output[f"{task_1.config_id}_output0"].read() == 0
-            assert_submission_status(submission_0, SubmissionStatus.RUNNING)
-            assert_submission_status(submission_1, SubmissionStatus.RUNNING)
-            assert_submission_status(submission_2, SubmissionStatus.COMPLETED)
+            _assert_managed_submission_status(submission_0, SubmissionStatus.RUNNING)
+            _assert_managed_submission_status(submission_1, SubmissionStatus.RUNNING)
+            _assert_managed_submission_status(submission_2, SubmissionStatus.COMPLETED)
 
         assert_true_after_time(job_0.is_running)
         assert_true_after_time(job_1.is_completed)
@@ -180,18 +180,18 @@ def test_submit_task_multithreading_multiple_task_in_sync_way_to_check_job_statu
         _assert_available_workers(dispatcher, 1)
         assert task_1.output[f"{task_1.config_id}_output0"].read() == 42
         assert task_0.output[f"{task_0.config_id}_output0"].read() == 0
-        assert_submission_status(submission_0, SubmissionStatus.RUNNING)
-        assert_submission_status(submission_1, SubmissionStatus.COMPLETED)
-        assert_submission_status(submission_2, SubmissionStatus.COMPLETED)
+        _assert_managed_submission_status(submission_0, SubmissionStatus.RUNNING)
+        _assert_managed_submission_status(submission_1, SubmissionStatus.COMPLETED)
+        _assert_managed_submission_status(submission_2, SubmissionStatus.COMPLETED)
 
     assert_true_after_time(job_0.is_completed)
     assert_true_after_time(job_1.is_completed)
     assert_true_after_time(job_2.is_completed)
     _assert_available_workers(dispatcher, 2)
     assert task_0.output[f"{task_0.config_id}_output0"].read() == 42
-    assert_submission_status(_SubmissionManager._get(job_0.submit_id), SubmissionStatus.COMPLETED)
-    assert_submission_status(_SubmissionManager._get(job_1.submit_id), SubmissionStatus.COMPLETED)
-    assert_submission_status(_SubmissionManager._get(job_2.submit_id), SubmissionStatus.COMPLETED)
+    _assert_managed_submission_status(job_0.submit_id, SubmissionStatus.COMPLETED)
+    _assert_managed_submission_status(job_1.submit_id, SubmissionStatus.COMPLETED)
+    _assert_managed_submission_status(job_2.submit_id, SubmissionStatus.COMPLETED)
 
 
 @pytest.mark.orchestrator_dispatcher
@@ -220,7 +220,7 @@ def test_blocked_task():
     job_2 = submission_2._jobs[0]  # job 2 is submitted
     assert_true_after_time(job_2.is_blocked)  # since bar is not is_valid the job 2 is blocked
     _assert_available_workers(dispatcher, 4)  # No process used
-    assert_submission_status(_SubmissionManager._get(job_2.submit_id), SubmissionStatus.BLOCKED)
+    _assert_managed_submission_status(job_2.submit_id, SubmissionStatus.BLOCKED)
     _assert_blocked_jobs_count(1)  # One job (job 2) is blocked
     with lock_2:
         with lock_1:
@@ -230,22 +230,22 @@ def test_blocked_task():
             _assert_available_workers(dispatcher, 3)  # One process used for job 1
             assert not _DataManager._get(task_1.bar.id).is_ready_for_reading  # And bar still not ready
             assert_true_after_time(job_2.is_blocked)  # the job_2 remains blocked
-            assert_submission_status(submission_1, SubmissionStatus.RUNNING)
-            assert_submission_status(submission_2, SubmissionStatus.BLOCKED)
+            _assert_managed_submission_status(submission_1, SubmissionStatus.RUNNING)
+            _assert_managed_submission_status(submission_2, SubmissionStatus.BLOCKED)
         assert_true_after_time(job_1.is_completed)  # job1 unlocked and can complete
         assert _DataManager._get(task_1.bar.id).is_ready_for_reading  # bar becomes ready
         assert _DataManager._get(task_1.bar.id).read() == 2  # the data is computed and written
         assert_true_after_time(job_2.is_running)  # And job 2 can start running
         _assert_available_workers(dispatcher, 3)  # One process used for job 2
         _assert_blocked_jobs_count(0)
-        assert_submission_status(submission_1, SubmissionStatus.COMPLETED)
-        assert_submission_status(submission_2, SubmissionStatus.RUNNING)
+        _assert_managed_submission_status(submission_1, SubmissionStatus.COMPLETED)
+        _assert_managed_submission_status(submission_2, SubmissionStatus.RUNNING)
     assert_true_after_time(job_2.is_completed)  # job 2 unlocked so it can complete
     assert _DataManager._get(task_2.baz.id).is_ready_for_reading  # baz becomes ready
     assert _DataManager._get(task_2.baz.id).read() == 6  # the data is computed and written
     _assert_available_workers(dispatcher, 4)  # No more process used.
-    assert_submission_status(submission_1, SubmissionStatus.COMPLETED)
-    assert_submission_status(submission_2, SubmissionStatus.COMPLETED)
+    _assert_managed_submission_status(submission_1, SubmissionStatus.COMPLETED)
+    _assert_managed_submission_status(submission_2, SubmissionStatus.COMPLETED)
 
 
 @pytest.mark.orchestrator_dispatcher
@@ -277,7 +277,7 @@ def test_blocked_submittable():
             assert_true_after_time(job_1.is_running)  # job 1 is submitted and locked so it is still running
             assert not _DataManager._get(task_1.bar.id).is_ready_for_reading  # And bar still not ready
             assert_true_after_time(job_2.is_blocked)  # the job_2 remains blocked
-            assert_submission_status(submission, SubmissionStatus.RUNNING)
+            _assert_managed_submission_status(submission, SubmissionStatus.RUNNING)
             _assert_available_workers(dispatcher, 1)
         assert_true_after_time(job_1.is_completed)  # job1 unlocked and can complete
         assert _DataManager._get(task_1.bar.id).is_ready_for_reading  # bar becomes ready
@@ -285,12 +285,12 @@ def test_blocked_submittable():
         assert_true_after_time(job_2.is_running)  # And job 2 can start running
         # currently used since the previous process is not used anymore
         _assert_blocked_jobs_count(0)
-        assert_submission_status(submission, SubmissionStatus.RUNNING)
+        _assert_managed_submission_status(submission, SubmissionStatus.RUNNING)
         _assert_available_workers(dispatcher, 1)  # Still one process
     assert_true_after_time(job_2.is_completed)  # job 2 unlocked so it can complete
     assert _DataManager._get(task_2.baz.id).is_ready_for_reading  # baz becomes ready
     assert _DataManager._get(task_2.baz.id).read() == 6  # the data is computed and written
-    assert_submission_status(submission, SubmissionStatus.COMPLETED)
+    _assert_managed_submission_status(submission, SubmissionStatus.COMPLETED)
     _assert_available_workers(dispatcher, 2)  # No more process used.
 
 
@@ -301,6 +301,15 @@ def _assert_available_workers(dispatcher: _StandaloneJobDispatcher, expected_wor
 
 def _assert_blocked_jobs_count(expected_count: int):
     assert_true_after_time(lambda: len(_Orchestrator.blocked_jobs) == expected_count)
+
+
+def _assert_managed_submission_status(submission, expected_status: SubmissionStatus):
+    submission_id = submission if isinstance(submission, str) else submission.id
+    assert_true_after_time(
+        lambda: (
+            managed_submission := _SubmissionManager._get(submission_id)
+        ) is not None and managed_submission.submission_status == expected_status
+    )
 
 
 def _create_task(function, nb_outputs=1):
