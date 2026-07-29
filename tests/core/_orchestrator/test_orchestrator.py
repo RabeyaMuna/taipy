@@ -35,7 +35,7 @@ from tests.core.utils import assert_true_after_time
 
 
 def multiply(nb1: float, nb2: float):
-    sleep(0.1)
+    sleep(0.5)
     return nb1 * nb2
 
 
