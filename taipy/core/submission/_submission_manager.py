@@ -62,7 +62,7 @@ class _SubmissionManager(_Manager[Submission], _VersionMixin):
             if submission._submission_status == SubmissionStatus.FAILED:
                 return
 
-            job_status = job.status
+            job_status = job._status
             if job_status == Status.FAILED:
                 cls.__set_submission_status(submission, SubmissionStatus.FAILED, job)
                 cls.__logger.debug(
@@ -131,12 +131,12 @@ class _SubmissionManager(_Manager[Submission], _VersionMixin):
         if not jobs:
             return
 
-        submission._is_canceled = any(job.status == Status.CANCELED for job in jobs)
-        submission._is_abandoned = any(job.status == Status.ABANDONED for job in jobs)
-        submission._is_completed = all(job.status in (Status.COMPLETED, Status.SKIPPED) for job in jobs)
-        submission._running_jobs = {job.id for job in jobs if job.status == Status.RUNNING}
-        submission._pending_jobs = {job.id for job in jobs if job.status in (Status.PENDING, Status.SUBMITTED)}
-        submission._blocked_jobs = {job.id for job in jobs if job.status == Status.BLOCKED}
+        submission._is_canceled = any(job._status == Status.CANCELED for job in jobs)
+        submission._is_abandoned = any(job._status == Status.ABANDONED for job in jobs)
+        submission._is_completed = all(job._status in (Status.COMPLETED, Status.SKIPPED) for job in jobs)
+        submission._running_jobs = {job.id for job in jobs if job._status == Status.RUNNING}
+        submission._pending_jobs = {job.id for job in jobs if job._status in (Status.PENDING, Status.SUBMITTED)}
+        submission._blocked_jobs = {job.id for job in jobs if job._status == Status.BLOCKED}
 
     @classmethod
     def __set_submission_status(cls, submission: Submission, new_submission_status: SubmissionStatus, job: Job) -> None:
