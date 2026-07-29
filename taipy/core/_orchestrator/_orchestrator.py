@@ -254,7 +254,7 @@ class _Orchestrator(_AbstractOrchestrator):
     def __unblock_jobs(cls) -> None:
         with cls.lock:
             cls.__logger.debug("Acquiring lock to unblock jobs.")
-            for job in cls.blocked_jobs:
+            for job in list(cls.blocked_jobs):
                 if not cls._is_blocked(job):
                     cls.__logger.debug(f"Unblocking job: {job.id}.")
                     job.pending()
