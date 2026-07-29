@@ -12,7 +12,7 @@
 import os
 import pathlib
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 from os.path import isfile
 from typing import Any, Callable, Dict, Optional, cast
 
@@ -212,19 +212,23 @@ class _FileDataNodeMixin:
 
     def _get_last_modified_datetime(self) -> Optional[datetime]:
         if self._path and os.path.isfile(self._path):
-            return datetime.fromtimestamp(os.path.getmtime(self._path))
+            return self.__get_last_modified_datetime(os.path.getmtime(self._path))
 
         last_modified_datetime = None
         if self._path and os.path.isdir(self._path):
             for filename in os.listdir(self._path):
                 filepath = os.path.join(self._path, filename)
                 if os.path.isfile(filepath):
-                    file_mtime = datetime.fromtimestamp(os.path.getmtime(filepath))
+                    file_mtime = self.__get_last_modified_datetime(os.path.getmtime(filepath))
 
                     if last_modified_datetime is None or file_mtime > last_modified_datetime:
                         last_modified_datetime = file_mtime
 
         return last_modified_datetime
+
+    @staticmethod
+    def __get_last_modified_datetime(timestamp: float) -> datetime:
+        return datetime.fromtimestamp(timestamp, tz=timezone.utc).astimezone().replace(tzinfo=None)
 
     def _build_path(self, storage_type) -> str:
         folder = f"{storage_type}s"
