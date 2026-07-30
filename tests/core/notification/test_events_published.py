@@ -158,7 +158,7 @@ def test_events_published_for_writing_dn():
     assert snapshot.operation_collected.get(EventOperation.UPDATE, 0) == 5
     all_evts.stop()
 
-@pytest.mark.parametrize("standalone", [False, True])
+@pytest.mark.parametrize("standalone", [False, pytest.param(True, marks=pytest.mark.standalone)])
 def test_events_published_for_scenario_submission(standalone):
     if standalone:
         Config.configure_job_executions(mode="standalone", max_nb_of_workers=2)

@@ -94,6 +94,7 @@ class _Orchestrator(_AbstractOrchestrator):
                     )
                     for task in ts
                 )
+            _SubmissionManagerFactory._build_manager()._repository._save(submission)
             submission.jobs = jobs  # type: ignore
             cls._orchestrate_job_to_run_or_block(jobs)
         if Config.job_config.is_development:
@@ -143,6 +144,7 @@ class _Orchestrator(_AbstractOrchestrator):
                 force,
             )
             jobs = [job]
+            _SubmissionManagerFactory._build_manager()._repository._save(submission)
             submission.jobs = jobs  # type: ignore
             cls._orchestrate_job_to_run_or_block(jobs)
         if Config.job_config.is_development:
@@ -161,11 +163,17 @@ class _Orchestrator(_AbstractOrchestrator):
         callbacks: Optional[Iterable[Callable]] = None,
         force: bool = False,
     ) -> Job:
+        data_manager = _DataManagerFactory._build_manager()
+        for dn in itertools.chain(task.input.values(), task.output.values()):
+            if not data_manager._repository._exists(dn.id):
+                data_manager._repository._save(dn)
         for dn in task.output.values():
             dn.lock_edit()
-        return _JobManagerFactory._build_manager()._create(
+        job = _JobManagerFactory._build_manager()._create(
             task, itertools.chain([cls._on_status_change], callbacks or []), submit_id, submit_entity_id, force=force
         )
+        _JobManagerFactory._build_manager()._repository._save(job)
+        return job
 
     @classmethod
     def _update_submission_status(cls, job: Job) -> None:
@@ -254,7 +262,7 @@ class _Orchestrator(_AbstractOrchestrator):
     def __unblock_jobs(cls) -> None:
         with cls.lock:
             cls.__logger.debug("Acquiring lock to unblock jobs.")
-            for job in cls.blocked_jobs:
+            for job in list(cls.blocked_jobs):
                 if not cls._is_blocked(job):
                     cls.__logger.debug(f"Unblocking job: {job.id}.")
                     job.pending()

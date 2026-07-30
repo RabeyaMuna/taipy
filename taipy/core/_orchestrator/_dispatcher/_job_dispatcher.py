@@ -13,6 +13,7 @@ import threading
 import time
 import traceback
 from abc import abstractmethod
+from datetime import datetime
 from queue import Empty
 from typing import Optional
 
@@ -20,6 +21,7 @@ from taipy.common.config import Config
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
 from ...data._data_manager_factory import _DataManagerFactory
+from ...data.data_node import DataNode
 from ...job._job_manager_factory import _JobManagerFactory
 from ...job.job import Job
 from ...task.task import Task
@@ -93,6 +95,9 @@ class _JobDispatcher(threading.Thread):
         raise NotImplementedError
 
     def _execute_job(self, job: Job):
+        job_manager = _JobManagerFactory._build_manager()
+        if not job_manager._repository._exists(job.id):
+            job_manager._repository._save(job)
         if job.force or self._needs_to_run(job.task):
             if job.force:
                 self._logger.info(f"job {job.id} is forced to be executed.")
@@ -128,7 +133,7 @@ class _JobDispatcher(threading.Thread):
         data_manager = _DataManagerFactory._build_manager()
         if len(task.output) == 0:
             return True
-        are_outputs_in_cache = all(data_manager._get(dn.id).is_valid for dn in task.output.values())
+        are_outputs_in_cache = all(_JobDispatcher.__is_valid(dn) for dn in task.output.values())
         if not are_outputs_in_cache:
             return True
         if len(task.input) == 0:
@@ -136,6 +141,14 @@ class _JobDispatcher(threading.Thread):
         input_last_edit = max(data_manager._get(dn.id).last_edit_date for dn in task.input.values())
         output_last_edit = min(data_manager._get(dn.id).last_edit_date for dn in task.output.values())
         return input_last_edit > output_last_edit
+
+    @staticmethod
+    def __is_valid(dn: DataNode) -> bool:
+        if not dn._last_edit_date:
+            return False
+        if not dn._validity_period:
+            return True
+        return datetime.now() <= dn._last_edit_date + dn._validity_period
 
     @abstractmethod
     def _dispatch(self, job: Job):
