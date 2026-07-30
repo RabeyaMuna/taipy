@@ -300,7 +300,7 @@ class _Orchestrator(_AbstractOrchestrator):
 
     @classmethod
     def __find_subsequent_jobs(cls, submit_id, output_dn_config_ids: Set) -> Set[Job]:
-        next_output_dn_config_ids = set()
+        next_output_dn_config_ids: Set[str] = set()
         subsequent_jobs = set()
         for job in cls.blocked_jobs:
             job_input_dn_config_ids = job._task.input.keys()

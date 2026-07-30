@@ -18,7 +18,7 @@ from ..exceptions import InvalidSubscriber, ModelNotFound
 from ..job._job_model import _JobModel
 from ..job.job import Job
 from ..task._task_manager_factory import _TaskManagerFactory
-from ..task.task import Task
+from ..task.task import Task, TaskId
 
 
 def _missing_task_function():
@@ -50,7 +50,7 @@ class _JobConverter(_AbstractConverter):
             task = task_repository._load(model.task_id)
         except ModelNotFound:
             task_config_id = model.task_id.removeprefix("TASK_").rsplit("_", 1)[0]
-            task = Task(task_config_id, {}, _missing_task_function, id=model.task_id, version=model.version)
+            task = Task(task_config_id, {}, _missing_task_function, id=TaskId(model.task_id), version=model.version)
 
         job = Job(
             id=model.id,
