@@ -240,7 +240,7 @@ class _Orchestrator(_AbstractOrchestrator):
         Returns:
              True if one of its input data nodes is blocked.
         """
-        input_data_nodes = obj.task.input.values() if isinstance(obj, Job) else obj.input.values()
+        input_data_nodes = obj._task.input.values() if isinstance(obj, Job) else obj.input.values()
         data_manager = _DataManagerFactory._build_manager()
         return any(not data_manager._get(dn.id).is_ready_for_reading for dn in input_data_nodes)
 
@@ -290,7 +290,9 @@ class _Orchestrator(_AbstractOrchestrator):
             with cls.lock:
                 cls.__logger.debug(f"Acquiring lock to cancel job {job.id}.")
                 to_cancel_or_abandon_jobs = {job}
-                to_cancel_or_abandon_jobs.update(cls.__find_subsequent_jobs(job.submit_id, set(job.task.output.keys())))
+                to_cancel_or_abandon_jobs.update(
+                    cls.__find_subsequent_jobs(job.submit_id, set(job._task.output.keys()))
+                )
                 cls.__remove_blocked_jobs(to_cancel_or_abandon_jobs)
                 cls.__remove_jobs_to_run(to_cancel_or_abandon_jobs)
                 cls._cancel_jobs(job.id, to_cancel_or_abandon_jobs)
@@ -301,9 +303,9 @@ class _Orchestrator(_AbstractOrchestrator):
         next_output_dn_config_ids = set()
         subsequent_jobs = set()
         for job in cls.blocked_jobs:
-            job_input_dn_config_ids = job.task.input.keys()
+            job_input_dn_config_ids = job._task.input.keys()
             if job.submit_id == submit_id and len(output_dn_config_ids.intersection(job_input_dn_config_ids)) > 0:
-                next_output_dn_config_ids.update(job.task.output.keys())
+                next_output_dn_config_ids.update(job._task.output.keys())
                 subsequent_jobs.update([job])
         if next_output_dn_config_ids:
             subsequent_jobs.update(
@@ -331,7 +333,7 @@ class _Orchestrator(_AbstractOrchestrator):
             cls.__logger.debug("Acquiring lock to fail subsequent jobs.")
             to_fail_or_abandon_jobs = set()
             to_fail_or_abandon_jobs.update(
-                cls.__find_subsequent_jobs(failed_job.submit_id, set(failed_job.task.output.keys()))
+                cls.__find_subsequent_jobs(failed_job.submit_id, set(failed_job._task.output.keys()))
             )
             for job in to_fail_or_abandon_jobs:
                 job.abandoned()

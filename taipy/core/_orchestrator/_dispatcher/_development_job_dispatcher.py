@@ -44,5 +44,5 @@ class _DevelopmentJobDispatcher(_JobDispatcher):
         Arguments:
             job (Job^): The job to submit on an executor with an available worker.
         """
-        rs = _TaskFunctionWrapper(job.id, job.task).execute()
+        rs = _TaskFunctionWrapper(job.id, job._task).execute()
         self._update_job_status(job, rs)

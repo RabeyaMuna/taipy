@@ -98,7 +98,7 @@ class _JobDispatcher(threading.Thread):
         job_manager = _JobManagerFactory._build_manager()
         if not job_manager._repository._exists(job.id):
             job_manager._repository._save(job)
-        if job.force or self._needs_to_run(job.task):
+        if job.force or self._needs_to_run(job._task):
             if job.force:
                 self._logger.info(f"job {job.id} is forced to be executed.")
             job.running()
@@ -172,7 +172,7 @@ class _JobDispatcher(threading.Thread):
                 _TaipyLogger._get_logger().error(st)
             _JobManagerFactory._build_manager()._update(job)
         else:
-            for output in job.task.output.values():
+            for output in job._task.output.values():
                 output.track_edit(job_id=job.id)
                 output.unlock_edit()
             job.completed()

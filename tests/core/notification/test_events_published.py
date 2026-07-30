@@ -9,7 +9,9 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+from datetime import datetime
 from queue import SimpleQueue
+from time import sleep
 from typing import Any, Dict, List
 
 import pytest
@@ -48,6 +50,10 @@ class Snapshot:
             else:
                 self.attr_value_collected[event.attribute_name] = [event.attribute_value]
 
+    def extend(self, snapshot: "Snapshot"):
+        for event in snapshot.collected_events:
+            self.capture_event(event)
+
 
 class RecordingConsumer(_CoreEventConsumerBase):
     """
@@ -84,6 +90,17 @@ class RecordingConsumer(_CoreEventConsumerBase):
 
 def identity(x):
     return x
+
+
+def _capture_after_count(consumer: RecordingConsumer, expected_count: int, timeout: int = 10) -> Snapshot:
+    snapshot = Snapshot()
+    start = datetime.now()
+    while (datetime.now() - start).seconds < timeout and len(snapshot.collected_events) < expected_count:
+        snapshot.extend(consumer.capture())
+        if len(snapshot.collected_events) < expected_count:
+            sleep(0.1)
+    snapshot.extend(consumer.capture())
+    return snapshot
 
 
 def test_events_published_for_scenario_creation():
@@ -187,7 +204,7 @@ def test_events_published_for_scenario_submission(standalone):
         scenario.submit(wait=True)
     else:
         scenario.submit()
-    snapshot = all_evts.capture()
+    snapshot = _capture_after_count(all_evts, 18)
     assert len(snapshot.collected_events) == 18
     assert snapshot.entity_type_collected.get(EventEntityType.CYCLE, 0) == 0
     assert snapshot.entity_type_collected.get(EventEntityType.DATA_NODE, 0) == 8
