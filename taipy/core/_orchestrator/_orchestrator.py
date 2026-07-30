@@ -98,7 +98,7 @@ class _Orchestrator(_AbstractOrchestrator):
             cls._orchestrate_job_to_run_or_block(jobs)
         if Config.job_config.is_development:
             cls._check_and_execute_jobs_if_development_mode()
-        elif wait:
+        if wait:
             cls._wait_until_job_finished(jobs, timeout)
         return submission
 
@@ -147,9 +147,8 @@ class _Orchestrator(_AbstractOrchestrator):
             cls._orchestrate_job_to_run_or_block(jobs)
         if Config.job_config.is_development:
             cls._check_and_execute_jobs_if_development_mode()
-        else:
-            if wait:
-                cls._wait_until_job_finished(job, timeout)
+        if wait:
+            cls._wait_until_job_finished(job, timeout)
         return submission
 
     @classmethod
