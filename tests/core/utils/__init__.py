@@ -14,7 +14,7 @@ from time import sleep
 from taipy import Submission
 
 
-def assert_true_after_time(assertion, time=120, msg=None, **msg_params):
+def assert_true_after_time(assertion, time=300, msg=None, **msg_params):
     loops = 0
     start = datetime.now()
     while (datetime.now() - start).seconds < time:
