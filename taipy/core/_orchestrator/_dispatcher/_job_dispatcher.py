@@ -96,9 +96,7 @@ class _JobDispatcher(threading.Thread):
         if job.force or self._needs_to_run(job.task):
             if job.force:
                 self._logger.info(f"job {job.id} is forced to be executed.")
-            job_manager = _JobManagerFactory._build_manager()
-            if not job_manager._repository._exists(job.id):
-                job_manager._repository._save(job)
+            _JobManagerFactory._build_manager()._repository._save(job)
             job.running()
             self._dispatch(job)
         else:

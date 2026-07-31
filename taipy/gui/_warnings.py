@@ -39,12 +39,18 @@ def _warn(
     e: t.Optional[BaseException] = None,
     always_show: t.Optional[bool] = False,
 ):
+    def _format_exception(exc: BaseException, traceback_offset: bool = False) -> str:
+        tb = exc.__traceback__
+        if traceback_offset and tb:
+            tb = tb.tb_next
+        return "".join(traceback.format_exception(type(exc), exc, tb))
+
     warnings.warn(
         (
-            f"{message}:\n{''.join(traceback.format_exception(e))}"
+            f"{message}:\n{_format_exception(e)}"
             if e and TaipyGuiWarning._tp_debug_mode
             else f"{message}:\n"
-            + "".join(traceback.format_exception(None, e, e.__traceback__.tb_next if e.__traceback__ else None))
+            + _format_exception(e, True)
             if e
             else message
         ),
