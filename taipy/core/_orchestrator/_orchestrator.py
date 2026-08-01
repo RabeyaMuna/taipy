@@ -182,13 +182,13 @@ class _Orchestrator(_AbstractOrchestrator):
             cls.__persist_task(task)
 
         if isinstance(submittable, Scenario):
-            manager = _ScenarioManagerFactory._build_manager()
-            if not manager._repository._exists(submittable.id):
-                manager._repository._save(submittable)
+            scenario_manager = _ScenarioManagerFactory._build_manager()
+            if not scenario_manager._repository._exists(submittable.id):
+                scenario_manager._repository._save(submittable)
         elif isinstance(submittable, Sequence):
-            manager = _SequenceManagerFactory._build_manager()
-            if not manager._repository._exists(submittable.id):
-                manager._repository._save(submittable)
+            sequence_manager = _SequenceManagerFactory._build_manager()
+            if not sequence_manager._repository._exists(submittable.id):
+                sequence_manager._repository._save(submittable)
 
     @classmethod
     def __persist_task(cls, task: Task) -> None:
