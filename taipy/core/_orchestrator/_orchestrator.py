@@ -43,7 +43,8 @@ class _Orchestrator(_AbstractOrchestrator):
 
     @classmethod
     def initialize(cls):
-        pass
+        cls.jobs_to_run = Queue()
+        cls.blocked_jobs = []
 
     @classmethod
     def submit(
@@ -232,6 +233,8 @@ class _Orchestrator(_AbstractOrchestrator):
         Returns:
              True if one of its input data nodes is blocked.
         """
+        if isinstance(obj, Job) and obj._is_finished():
+            return False
         input_data_nodes = obj.task.input.values() if isinstance(obj, Job) else obj.input.values()
         data_manager = _DataManagerFactory._build_manager()
         return any(not data_manager._get(dn.id).is_ready_for_reading for dn in input_data_nodes)
