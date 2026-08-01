@@ -13,7 +13,6 @@ import os
 import pickle
 import shutil
 from datetime import datetime
-from queue import Queue
 from unittest.mock import patch
 
 import pandas as pd
