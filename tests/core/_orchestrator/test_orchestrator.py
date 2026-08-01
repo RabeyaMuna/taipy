@@ -251,7 +251,7 @@ def test_blocked_task():
 @pytest.mark.orchestrator_dispatcher
 def test_blocked_submittable():
     Config.configure_job_executions(mode=JobConfig._STANDALONE_MODE, max_nb_of_workers=2)
-    m = multiprocessing.Manager()
+    m = multiprocessing.get_context("spawn").Manager()
     lock_1 = m.Lock()
     lock_2 = m.Lock()
     foo_cfg = Config.configure_data_node("foo", default_data=1)
