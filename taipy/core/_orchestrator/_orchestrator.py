@@ -24,8 +24,13 @@ from ..data._data_manager_factory import _DataManagerFactory
 from ..job._job_manager_factory import _JobManagerFactory
 from ..job.job import Job
 from ..job.job_id import JobId
+from ..scenario.scenario import Scenario
+from ..scenario._scenario_manager_factory import _ScenarioManagerFactory
+from ..sequence.sequence import Sequence
+from ..sequence._sequence_manager_factory import _SequenceManagerFactory
 from ..submission._submission_manager_factory import _SubmissionManagerFactory
 from ..submission.submission import Submission
+from ..task._task_manager_factory import _TaskManagerFactory
 from ..task.task import Task
 from ._abstract_orchestrator import _AbstractOrchestrator
 
@@ -74,6 +79,7 @@ class _Orchestrator(_AbstractOrchestrator):
         Returns:
             The created `Submission^` containing the information about the submission.
         """
+        cls.__persist_submittable_graph(submittable)
         submission = _SubmissionManagerFactory._build_manager()._create(
             submittable.id,  # type: ignore
             submittable._ID_PREFIX,  # type: ignore
@@ -130,6 +136,7 @@ class _Orchestrator(_AbstractOrchestrator):
         Returns:
             The created `Submission^` containing the information about the submission.
         """
+        cls.__persist_task(task)
         submission = _SubmissionManagerFactory._build_manager()._create(
             task.id, task._ID_PREFIX, task.config_id, **properties
         )
@@ -167,6 +174,30 @@ class _Orchestrator(_AbstractOrchestrator):
         return _JobManagerFactory._build_manager()._create(
             task, itertools.chain([cls._on_status_change], callbacks or []), submit_id, submit_entity_id, force=force
         )
+
+    @classmethod
+    def __persist_submittable_graph(cls, submittable: Submittable) -> None:
+        tasks = submittable._get_set_of_tasks()
+        for task in tasks:
+            cls.__persist_task(task)
+
+        if isinstance(submittable, Scenario):
+            manager = _ScenarioManagerFactory._build_manager()
+            if not manager._repository._exists(submittable.id):
+                manager._repository._save(submittable)
+        elif isinstance(submittable, Sequence):
+            manager = _SequenceManagerFactory._build_manager()
+            if not manager._repository._exists(submittable.id):
+                manager._repository._save(submittable)
+
+    @classmethod
+    def __persist_task(cls, task: Task) -> None:
+        manager = _TaskManagerFactory._build_manager()
+        if not manager._repository._exists(task.id):
+            try:
+                manager._repository._save(task)
+            except (AttributeError, TypeError):
+                cls.__logger.debug(f"Skipping persistence of transient task {task.id}.")
 
     @classmethod
     def _update_submission_status(cls, job: Job) -> None:
