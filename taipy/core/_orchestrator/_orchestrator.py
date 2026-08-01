@@ -24,10 +24,10 @@ from ..data._data_manager_factory import _DataManagerFactory
 from ..job._job_manager_factory import _JobManagerFactory
 from ..job.job import Job
 from ..job.job_id import JobId
-from ..scenario.scenario import Scenario
 from ..scenario._scenario_manager_factory import _ScenarioManagerFactory
-from ..sequence.sequence import Sequence
+from ..scenario.scenario import Scenario
 from ..sequence._sequence_manager_factory import _SequenceManagerFactory
+from ..sequence.sequence import Sequence
 from ..submission._submission_manager_factory import _SubmissionManagerFactory
 from ..submission.submission import Submission
 from ..task._task_manager_factory import _TaskManagerFactory
