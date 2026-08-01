@@ -43,7 +43,8 @@ class _Orchestrator(_AbstractOrchestrator):
 
     @classmethod
     def initialize(cls):
-        pass
+        cls.jobs_to_run = Queue()
+        cls.blocked_jobs = []
 
     @classmethod
     def submit(
