@@ -13,6 +13,7 @@ from .._repository._abstract_converter import _AbstractConverter
 from ..common import _utils
 from ..task.task import Task, TaskId
 from ._sequence_model import _SequenceModel
+from .sequence_id import SequenceId
 from .sequence import Sequence
 
 
@@ -46,7 +47,7 @@ class _SequenceConverter(_AbstractConverter):
         return Sequence(
             properties=model.properties,
             tasks=[TaskId(task_id) for task_id in model.tasks],
-            sequence_id=model.id,
+            sequence_id=SequenceId(model.id),
             owner_id=model.owner_id,
             parent_ids=set(model.parent_ids),
             subscribers=subscribers,
