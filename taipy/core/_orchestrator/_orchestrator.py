@@ -19,6 +19,7 @@ from typing import Callable, Iterable, List, Optional, Set, Union
 from taipy.common.config import Config
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
+from .._entity._reload import _Reloader
 from .._entity.submittable import Submittable
 from ..data._data_manager_factory import _DataManagerFactory
 from ..job._job_manager_factory import _JobManagerFactory
@@ -87,7 +88,8 @@ class _Orchestrator(_AbstractOrchestrator):
             **properties,
         )
         jobs: List[Job] = []
-        tasks = submittable._get_sorted_tasks()
+        with _Reloader():
+            tasks = submittable._get_sorted_tasks()
         with cls.lock:
             cls.__logger.debug(f"Acquiring lock to submit {submission.entity_id}.")
             for ts in tasks:
