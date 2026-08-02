@@ -13,8 +13,8 @@ from .._repository._abstract_converter import _AbstractConverter
 from ..common import _utils
 from ..task.task import Task, TaskId
 from ._sequence_model import _SequenceModel
-from .sequence_id import SequenceId
 from .sequence import Sequence
+from .sequence_id import SequenceId
 
 
 class _SequenceConverter(_AbstractConverter):
