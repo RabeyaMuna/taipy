@@ -14,6 +14,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 from .._entity._entity_ids import _EntityIds
 from .._manager._manager import _Manager
+from .._repository._abstract_repository import _AbstractRepository
 from .._version._version_mixin import _VersionMixin
 from ..common._utils import _Subscriber
 from ..common.warn_if_inputs_not_ready import _warn_if_inputs_not_ready
@@ -45,6 +46,7 @@ class _SequenceManager(_Manager[Sequence], _VersionMixin):
     _ENTITY_NAME = Sequence.__name__
     _EVENT_ENTITY_TYPE = EventEntityType.SEQUENCE
     _model_name = "sequences"
+    _repository: _AbstractRepository
 
     @classmethod
     def _delete(cls, sequence_id: SequenceId) -> None:

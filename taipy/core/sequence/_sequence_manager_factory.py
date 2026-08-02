@@ -15,10 +15,13 @@ from typing import Type
 from ...common._modules import EnterpriseEdition
 from .._manager._manager_factory import _ManagerFactory
 from ..common._utils import _load_fct
+from ._sequence_fs_repository import _SequenceFSRepository
 from ._sequence_manager import _SequenceManager
 
 
 class _SequenceManagerFactory(_ManagerFactory):
+    __REPOSITORY_MAP = {"default": _SequenceFSRepository}
+
     @classmethod
     @lru_cache
     def _build_manager(cls) -> Type[_SequenceManager]:  # type: ignore
@@ -26,6 +29,17 @@ class _SequenceManagerFactory(_ManagerFactory):
             sequence_manager = _load_fct(
                 EnterpriseEdition._CORE_MODULE_PATH + ".sequence._sequence_manager", "_SequenceManager"
             )
+            build_repository = _load_fct(
+                EnterpriseEdition._CORE_MODULE_PATH + ".sequence._sequence_manager_factory",
+                "_SequenceManagerFactory",
+            )._build_repository  # type: ignore[reportFunctionMemberAccess]
         else:
             sequence_manager = _SequenceManager
+            build_repository = cls._build_repository
+        sequence_manager._repository = build_repository()  # type: ignore[reportFunctionMemberAccess]
         return sequence_manager  # type: ignore
+
+    @classmethod
+    @lru_cache
+    def _build_repository(cls):  # type: ignore[reportIncompatibleMethodOverride]
+        return cls._get_repository_with_repo_map(cls.__REPOSITORY_MAP)()  # type: ignore[reportOptionalCall]
