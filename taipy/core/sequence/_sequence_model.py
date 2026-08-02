@@ -25,6 +25,17 @@ class _SequenceModel(_BaseModel):
     subscribers: List[Dict]
     version: str
 
+    def __getitem__(self, key: str):
+        return getattr(self, key)
+
+    def __setitem__(self, key: str, value):
+        return setattr(self, key, value)
+
+    def __eq__(self, other):
+        if isinstance(other, dict):
+            return self.to_dict() == other
+        return super().__eq__(other)
+
     @staticmethod
     def from_dict(data: Dict[str, Any]):
         return _SequenceModel(

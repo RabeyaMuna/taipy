@@ -11,7 +11,7 @@
 
 import functools
 import threading
-from typing import Any, Dict, Type
+from typing import Dict, Type
 
 from ...common._modules import EnterpriseEdition
 from .._manager._manager import _Manager
@@ -26,7 +26,6 @@ class _Reloader:
     _instance = None
     _lock = threading.RLock()
     _managers: Dict[str, Type[_Manager]] = {}
-    _live_entities: Dict[str, Dict[str, Any]] = {}
 
     def __new__(cls, *args, **kwargs):
         with cls._lock:
@@ -41,23 +40,17 @@ class _Reloader:
         if self._no_reload_context:
             return obj
 
-        entity_id = getattr(obj, "id", None)
-        live_entity = obj
-        if entity_id is not None:
-            live_entities = self._live_entities.setdefault(manager, {})
-            live_entity = live_entities.setdefault(entity_id, obj)
-
         if manager == "job":
-            task = getattr(live_entity, "_task", None)
+            task = getattr(obj, "_task", None)
             if task is not None and not self._get_manager("task")._repository._exists(task.id):
-                return live_entity
-        if manager in {"scenario", "sequence"}:
-            tasks = getattr(live_entity, "_tasks", [])
+                return obj
+        if manager == "sequence":
+            tasks = getattr(obj, "_tasks", [])
             task_repository = self._get_manager("task")._repository
             for task_or_id in tasks:
                 task_id = task_or_id.id if hasattr(task_or_id, "id") else task_or_id
                 if not task_repository._exists(task_id):
-                    return live_entity
+                    return obj
 
         entity = self._get_manager(manager)._get(obj, obj)
         if obj._is_in_context and hasattr(entity, "_properties"):
@@ -66,9 +59,6 @@ class _Reloader:
             if obj._properties._pending_deletions:
                 entity._properties._pending_deletions = obj._properties._pending_deletions
             entity._properties._entity_owner = obj
-
-        if entity_id is not None:
-            self._live_entities.setdefault(manager, {})[entity_id] = entity
         return entity
 
     def __enter__(self):

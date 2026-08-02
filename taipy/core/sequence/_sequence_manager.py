@@ -147,6 +147,8 @@ class _SequenceManager(_Manager[Sequence], _VersionMixin):
                 _tasks.append(task)
             elif _task := task_manager._get(task):
                 _tasks.append(_task)
+            elif _tasks_by_config := task_manager._get_by_config_id(str(task)):
+                _tasks.append(_tasks_by_config[0])
             else:
                 raise NonExistingTask(task)
         return _tasks

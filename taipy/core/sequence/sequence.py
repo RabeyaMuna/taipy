@@ -387,6 +387,9 @@ class Sequence(_Entity, Submittable, _Labeled):
         for task_or_id in self._tasks:
             t = task_manager._get(task_or_id, task_or_id)
             if not isinstance(t, Task):
+                tasks_by_config = task_manager._get_by_config_id(str(task_or_id))
+                t = tasks_by_config[0] if tasks_by_config else t
+            if not isinstance(t, Task):
                 raise NonExistingTask(task_or_id)
             tasks[t.config_id] = t
         return tasks
@@ -398,6 +401,9 @@ class Sequence(_Entity, Submittable, _Labeled):
         task_manager = _TaskManagerFactory._build_manager()
         for task_or_id in self._tasks:
             task = task_manager._get(task_or_id, task_or_id)
+            if not isinstance(task, Task):
+                tasks_by_config = task_manager._get_by_config_id(str(task_or_id))
+                task = tasks_by_config[0] if tasks_by_config else task
             if not isinstance(task, Task):
                 raise NonExistingTask(task_or_id)
             tasks.add(task)
