@@ -81,3 +81,4 @@ version = "==4.2.13"
 "apispec-webframeworks" = {version="==1.2.0"}
 "watchdog" = {version="==6.0.0"}
 "charset-normalizer" = {version="==3.4.1"}
+"setuptools" = {version="<81"}

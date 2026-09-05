@@ -93,6 +93,11 @@ class _JobDispatcher(threading.Thread):
         raise NotImplementedError
 
     def _execute_job(self, job: Job):
+        # Check if the job still exists in the manager to avoid race condition
+        job_manager = _JobManagerFactory._build_manager()
+        if not job_manager._exists(job.id):
+            self._logger.warning(f"Job {job.id} no longer exists in the manager. Skipping execution.")
+            return
         if job.force or self._needs_to_run(job.task):
             if job.force:
                 self._logger.info(f"job {job.id} is forced to be executed.")
