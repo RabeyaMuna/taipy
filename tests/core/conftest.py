@@ -60,7 +60,7 @@ from taipy.core.submission.submission import Submission
 from taipy.core.task._task_manager_factory import _TaskManagerFactory
 from taipy.core.task.task import Task, TaskId
 
-current_time = datetime.now()
+current_time = datetime(2024, 1, 1, 0, 0, 0)
 
 
 @pytest.fixture(scope="function")
