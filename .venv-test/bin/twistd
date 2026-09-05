@@ -1,0 +1,6 @@
+#!/Users/rabeyakhatunmuna/Documents/mini-swe-agent-ci-based/results/miniswe-agent/bidirectional/l1_l2_l3_minimax-m2.5/L1_L2_L3/358dc4d954c07b9725c93750029a413768a9fc16/testbed/.venv-test/bin/python3.12
+import sys
+from twisted.scripts.twistd import run
+if __name__ == '__main__':
+    sys.argv[0] = sys.argv[0].removesuffix('.exe')
+    sys.exit(run())

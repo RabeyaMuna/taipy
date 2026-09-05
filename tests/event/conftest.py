@@ -25,7 +25,7 @@ from taipy.core.sequence.sequence import Sequence
 from taipy.core.sequence.sequence_id import SequenceId
 from taipy.core.submission.submission import Submission
 
-current_time = datetime.now()
+current_time = datetime(2024, 1, 1, 0, 0, 0)
 
 @pytest.fixture(scope="function")
 def current_datetime():

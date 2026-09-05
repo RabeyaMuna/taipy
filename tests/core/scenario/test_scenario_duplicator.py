@@ -66,7 +66,7 @@ def test_duplicate_scenario_scoped_dns_no_cycle_one_sequence():
                                           skippable=True,
                                           k="v")
     scenario_config_1 = Config.configure_scenario("scenario_1", [task_config_1], [additional_dn_config_1])
-    creation_date = datetime.now() - timedelta(minutes=1)
+    creation_date = datetime(2023, 12, 31, 23, 59, 0)
     name = "original"
     scenario = _ScenarioManager._create(scenario_config_1, creation_date, name)
     scenario.properties["key"] = "value"
@@ -172,7 +172,7 @@ def test_duplicate_same_cycle():
     t_cfg_2 = Config.configure_task("task_2", identity, input=[dn_cfg_2], output=[dn_cfg_3])
     t_cfg_3 = Config.configure_task("task_3", identity, input=[dn_cfg_3], output=[dn_cfg_4])
     s_cfg_1 = Config.configure_scenario("scenario_1", [t_cfg_1, t_cfg_2, t_cfg_3], frequency=Frequency.DAILY)
-    creation_date = datetime.now() - timedelta(days=2)
+    creation_date = datetime(2023, 12, 30, 0, 0, 0)
     name = "original"
     scenario = _ScenarioManager._create(s_cfg_1, creation_date, name)
 
@@ -302,7 +302,7 @@ def test_duplicate_to_new_cycle():
     t_cfg_2 = Config.configure_task("task_2", identity, input=[dn_cfg_2], output=[dn_cfg_3])
     t_cfg_3 = Config.configure_task("task_3", identity, input=[dn_cfg_3], output=[dn_cfg_4])
     s_cfg_1 = Config.configure_scenario("scenario_1", [t_cfg_1, t_cfg_2, t_cfg_3], frequency=Frequency.DAILY)
-    creation_date = datetime.now() - timedelta(days=2)
+    creation_date = datetime(2023, 12, 30, 0, 0, 0)
     name = "original"
     scenario = _ScenarioManager._create(s_cfg_1, creation_date, name)
 
@@ -311,7 +311,7 @@ def test_duplicate_to_new_cycle():
     assert len(_TaskManager._get_all()) == 3
     assert len(_DataManager._get_all()) == 4
 
-    new_creation_date = datetime.now()
+    new_creation_date = datetime(2024, 1, 1, 0, 0, 0)
     new_name = "new"
     new_scenario = _ScenarioDuplicator(scenario, False).duplicate(new_creation_date, new_name)
 
@@ -438,8 +438,8 @@ def test_duplicate_to_new_cycle_with_existing_scenario():
     t_cfg_2 = Config.configure_task("task_2", identity, input=[dn_cfg_2], output=[dn_cfg_3])
     t_cfg_3 = Config.configure_task("task_3", identity, input=[dn_cfg_3], output=[dn_cfg_4])
     s_cfg_1 = Config.configure_scenario("scenario_1", [t_cfg_1, t_cfg_2, t_cfg_3], frequency=Frequency.DAILY)
-    creation_date = datetime.now() - timedelta(days=2)
-    new_creation_date = datetime.now()
+    creation_date = datetime(2023, 12, 30, 0, 0, 0)
+    new_creation_date = datetime(2024, 1, 1, 0, 0, 0)
     name = "original"
     existing_name = "existing"
     new_name = "new"
@@ -579,13 +579,13 @@ def test_duplicate_with_all_global_dn():
     dn_config_2 = Config.configure_pickle_data_node("dn_2", scope=Scope.GLOBAL)
     task_config_1 = Config.configure_task("task_1", print, [dn_config_1], [dn_config_2])
     scenario_config_1 = Config.configure_scenario("scenario_1", [task_config_1], frequency=Frequency.DAILY)
-    scenario = _ScenarioManager._create(scenario_config_1, datetime.now() - timedelta(days=10), "original")
+    scenario = _ScenarioManager._create(scenario_config_1, datetime(2023, 12, 22, 0, 0, 0), "original")
 
     assert len(_ScenarioManager._get_all()) == 1
     assert len(_DataManager._get_all()) == 2
     assert len(_TaskManager._get_all()) == 1
 
-    new_scenario = _ScenarioDuplicator(scenario, False).duplicate(datetime.now(), "new")
+    new_scenario = _ScenarioDuplicator(scenario, False).duplicate(datetime(2024, 1, 1, 0, 0, 0), "new")
 
     assert len(_ScenarioManager._get_all()) == 2
     assert len(_DataManager._get_all()) == 2
@@ -654,9 +654,9 @@ def test_data_duplication():
     scenario = _ScenarioManager._create(scenario_config_1)
 
     with mock.patch("taipy.core.data._data_duplicator._DataDuplicator.duplicate_data") as mck:
-        new_scenario = _ScenarioDuplicator(scenario, True).duplicate(datetime.now(), "new")
+        new_scenario = _ScenarioDuplicator(scenario, True).duplicate(datetime(2024, 1, 1, 0, 0, 0), "new")
         mck.assert_has_calls([call(new_scenario.dn_1), call(new_scenario.dn_2)], any_order=True)
 
     with mock.patch("taipy.core.data._data_duplicator._DataDuplicator.duplicate_data") as mck:
-        new_scenario = _ScenarioDuplicator(scenario, {"dn_1", "dn_3"}).duplicate(datetime.now(), "new")
+        new_scenario = _ScenarioDuplicator(scenario, {"dn_1", "dn_3"}).duplicate(datetime(2024, 1, 1, 0, 0, 0), "new")
         mck.assert_called_once_with(new_scenario.dn_1)

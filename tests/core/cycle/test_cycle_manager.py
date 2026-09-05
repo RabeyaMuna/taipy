@@ -160,7 +160,7 @@ def test_get_cycle_start_date_and_end_date():
     assert monthly_end_date_1 == datetime.fromisoformat("2021-11-30T23:59:59.999999")
     assert yearly_end_date_1 == datetime.fromisoformat("2021-12-31T23:59:59.999999")
 
-    creation_date_2 = datetime.now()
+    creation_date_2 = datetime(2024, 1, 1, 0, 0, 0)
 
     daily_start_date_2 = _CycleManager._get_start_date_of_cycle(Frequency.DAILY, creation_date=creation_date_2)
     daily_end_date_2 = _CycleManager._get_end_date_of_cycle(Frequency.DAILY, daily_start_date_2)
@@ -195,7 +195,7 @@ def test_hard_delete_shared_entities():
     task_config_1 = Config.configure_task("task_config_1", print, dn_config_1, dn_config_2)
     task_config_2 = Config.configure_task("task_config_2", print, dn_config_2, dn_config_3)
     task_config_3 = Config.configure_task("task_config_3", print, dn_config_3, dn_config_4)  # scope = global
-    creation_date = datetime.now()
+    creation_date = datetime(2024, 1, 1, 0, 0, 0)
     # Daily frequency so cycle attached to scenarios
     scenario_config_1 = Config.configure_scenario(
         "scenario_1",

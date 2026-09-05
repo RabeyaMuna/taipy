@@ -143,7 +143,7 @@ class TestTaipy:
             mck.assert_called_once_with(submission_id)
 
     def test_is_editable(self):
-        a_date = datetime.datetime.now()
+        a_date = datetime.datetime(2024, 1, 1, 0, 0, 0)
         cycle = Cycle(Frequency.DAILY, {}, a_date, a_date, a_date)
         scenario = Scenario("scenario_config_id", set(), {}, sequences={"sequence": {}})
         task = Task("task_config_id", {}, print)
@@ -235,7 +235,7 @@ class TestTaipy:
             mck.assert_called_once_with(submission_id)
 
     def test_is_readable(self):
-        a_date = datetime.datetime.now()
+        a_date = datetime.datetime(2024, 1, 1, 0, 0, 0)
         cycle = Cycle(Frequency.DAILY, {}, a_date, a_date, a_date)
         scenario = Scenario("scenario_config_id", set(), {}, sequences={"sequence": {}})
         task = Task("task_config_id", {}, print)
@@ -290,7 +290,7 @@ class TestTaipy:
             mck.assert_called_once_with(task)
 
     def test_is_submittable(self):
-        current_date = datetime.datetime.now()
+        current_date = datetime.datetime(2024, 1, 1, 0, 0, 0)
         cycle = Cycle(Frequency.DAILY, {}, current_date, current_date, current_date)
         scenario = Scenario("scenario_config_id", set(), {}, sequences={"sequence": {}})
         task = Task("task_config_id", {}, print)
@@ -439,7 +439,7 @@ class TestTaipy:
         scenario_1_cfg = Config.configure_scenario(id="scenario_1")
         scenario_2_cfg = Config.configure_scenario(id="scenario_2")
 
-        now = datetime.datetime.now() + datetime.timedelta(seconds=1)
+        now = datetime.datetime(2024, 1, 1, 0, 0, 1)
         scenario_1 = _ScenarioManager._create(scenario_1_cfg, now, "B_scenario")
         scenario_2 = _ScenarioManager._create(scenario_2_cfg, now + datetime.timedelta(seconds=1), "C_scenario")
         scenario_3 = _ScenarioManager._create(scenario_2_cfg, now + datetime.timedelta(seconds=2), "A_scenario")
@@ -793,9 +793,9 @@ class TestTaipy:
         scenario_cfg_4 = Config.configure_scenario("s4", [], [], Frequency.YEARLY)
         scenario_cfg_5 = Config.configure_scenario("s5", [], [], None)
 
-        now = datetime.datetime.now()
+        now = datetime.datetime(2024, 1, 1, 0, 0, 0)
         scenario_1_1 = tp.create_scenario(scenario_cfg_1, now)
-        scenario_1_2 = tp.create_scenario(scenario_cfg_1, datetime.datetime.now())
+        scenario_1_2 = tp.create_scenario(scenario_cfg_1, datetime.datetime(2024, 1, 1, 0, 0, 0))
         scenario_1_3 = tp.create_scenario(scenario_cfg_1, now + datetime.timedelta(days=1))
         scenario_1_4 = tp.create_scenario(scenario_cfg_1, now + datetime.timedelta(days=8))
         scenario_1_5 = tp.create_scenario(scenario_cfg_1, now + datetime.timedelta(days=25))

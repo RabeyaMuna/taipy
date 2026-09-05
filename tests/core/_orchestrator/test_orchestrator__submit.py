@@ -56,7 +56,7 @@ def test_submit_scenario_development_mode():
     orchestrator = _OrchestratorFactory._build_orchestrator()
     _OrchestratorFactory._build_dispatcher()
 
-    submit_time = datetime.now() + timedelta(seconds=1)  # +1 to ensure the edit time of dn_0 is before the submit time
+    submit_time = datetime(2024, 1, 1, 0, 0, 1)  # +1 to ensure the edit time of dn_0 is before the submit time
     with freezegun.freeze_time(submit_time):
         submission = orchestrator.submit(
             scenario, no_of_retry=10, log=True, log_file="file_path"
@@ -138,7 +138,7 @@ def test_submit_scenario_development_mode_blocked_jobs():
     scenario = create_scenario()  # input data is not ready
     orchestrator = _OrchestratorFactory._build_orchestrator()
 
-    s_time = datetime.now() + timedelta(seconds=1)  # +1 to ensure the scenario creation is before the submit time
+    s_time = datetime(2024, 1, 1, 0, 0, 1)  # +1 to ensure the scenario creation is before the submit time
     with freezegun.freeze_time(s_time):
         submission = orchestrator.submit(
             scenario, no_of_retry=10, log=True, log_file="file_path"
@@ -222,7 +222,7 @@ def test_submit_scenario_standalone_mode():
     sc = create_scenario()
     orchestrator = _OrchestratorFactory._build_orchestrator()
     sc.dn_0.write(0)  # input data is made ready
-    submit_time = datetime.now() + timedelta(seconds=1)  # +1 to ensure the edit time of dn_0 is before the submit time
+    submit_time = datetime(2024, 1, 1, 0, 0, 1)  # +1 to ensure the edit time of dn_0 is before the submit time
     with freezegun.freeze_time(submit_time):
         submission = orchestrator.submit(
             sc, no_of_retry=10, log=True, log_file="file_path"
@@ -333,7 +333,7 @@ def test_submit_sequence_development_mode():
 
     orchestrator = _OrchestratorFactory._build_orchestrator()
 
-    submit_time = datetime.now() + timedelta(seconds=1)  # +1 to ensure the edit time of dn_0 is before the submit time
+    submit_time = datetime(2024, 1, 1, 0, 0, 1)  # +1 to ensure the edit time of dn_0 is before the submit time
     with freezegun.freeze_time(submit_time):
         submission = orchestrator.submit(
             seq, no_of_retry=10, log=True, log_file="file_path"
@@ -410,7 +410,7 @@ def test_submit_sequence_standalone_mode():
 
     orchestrator = _OrchestratorFactory._build_orchestrator()
 
-    submit_time = datetime.now() + timedelta(seconds=1)  # +1 to ensure the edit time of dn_0 is before the submit time
+    submit_time = datetime(2024, 1, 1, 0, 0, 1)  # +1 to ensure the edit time of dn_0 is before the submit time
     with freezegun.freeze_time(submit_time):
         submission = orchestrator.submit(
             sequence, no_of_retry=10, log=True, log_file="file_path"

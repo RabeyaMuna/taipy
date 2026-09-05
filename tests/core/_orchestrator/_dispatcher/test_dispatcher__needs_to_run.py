@@ -93,7 +93,7 @@ def test_need_to_run_skippable_task_but_input_edited_after_output():
     task_cfg = Config.configure_task("name", nothing, [hello_cfg], [hello_world_cfg], skippable=True)
     task = _create_task_from_config(task_cfg)
     dispatcher = _JobDispatcher(_OrchestratorFactory._build_orchestrator())
-    output_edit_time = datetime.now()
+    output_edit_time = datetime(2024, 1, 1, 0, 0, 0)
     with freezegun.freeze_time(output_edit_time):
         task.data_nodes["output"].write("Hello world !")  # output data is edited at output_edit_time
 

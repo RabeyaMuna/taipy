@@ -38,7 +38,7 @@ class TestReloader:
     def test_single_context(self):
         dn = tp.create_global_data_node(Config.configure_data_node("dn1", scope=tp.Scope.GLOBAL))
         assert len(dn.edits) == 0
-        edit = {"comments": "inside", "timestamp": datetime.now()}
+        edit = {"comments": "inside", "timestamp": datetime(2024, 1, 1, 0, 0, 0)}
         dn._edits.append(edit) # add a new edit in memory without saving the data node
         reloader = _Reloader()
         with reloader:
@@ -52,7 +52,7 @@ class TestReloader:
     def test_nested_contexts(self):
         dn = tp.create_global_data_node(Config.configure_data_node("dn1", scope=tp.Scope.GLOBAL))
         assert len(dn.edits) == 0
-        edit = {"comments": "inside", "timestamp": datetime.now()}
+        edit = {"comments": "inside", "timestamp": datetime(2024, 1, 1, 0, 0, 0)}
         dn._edits.append(edit)  # add a new edit in memory without saving the data node
         reloader = _Reloader()
         with reloader:

@@ -112,7 +112,7 @@ def assert_does_not_change(template):
 def test_replace_tuple_list_dict():
     with mock.patch.dict(os.environ, {"FOO": "true", "BAR": "3", "BAZ": "qux"}):
         tpl = _TemplateHandler()
-        now = datetime.datetime.now()
+        now = datetime.datetime(2024, 1, 1, 0, 0, 0)
         actual = tpl._replace_templates(("ENV[FOO]:bool", now, "ENV[BAR]:int", "ENV[BAZ]", "quz"))
         assert actual == (True, now, 3, "qux", "quz")
         actual = tpl._replace_templates(("ENV[FOO]:bool", now, "ENV[BAR]:int", "ENV[BAZ]", "quz"))

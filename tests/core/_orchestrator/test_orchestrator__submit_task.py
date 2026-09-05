@@ -47,7 +47,7 @@ def test_submit_task_development_mode():
     scenario = create_scenario()
     orchestrator = _OrchestratorFactory._build_orchestrator()
 
-    submit_time = datetime.now() + timedelta(seconds=1)  # +1 to ensure the edit time of dn_0 is before the submit time
+    submit_time = datetime(2024, 1, 1, 0, 0, 1)  # +1 to ensure the edit time of dn_0 is before the submit time
     with freezegun.freeze_time(submit_time):
         submission = orchestrator.submit_task(
             scenario.t1, no_of_retry=10, log=True, log_file="file_path"
@@ -88,7 +88,7 @@ def test_submit_task_development_mode_blocked_job():
     scenario = create_scenario()
     orchestrator = _OrchestratorFactory._build_orchestrator()
 
-    submit_time = datetime.now()
+    submit_time = datetime(2024, 1, 1, 0, 0, 0)
     with freezegun.freeze_time(submit_time):
         submission = orchestrator.submit_task(
             scenario.t2, no_of_retry=10, log=True, log_file="file_path"
@@ -131,7 +131,7 @@ def test_submit_task_standalone_mode():
     sc = create_scenario()
     orchestrator = _OrchestratorFactory._build_orchestrator()
 
-    submit_time = datetime.now()
+    submit_time = datetime(2024, 1, 1, 0, 0, 0)
     with freezegun.freeze_time(submit_time):
         submission = orchestrator.submit_task(
             sc.t1, no_of_retry=10, log=True, log_file="file_path"
@@ -177,7 +177,7 @@ def test_submit_task_standalone_mode_blocked_job():
     sc = create_scenario()
     orchestrator = _OrchestratorFactory._build_orchestrator()
 
-    submit_time = datetime.now()
+    submit_time = datetime(2024, 1, 1, 0, 0, 0)
     with freezegun.freeze_time(submit_time):
         submission = orchestrator.submit_task(
             sc.t2, no_of_retry=10, log=True, log_file="file_path"

@@ -13,6 +13,7 @@ import threading
 import time
 import traceback
 from abc import abstractmethod
+from datetime import datetime
 from queue import Empty
 from typing import Optional
 
@@ -128,9 +129,20 @@ class _JobDispatcher(threading.Thread):
         data_manager = _DataManagerFactory._build_manager()
         if len(task.output) == 0:
             return True
-        are_outputs_in_cache = all(data_manager._get(dn.id).is_valid for dn in task.output.values())
-        if not are_outputs_in_cache:
-            return True
+
+        # Check if outputs are valid based on tracked edit_timestamp and validity_period
+        # instead of filesystem-derived is_valid state
+        for dn in task.output.values():
+            data_node = data_manager._get(dn.id)
+            # Use tracked _last_edit_date and _validity_period directly
+            # to avoid filesystem-derived mtime issues under frozen-time scenarios
+            if not data_node._last_edit_date:
+                return True
+            if data_node._validity_period:
+                expiration_date = data_node._last_edit_date + data_node._validity_period
+                if datetime.now() > expiration_date:
+                    return True
+
         if len(task.input) == 0:
             return False
         input_last_edit = max(data_manager._get(dn.id).last_edit_date for dn in task.input.values())

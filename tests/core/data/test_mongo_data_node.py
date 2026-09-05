@@ -283,8 +283,8 @@ class TestMongoCollectionDataNode:
         mongo_dn = MongoCollectionDataNode("foo", Scope.SCENARIO, properties=custom_properties)
         _DataManagerFactory._build_manager()._repository._save(mongo_dn)
         data = [
-            CustomObjectWithCustomEncoder("1", 1, "abc", datetime.now()),
-            CustomObjectWithCustomEncoder("2", 2, "def", datetime.now()),
+            CustomObjectWithCustomEncoder("1", 1, "abc", datetime(2024, 1, 1, 0, 0, 0)),
+            CustomObjectWithCustomEncoder("2", 2, "def", datetime(2024, 1, 1, 0, 0, 0)),
         ]
         mongo_dn.write(data)
 
@@ -309,8 +309,8 @@ class TestMongoCollectionDataNode:
         mongo_dn = MongoCollectionDataNode("foo", Scope.SCENARIO, properties=custom_properties)
         _DataManagerFactory._build_manager()._repository._save(mongo_dn)
         data = [
-            CustomObjectWithCustomEncoderDecoder("1", 1, "abc", datetime.now()),
-            CustomObjectWithCustomEncoderDecoder("2", 2, "def", datetime.now()),
+            CustomObjectWithCustomEncoderDecoder("1", 1, "abc", datetime(2024, 1, 1, 0, 0, 0)),
+            CustomObjectWithCustomEncoderDecoder("2", 2, "def", datetime(2024, 1, 1, 0, 0, 0)),
         ]
         mongo_dn.write(data)
 

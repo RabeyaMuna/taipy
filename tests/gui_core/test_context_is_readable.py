@@ -31,7 +31,7 @@ from taipy.gui import Gui, State
 from taipy.gui_core._context import _GuiCoreContext
 from taipy.gui_core._utils import _ClientStatus
 
-a_cycle = Cycle(Frequency.DAILY, {}, datetime.now(), datetime.now(), datetime.now(), id=CycleId("CYCLE_id"))
+a_cycle = Cycle(Frequency.DAILY, {}, datetime(2024, 1, 1, 0, 0, 0), datetime(2024, 1, 1, 0, 0, 0), datetime(2024, 1, 1, 0, 0, 0), id=CycleId("CYCLE_id"))
 a_scenario = Scenario("scenario_config_id", None, {}, sequences={"sequence": {}})
 a_task = Task("task_config_id", {}, print)
 a_job = Job(t.cast(JobId, "JOB_job_id"), a_task, "submit_id", a_scenario.id)

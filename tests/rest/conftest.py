@@ -253,7 +253,7 @@ def default_scenario():
 
 
 def __create_cycle(name="foo"):
-    now = datetime.now()
+    now = datetime(2024, 1, 1, 0, 0, 0)
     return Cycle(
         name=name,
         frequency=Frequency.DAILY,

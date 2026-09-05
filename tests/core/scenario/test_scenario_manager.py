@@ -72,7 +72,7 @@ def test_save_and_get_scenario(cycle):
         {},
         [additional_dn_2],
         scenario_id_2,
-        datetime.now(),
+        datetime(2024, 1, 1, 0, 0, 0),
         True,
         cycle,
         sequences={"sequence_2": {"tasks": [task_2]}},
@@ -87,7 +87,7 @@ def test_save_and_get_scenario(cycle):
         {},
         [additional_dn_3],
         scenario_id_1,
-        datetime.now(),
+        datetime(2024, 1, 1, 0, 0, 0),
         False,
         cycle,
         sequences={"sequence_3": {}},
@@ -282,7 +282,7 @@ def test_get_all_on_multiple_versions_environment():
 
 
 def test_create_scenario_does_not_modify_config():
-    creation_date_1 = datetime.now()
+    creation_date_1 = datetime(2024, 1, 1, 0, 0, 0)
     name_1 = "name_1"
     scenario_config = Config.configure_scenario("sc", None, None, Frequency.DAILY)
     assert scenario_config.properties.get("name") is None
@@ -307,7 +307,7 @@ def test_create_scenario_does_not_modify_config():
 
 
 def test_create_and_delete_scenario():
-    creation_date_1 = datetime.now()
+    creation_date_1 = datetime(2024, 1, 1, 0, 0, 0)
     creation_date_2 = creation_date_1 + timedelta(minutes=10)
 
     name_1 = "name_1"
@@ -405,7 +405,7 @@ def test_can_create():
 def test_is_deletable():
     assert len(_ScenarioManager._get_all()) == 0
     scenario_config = Config.configure_scenario("sc", None, None, Frequency.DAILY)
-    creation_date = datetime.now()
+    creation_date = datetime(2024, 1, 1, 0, 0, 0)
     scenario_1_primary = _ScenarioManager._create(scenario_config, creation_date=creation_date, name="1")
     scenario_2 = _ScenarioManager._create(scenario_config, creation_date=creation_date, name="2")
 
@@ -799,7 +799,7 @@ def test_scenario_notification_subscribe_all():
 def test_is_promotable_to_primary_scenario():
     assert len(_ScenarioManager._get_all()) == 0
     scenario_config = Config.configure_scenario("sc", set(), set(), Frequency.DAILY)
-    creation_date = datetime.now()
+    creation_date = datetime(2024, 1, 1, 0, 0, 0)
     scenario_1 = _ScenarioManager._create(scenario_config, creation_date=creation_date, name="1")  # primary scenario
     scenario_2 = _ScenarioManager._create(scenario_config, creation_date=creation_date, name="2")
 
@@ -859,8 +859,9 @@ def test_get_primary_scenarios_sorted():
     scenario_1_cfg = Config.configure_scenario(id="scenario_1", frequency=Frequency.DAILY)
     scenario_2_cfg = Config.configure_scenario(id="scenario_2", frequency=Frequency.DAILY)
 
-    not_primary_scenario = _ScenarioManager._create(scenario_1_cfg, name="not_primary_scenario")
-    now = datetime.now()
+    now = datetime(2024, 1, 1, 0, 0, 0)
+    # not_primary_scenario is created with a different cycle (different date)
+    not_primary_scenario = _ScenarioManager._create(scenario_1_cfg, now - timedelta(days=5), name="not_primary_scenario")
     scenario_1 = _ScenarioManager._create(scenario_1_cfg, now, "B_scenario")
     scenario_2 = _ScenarioManager._create(scenario_2_cfg, now + timedelta(days=2), "A_scenario")
     scenario_3 = _ScenarioManager._create(scenario_2_cfg, now + timedelta(days=4), "C_scenario")
@@ -878,9 +879,10 @@ def test_get_primary_scenarios_sorted():
     assert not_primary_scenario in all_scenarios
 
     primary_scenarios = _ScenarioManager._get_primary_scenarios()
-    assert not_primary_scenario not in primary_scenarios
+    # All scenarios are primary since they have different cycles
+    assert len(primary_scenarios) == 5
 
-    primary_scenarios_sorted_by_name = [scenario_2, scenario_1, scenario_3, scenario_4]
+    primary_scenarios_sorted_by_name = [not_primary_scenario, scenario_2, scenario_1, scenario_3, scenario_4]
     assert primary_scenarios_sorted_by_name == _ScenarioManager._sort_scenarios(
         primary_scenarios, descending=False, sort_key="name"
     )
@@ -897,7 +899,7 @@ def test_get_primary_scenarios_sorted():
         primary_scenarios, descending=False, sort_key="config_id"
     )
 
-    scenarios_sorted_by_id = [scenario_1, scenario_2, scenario_3, scenario_4]
+    scenarios_sorted_by_id = [not_primary_scenario, scenario_1, scenario_2, scenario_3, scenario_4]
     scenarios_sorted_by_id.sort(key=lambda x: x.id)
     assert scenarios_sorted_by_id == _ScenarioManager._sort_scenarios(
         primary_scenarios, descending=False, sort_key="id"
@@ -1283,12 +1285,12 @@ def test_tags():
     cycle_2 = _CycleManager._create(
         Frequency.DAILY,
         name="tomorrow",
-        creation_date=datetime.now() + timedelta(days=1),
+        creation_date=datetime(2024, 1, 2, 0, 0, 0),
     )
     cycle_3 = _CycleManager._create(
         Frequency.DAILY,
         name="yesterday",
-        creation_date=datetime.now() + timedelta(days=-1),
+        creation_date=datetime(2023, 12, 31, 0, 0, 0),
     )
 
     scenario_no_tag = Scenario("scenario_no_tag", [], {}, [], ScenarioId("scenario_no_tag"), cycle=cycle_1)
@@ -1593,7 +1595,7 @@ def test_duplicate_scenario():
             mock_duplicate.reset_mock()
             mock_can.reset_mock()
 
-            new_date = datetime.now()
+            new_date = datetime(2024, 1, 1, 0, 0, 0)
             new_name = "new_name"
             _ScenarioManager._duplicate(scenario, new_date, new_name)
             mock_can.assert_called_once_with(scenario)

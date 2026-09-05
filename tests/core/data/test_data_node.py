@@ -119,7 +119,7 @@ class TestDataNode:
         assert scenario.dn_2.is_up_to_date is True
 
     def test_create(self):
-        a_date = datetime.now()
+        a_date = datetime(2024, 1, 1, 0, 0, 0)
         dn = DataNode(
             "foo_bar",
             Scope.SCENARIO,
@@ -299,7 +299,7 @@ class TestDataNode:
         assert dn.is_valid is True
 
         # Has been written more than 30 minutes ago
-        dn.last_edit_date = datetime.now() + timedelta(days=-1)
+        dn.last_edit_date = datetime(2023, 12, 31, 0, 0, 0)
         assert dn.is_valid is False
 
     def test_is_valid_with_5_days_validity_period(self):
@@ -314,7 +314,7 @@ class TestDataNode:
         assert dn.is_valid is True
 
         # Has been written more than 30 minutes ago
-        dn._last_edit_date = datetime.now() - timedelta(days=6)
+        dn._last_edit_date = datetime(2023, 12, 26, 0, 0, 0)
         _DataManager()._repository._save(dn)
         assert dn.is_valid is False
 
@@ -734,7 +734,7 @@ class TestDataNode:
         assert last_edit["timestamp"] == date
 
     def test_label(self):
-        a_date = datetime.now()
+        a_date = datetime(2024, 1, 1, 0, 0, 0)
         dn = DataNode(
             "foo_bar",
             Scope.SCENARIO,
@@ -760,7 +760,7 @@ class TestDataNode:
             assert dn.get_simple_label() == dn.name
 
     def test_explicit_label(self):
-        a_date = datetime.now()
+        a_date = datetime(2024, 1, 1, 0, 0, 0)
         dn = DataNode(
             "foo_bar",
             Scope.SCENARIO,
@@ -804,7 +804,7 @@ class TestDataNode:
         dn_config = Config.configure_data_node("A")
         dn = _DataManager._bulk_get_or_create([dn_config])[dn_config]
 
-        lock_time = datetime.now()
+        lock_time = datetime(2024, 1, 1, 0, 0, 0)
         with freezegun.freeze_time(lock_time):
             dn.lock_edit("editor_1")
 
@@ -844,7 +844,7 @@ class TestDataNode:
         dn.write(first_line)
         assert first_line.equals(dn.read())
 
-        lock_time = datetime.now()
+        lock_time = datetime(2024, 1, 1, 0, 0, 0)
         with freezegun.freeze_time(lock_time):
             dn.lock_edit("editor_1")
 
@@ -901,14 +901,14 @@ class TestDataNode:
         dn_config = Config.configure_data_node("A")
         data_node = _DataManager._bulk_get_or_create([dn_config])[dn_config]
 
-        before = datetime.now()
+        before = datetime(2024, 1, 1, 0, 0, 0)
         data_node.track_edit(job_id="job_1")
         data_node.track_edit(editor_id="editor_1")
         data_node.track_edit(comment="This is a comment on this edit")
         data_node.track_edit(editor_id="editor_2", comment="This is another comment on this edit")
         data_node.track_edit(editor_id="editor_3", foo="bar")
-        after = datetime.now()
-        timestamp = datetime.now()
+        after = datetime(2024, 1, 1, 0, 0, 0)
+        timestamp = datetime(2024, 1, 1, 0, 0, 0)
         data_node.track_edit(timestamp=timestamp)
         _DataManagerFactory._build_manager()._update(data_node)
         # To save the edits because track edit does not save the data node
