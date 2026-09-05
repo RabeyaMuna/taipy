@@ -51,3 +51,22 @@ def submission_status_message(submission: Submission, expected_status, timeout=1
         ms += f"{job.id}: {job.status}\n"
     ms += "--------------------------------------------------------------------------------\n"
     return ms
+
+
+def _assert_available_workers(dispatcher, expected_workers, timeout=120):
+    """Assert that the dispatcher has the expected number of available workers."""
+    assert_true_after_time(
+        lambda: dispatcher._nb_available_workers == expected_workers,
+        time=timeout,
+        msg=lambda: f"Expected {expected_workers} available workers, got {dispatcher._nb_available_workers}"
+    )
+
+
+def _assert_blocked_jobs_count(expected_count, timeout=120):
+    """Assert that the expected number of jobs are blocked."""
+    from taipy.core._orchestrator._orchestrator import _Orchestrator
+    assert_true_after_time(
+        lambda: len(_Orchestrator.blocked_jobs) == expected_count,
+        time=timeout,
+        msg=lambda: f"Expected {expected_count} blocked jobs, got {len(_Orchestrator.blocked_jobs)}"
+    )

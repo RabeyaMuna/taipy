@@ -257,7 +257,9 @@ def test_get_all_on_multiple_versions_environment():
     for version in range(1, 3):
         for i in range(5):
             _ScenarioManager._repository._save(
-                Scenario(f"config_id_{i+version}", [], {}, [], ScenarioId(f"id{i}_v{version}"), version=f"{version}.0")
+                Scenario(
+                    f"config_id_{i + version}", [], {}, [], ScenarioId(f"id{i}_v{version}"), version=f"{version}.0"
+                )
             )
 
     _VersionManager._set_experiment_version("1.0")
@@ -282,7 +284,7 @@ def test_get_all_on_multiple_versions_environment():
 
 
 def test_create_scenario_does_not_modify_config():
-    creation_date_1 = datetime.now()
+    creation_date_1 = datetime(2021, 1, 1, 12, 0, 0)
     name_1 = "name_1"
     scenario_config = Config.configure_scenario("sc", None, None, Frequency.DAILY)
     assert scenario_config.properties.get("name") is None
@@ -307,8 +309,8 @@ def test_create_scenario_does_not_modify_config():
 
 
 def test_create_and_delete_scenario():
-    creation_date_1 = datetime.now()
-    creation_date_2 = creation_date_1 + timedelta(minutes=10)
+    creation_date_1 = datetime(2021, 1, 1, 12, 0, 0)
+    creation_date_2 = creation_date_1 + timedelta(seconds=5)
 
     name_1 = "name_1"
 

@@ -28,19 +28,23 @@ def _create_task_from_config(task_cfg):
 
 
 def test_need_to_run_no_output():
-    hello_cfg = Config.configure_data_node("hello", default_data="Hello ")
-    world_cfg = Config.configure_data_node("world", default_data="world !")
-    task_cfg = Config.configure_task("name", input=[hello_cfg, world_cfg], function=nothing, output=[])
+    hello_cfg = Config.configure_in_memory_data_node("hello_validity_period", default_data="Hello ")
+    world_cfg = Config.configure_in_memory_data_node("world_validity_period", default_data="world !")
+    task_cfg = Config.configure_task("name_validity_period", input=[hello_cfg, world_cfg], function=nothing, output=[])
     task = _create_task_from_config(task_cfg)
     assert _JobDispatcher(_OrchestratorFactory._build_orchestrator())._needs_to_run(task)
 
 
 def test_need_to_run_task_not_skippable():
-    hello_cfg = Config.configure_data_node("hello", default_data="Hello ")
-    world_cfg = Config.configure_data_node("world", default_data="world !")
-    hello_world_cfg = Config.configure_data_node("hello_world")
+    hello_cfg = Config.configure_in_memory_data_node("hello_validity_period", default_data="Hello ")
+    world_cfg = Config.configure_in_memory_data_node("world_validity_period", default_data="world !")
+    hello_world_cfg = Config.configure_in_memory_data_node("hello_world_validity_period")
     task_cfg = Config.configure_task(
-        "name", input=[hello_cfg, world_cfg], function=nothing, output=[hello_world_cfg], skippable=False
+        "name_validity_period",
+        input=[hello_cfg, world_cfg],
+        function=nothing,
+        output=[hello_world_cfg],
+        skippable=False,
     )
     task = _create_task_from_config(task_cfg)
 
@@ -48,37 +52,44 @@ def test_need_to_run_task_not_skippable():
 
 
 def test_need_to_run_skippable_task_no_input():
-    hello_world_cfg = Config.configure_data_node("hello_world")
-    task_cfg = Config.configure_task("name", input=[], function=nothing, output=[hello_world_cfg], skippable=True)
+    hello_world_cfg = Config.configure_in_memory_data_node("hello_world_validity_period")
+    task_cfg = Config.configure_task(
+        "name_validity_period", input=[], function=nothing, output=[hello_world_cfg], skippable=True
+    )
     task = _create_task_from_config(task_cfg)
     dispatcher = _JobDispatcher(_OrchestratorFactory._build_orchestrator())
     assert dispatcher._needs_to_run(task)  # output data is not written
-    task.output["hello_world"].write("Hello world !")
+    task.output["hello_world_validity_period"].write("Hello world !")
     assert not dispatcher._needs_to_run(task)  # output data is written
 
 
 def test_need_to_run_skippable_task_no_validity_period_on_output():
-    hello_cfg = Config.configure_data_node("hello", default_data="Hello ")
-    output_cfg = Config.configure_data_node("output")
-    task_cfg = Config.configure_task("name", input=[hello_cfg], function=nothing, output=[output_cfg], skippable=True)
+    hello_cfg = Config.configure_in_memory_data_node("hello_validity_period", default_data="Hello ")
+    output_cfg = Config.configure_in_memory_data_node("output_validity_period")
+    task_cfg = Config.configure_task(
+        "name_validity_period", input=[hello_cfg], function=nothing, output=[output_cfg], skippable=True
+    )
     task = _create_task_from_config(task_cfg)
     dispatcher = _JobDispatcher(_OrchestratorFactory._build_orchestrator())
     assert dispatcher._needs_to_run(task)  # output data is not written
-    task.output["output"].write("Hello world !")
+    task.output["output_validity_period"].write("Hello world !")
     assert not dispatcher._needs_to_run(task)  # output data is written
 
 
 def test_need_to_run_skippable_task_with_validity_period_on_output():
-    hello_cfg = Config.configure_data_node("hello", default_data="Hello ")
-    hello_world_cfg = Config.configure_data_node("output", validity_period=timedelta(days=1))
-    task_cfg = Config.configure_task("name", nothing, [hello_cfg], [hello_world_cfg], skippable=True)
+    hello_cfg = Config.configure_in_memory_data_node("hello_validity_period", default_data="Hello ")
+    hello_world_cfg = Config.configure_in_memory_data_node("output_validity_period", validity_period=timedelta(days=1))
+    task_cfg = Config.configure_task("name_validity_period", nothing, [hello_cfg], [hello_world_cfg], skippable=True)
     task = _create_task_from_config(task_cfg)
     dispatcher = _JobDispatcher(_OrchestratorFactory._build_orchestrator())
 
     assert dispatcher._needs_to_run(task)  # output data is not edited
 
-    task.output["output"].write("Hello world !")  # output data is edited
-    output_edit_time = task.output["output"].last_edit_date
+    task.output["output_validity_period"].write("Hello world !")  # output data is edited
+    from time import sleep
+
+    sleep(0.1)  # Wait for the write to complete
+    output_edit_time = task.output["output_validity_period"].last_edit_date
 
     with freezegun.freeze_time(output_edit_time + timedelta(minutes=30)):  # 30 min after edit time
         assert not dispatcher._needs_to_run(task)  # output data is written and validity period not expired
@@ -88,15 +99,15 @@ def test_need_to_run_skippable_task_with_validity_period_on_output():
 
 
 def test_need_to_run_skippable_task_but_input_edited_after_output():
-    hello_cfg = Config.configure_data_node("input", default_data="Hello ")
-    hello_world_cfg = Config.configure_data_node("output")
-    task_cfg = Config.configure_task("name", nothing, [hello_cfg], [hello_world_cfg], skippable=True)
+    hello_cfg = Config.configure_in_memory_data_node("input_validity_period", default_data="Hello ")
+    hello_world_cfg = Config.configure_in_memory_data_node("output_validity_period")
+    task_cfg = Config.configure_task("name_validity_period", nothing, [hello_cfg], [hello_world_cfg], skippable=True)
     task = _create_task_from_config(task_cfg)
     dispatcher = _JobDispatcher(_OrchestratorFactory._build_orchestrator())
     output_edit_time = datetime.now()
     with freezegun.freeze_time(output_edit_time):
-        task.data_nodes["output"].write("Hello world !")  # output data is edited at output_edit_time
+        task.data_nodes["output_validity_period"].write("Hello world !")  # output data is edited at output_edit_time
 
     with freezegun.freeze_time(output_edit_time + timedelta(minutes=30)):  # 30 min after output_edit_time
-        task.data_nodes["input"].write("Yellow !")
+        task.data_nodes["input_validity_period"].write("Yellow !")
         assert dispatcher._needs_to_run(task)  # output data is written but validity period expired
