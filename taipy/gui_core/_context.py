@@ -108,7 +108,7 @@ class _GuiCoreContext(_CoreEventConsumerBase):
 
     def process_event(self, event: Event):
         self.__lazy_start()
-        with self.gui._get_authorization(system=True): # type: ignore
+        with self.gui._get_authorization(system=True):  # type: ignore
             if event.entity_type is EventEntityType.SCENARIO:
                 self.scenario_refresh(
                     event.entity_id
@@ -184,7 +184,7 @@ class _GuiCoreContext(_CoreEventConsumerBase):
                 else:
                     last_client_status.submission_status = new_status
 
-            if client_id:= submission.properties.get("client_id"):
+            if client_id := submission.properties.get("client_id"):
                 with self.gui._get_authorization(client_id):
                     if payload is not None:
                         running_tasks = {}
@@ -276,8 +276,22 @@ class _GuiCoreContext(_CoreEventConsumerBase):
         return None
 
     def filter_entities(
-        self, cycle_scenario: t.List, col: str, col_type: str, is_dn: bool, action: str, val: t.Any, col_fn=None
+        self,
+        cycle_scenario: t.Union[t.List[t.Any], t.Tuple[t.Any, ...], t.Any],
+        col: str,
+        col_type: str,
+        is_dn: bool,
+        action: str,
+        val: t.Any,
+        col_fn=None,
     ):
+        # Accept list/tuple or any - if not a sequence we return it unchanged.
+        if not isinstance(cycle_scenario, (list, tuple)):
+            return cycle_scenario
+        if isinstance(cycle_scenario, tuple):
+            lst = list(cycle_scenario)
+            lst[2] = [e for e in lst[2] if _invoke_action(e, col, col_type, is_dn, action, val, col_fn)]
+            return tuple(lst)
         cycle_scenario[2] = [
             e for e in cycle_scenario[2] if _invoke_action(e, col, col_type, is_dn, action, val, col_fn)
         ]
@@ -339,14 +353,19 @@ class _GuiCoreContext(_CoreEventConsumerBase):
                 or _invoke_action(e, t.cast(str, col), col_type, is_datanode_prop, action, val, col_fn)
             ]
             # level 2 filtering
-            filtered_list = [
-                e
-                if isinstance(e, Scenario)
-                else self.filter_entities(
-                    t.cast(list, e), t.cast(str, col), col_type, is_datanode_prop, action, val, col_fn
-                )
-                for e in filtered_list
-            ]
+            new_filtered = []
+            for e in filtered_list:
+                if isinstance(e, Scenario):
+                    new_filtered.append(e)
+                else:
+                    if isinstance(e, (list, tuple)):
+                        new_filtered.append(
+                            self.filter_entities(e, t.cast(str, col), col_type, is_datanode_prop, action, val, col_fn)
+                        )
+                    else:
+                        # not a sequence we can filter; keep as-is
+                        new_filtered.append(e)
+            filtered_list = new_filtered
         # remove empty cycles
         return [e for e in filtered_list if isinstance(e, Scenario) or (isinstance(e, (tuple, list)) and len(e[2]))]
 
@@ -660,13 +679,19 @@ class _GuiCoreContext(_CoreEventConsumerBase):
                 or _invoke_action(e, t.cast(str, col), col_type, False, action, val, col_fn)
             ]
             # level 3 filtering
-            filtered_list = [
-                e
-                if isinstance(e, DataNode)
-                else self.filter_entities(d, t.cast(str, col), col_type, False, action, val, col_fn)
-                for e in filtered_list
-                for d in (t.cast(list, t.cast(list, e)[2]) if isinstance(e, list) else [e])
-            ]
+            new_filtered = []
+            for e in filtered_list:
+                if isinstance(e, DataNode):
+                    new_filtered.append(e)
+                else:
+                    if isinstance(e, (list, tuple)):
+                        new_filtered.append(
+                            self.filter_entities(e, t.cast(str, col), col_type, False, action, val, col_fn)
+                        )
+                    else:
+                        # not a sequence we can filter; keep as-is
+                        new_filtered.append(e)
+            filtered_list = new_filtered
         # remove empty cycles
         return [e for e in filtered_list if isinstance(e, DataNode) or (isinstance(e, (tuple, list)) and len(e[2]))]
 
