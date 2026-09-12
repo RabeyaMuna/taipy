@@ -21,7 +21,21 @@ Taipy application in a more complex IT ecosystem.
 
 Please refer to [REST API](../../../reference_rest/index.md) page to get the exhaustive list of available APIs."""
 
-from ._init import *
+import importlib
+
 from .version import _get_version
+
+
+def __getattr__(name):
+    """Lazily load attributes from the submodule ._init to avoid eager imports
+    (which can pull heavy optional dependencies) at package import time.
+    """
+    # Import the implementation module only when an attribute is accessed
+    mod = importlib.import_module(f"{__package__}._init")
+    try:
+        return getattr(mod, name)
+    except AttributeError:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}") from None
+
 
 __version__ = _get_version()

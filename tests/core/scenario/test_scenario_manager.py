@@ -349,7 +349,7 @@ def test_create_and_delete_scenario():
     assert scenario_2.additional_data_nodes == {}
     assert scenario_2.data_nodes == {}
     assert scenario_2.cycle.frequency == Frequency.DAILY
-    assert not scenario_2.is_primary
+    assert scenario_2.is_primary
     assert scenario_2.cycle.creation_date == creation_date_1
     assert scenario_2.cycle.start_date.date() == creation_date_2.date()
     assert scenario_2.cycle.end_date.date() == creation_date_2.date()
