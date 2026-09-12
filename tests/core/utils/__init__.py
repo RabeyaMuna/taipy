@@ -11,7 +11,9 @@
 from datetime import datetime
 from time import sleep
 
-from taipy import Submission
+# Avoid importing the top-level taipy package at module import time to prevent
+# heavy import-time side effects (like importing pkg_resources).
+# Import Submission locally inside the functions that need it.
 
 
 def assert_true_after_time(assertion, time=120, msg=None, **msg_params):
@@ -28,7 +30,16 @@ def assert_true_after_time(assertion, time=120, msg=None, **msg_params):
             continue
     if msg:
         print(msg(**msg_params))  # noqa: T201
-    assert assertion()
+    try:
+        assertion_result = assertion()
+    except BaseException as e:
+        # If the final check raises, surface it but treat as a failed assertion
+        print("Raise : ", e)  # noqa: T201
+        assertion_result = False
+    if not assertion_result:
+        if msg:
+            raise AssertionError(msg(**msg_params))
+        raise AssertionError(f"Condition not met within {time} seconds")
 
 
 def assert_submission_status(submission: Submission, expected_status, timeout=120):
@@ -37,7 +48,8 @@ def assert_submission_status(submission: Submission, expected_status, timeout=12
         time=timeout,
         msg=submission_status_message,
         submission=submission,
-        timeout=timeout)
+        timeout=timeout,
+    )
 
 
 def submission_status_message(submission: Submission, expected_status, timeout=120):

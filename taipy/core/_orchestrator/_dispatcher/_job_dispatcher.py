@@ -105,12 +105,16 @@ class _JobDispatcher(threading.Thread):
 
     def _execute_jobs_synchronously(self):
         while not self.orchestrator.jobs_to_run.empty():
+            job = None
             with self.lock:
                 try:
                     job = self.orchestrator.jobs_to_run.get()
                 except Exception:  # In case the last job of the queue has been removed.
-                    self._logger.warning(f"{job.id} is no longer in the list of jobs to run.")
-            self._execute_job(job)
+                    # The job may have been removed before it could be fetched; avoid referencing a possibly
+                    # uninitialized variable and log a generic warning instead.
+                    self._logger.warning("A job was removed from the queue before it could be fetched.")
+            if job is not None:
+                self._execute_job(job)
 
     @staticmethod
     def _needs_to_run(task: Task) -> bool:
@@ -157,7 +161,17 @@ class _JobDispatcher(threading.Thread):
                 st = "".join(traceback.format_exception(type(e), value=e, tb=e.__traceback__))
                 job._stacktrace.append(st)
                 _TaipyLogger._get_logger().error(st)
-            _JobManagerFactory._build_manager()._update(job)
+            try:
+                _JobManagerFactory._build_manager()._update(job)
+            except Exception as e:
+                # The job may have been removed from storage between execution and update.
+                # If the exception corresponds to a missing entity, log and continue; otherwise re-raise.
+                if e.__class__.__name__ == "NonExistingEntity":
+                    _TaipyLogger._get_logger().warning(
+                        f"Unable to update job {job.id}: it no longer exists ({e}). Skipping update."
+                    )
+                else:
+                    raise
         else:
             for output in job.task.output.values():
                 output.track_edit(job_id=job.id)

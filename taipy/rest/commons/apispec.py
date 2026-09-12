@@ -12,7 +12,9 @@
 from apispec import APISpec
 from apispec.exceptions import APISpecError
 from apispec.ext.marshmallow import MarshmallowPlugin
-from apispec_webframeworks.flask import FlaskPlugin
+
+# FlaskPlugin is imported lazily in APISpecExt.init_app to avoid importing
+# apispec_webframeworks (which requires pkg_resources) at module import time
 from flask import Blueprint, jsonify, render_template
 
 

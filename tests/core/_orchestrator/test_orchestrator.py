@@ -226,21 +226,21 @@ def test_blocked_task():
         with lock_1:
             submission_1 = _Orchestrator.submit_task(task_1)
             job_1 = submission_1._jobs[0]  # job 1 is submitted and locked
-            assert_true_after_time(job_1.is_running)  # so it is still running
+            assert_true_after_time(lambda: job_1.is_running())  # so it is still running
             assert dispatcher._nb_available_workers == 3  # One process used for job 1
             assert not _DataManager._get(task_1.bar.id).is_ready_for_reading  # And bar still not ready
             assert job_2.is_blocked  # the job_2 remains blocked
             assert_submission_status(submission_1, SubmissionStatus.RUNNING)
             assert_submission_status(submission_2, SubmissionStatus.BLOCKED)
-        assert_true_after_time(job_1.is_completed)  # job1 unlocked and can complete
+        assert_true_after_time(lambda: job_1.is_completed())  # job1 unlocked and can complete
         assert _DataManager._get(task_1.bar.id).is_ready_for_reading  # bar becomes ready
         assert _DataManager._get(task_1.bar.id).read() == 2  # the data is computed and written
-        assert_true_after_time(job_2.is_running)  # And job 2 can start running
+        assert_true_after_time(lambda: job_2.is_running())  # And job 2 can start running
         assert dispatcher._nb_available_workers == 3  # One process used for job 2
         assert len(_Orchestrator.blocked_jobs) == 0
         assert_submission_status(submission_1, SubmissionStatus.COMPLETED)
         assert_submission_status(submission_2, SubmissionStatus.RUNNING)
-    assert_true_after_time(job_2.is_completed)  # job 2 unlocked so it can complete
+    assert_true_after_time(lambda: job_2.is_completed())  # job 2 unlocked so it can complete
     assert _DataManager._get(task_2.baz.id).is_ready_for_reading  # baz becomes ready
     assert _DataManager._get(task_2.baz.id).read() == 6  # the data is computed and written
     assert dispatcher._nb_available_workers == 4  # No more process used.

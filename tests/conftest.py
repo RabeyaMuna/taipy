@@ -14,16 +14,10 @@ import typing as t
 
 import pytest
 
-from taipy.common._cli._base_cli._taipy_parser import _TaipyParser
-from taipy.common.config import Config, _inject_section
-from taipy.common.config._config import _Config
-from taipy.common.config._config_comparator._config_comparator import _ConfigComparator
-from taipy.common.config._serializer._base_serializer import _BaseSerializer
-from taipy.common.config._serializer._toml_serializer import _TomlSerializer
-from taipy.common.config.checker._checker import _Checker
-from taipy.common.config.checker.issue_collector import IssueCollector
-from taipy.core.config import CoreSection, DataNodeConfig, JobConfig, ScenarioConfig, TaskConfig
-from taipy.rest.config import RestConfig
+# Defer imports of project modules to runtime inside fixtures/functions to avoid importing
+# project code at collection time (which may require dependencies not available in the
+# test environment, e.g. pkg_resources). The original taipy imports are intentionally
+# removed from the top-level and should be imported lazily where needed.
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

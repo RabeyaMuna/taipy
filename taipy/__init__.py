@@ -22,7 +22,10 @@ if find_spec("taipy"):
         from taipy.core._init import *
 
     if find_spec("taipy.rest"):
-        from taipy.rest._init import *
+        # Delay importing taipy.rest until its functionality is actually requested
+        # to avoid importing optional dependencies (such as pkg_resources) at package import time.
+        def _import_taipy_rest():
+            from taipy.rest._init import *
 
     if find_spec("taipy.gui_core"):
         from taipy.gui_core._init import *
