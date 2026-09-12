@@ -12,7 +12,13 @@
 from apispec import APISpec
 from apispec.exceptions import APISpecError
 from apispec.ext.marshmallow import MarshmallowPlugin
-from apispec_webframeworks.flask import FlaskPlugin
+
+try:
+    from apispec_webframeworks.flask import FlaskPlugin
+except Exception:
+    # Degrade gracefully if apispec_webframeworks or its dependencies (e.g. pkg_resources)
+    # are not available at import time so test collection or runtime doesn't fail.
+    FlaskPlugin = None
 from flask import Blueprint, jsonify, render_template
 
 

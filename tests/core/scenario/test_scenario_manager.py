@@ -19,7 +19,6 @@ import pytest
 
 from taipy.common.config import Config
 from taipy.core import Job
-from taipy.core import taipy as tp
 from taipy.core._orchestrator._orchestrator import _Orchestrator
 from taipy.core._version._version_manager import _VersionManager
 from taipy.core.common import _utils

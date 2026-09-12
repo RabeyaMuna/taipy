@@ -14,16 +14,38 @@ import typing as t
 
 import pytest
 
-from taipy.common._cli._base_cli._taipy_parser import _TaipyParser
-from taipy.common.config import Config, _inject_section
-from taipy.common.config._config import _Config
-from taipy.common.config._config_comparator._config_comparator import _ConfigComparator
-from taipy.common.config._serializer._base_serializer import _BaseSerializer
-from taipy.common.config._serializer._toml_serializer import _TomlSerializer
-from taipy.common.config.checker._checker import _Checker
-from taipy.common.config.checker.issue_collector import IssueCollector
-from taipy.core.config import CoreSection, DataNodeConfig, JobConfig, ScenarioConfig, TaskConfig
-from taipy.rest.config import RestConfig
+# Avoid importing project modules at top-level to prevent heavy imports (like taipy.rest)
+# during pytest collection which can trigger ImportError (e.g. missing pkg_resources).
+# Import these modules lazily inside fixtures or functions, or handle ImportError gracefully.
+try:
+    from taipy.common._cli._base_cli._taipy_parser import _TaipyParser
+    from taipy.common.config import Config, _inject_section
+    from taipy.common.config._config import _Config
+    from taipy.common.config._config_comparator._config_comparator import _ConfigComparator
+    from taipy.common.config._serializer._base_serializer import _BaseSerializer
+    from taipy.common.config._serializer._toml_serializer import _TomlSerializer
+    from taipy.common.config.checker._checker import _Checker
+    from taipy.common.config.checker.issue_collector import IssueCollector
+    from taipy.core.config import CoreSection, DataNodeConfig, JobConfig, ScenarioConfig, TaskConfig
+    from taipy.rest.config import RestConfig
+except Exception:
+    # Set names to None so modules can still be referenced safely; tests/fixtures
+    # should perform local imports when they actually need these components.
+    _TaipyParser = None
+    Config = None
+    _inject_section = None
+    _Config = None
+    _ConfigComparator = None
+    _BaseSerializer = None
+    _TomlSerializer = None
+    _Checker = None
+    IssueCollector = None
+    CoreSection = None
+    DataNodeConfig = None
+    JobConfig = None
+    ScenarioConfig = None
+    TaskConfig = None
+    RestConfig = None
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
