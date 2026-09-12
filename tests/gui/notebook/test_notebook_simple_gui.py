@@ -39,6 +39,8 @@ def wait_for_content(url, expected_text, timeout=10):
 @pytest.mark.teste2e
 @testbook("tests/gui/notebook/simple_gui.ipynb")
 def test_notebook_simple_gui(tb, helpers):
+    from taipy.gui import Gui
+
     tb.execute_cell("import")
     tb.execute_cell("page_declaration")
     tb.execute_cell("gui_init")
@@ -83,6 +85,8 @@ def test_notebook_simple_gui(tb, helpers):
 @pytest.mark.teste2e
 @testbook("tests/gui/notebook/simple_gui_fastapi.ipynb")
 def test_notebook_simple_gui_fastapi(tb, helpers):
+    from taipy.gui import Gui
+
     tb.execute_cell("import")
     tb.execute_cell("page_declaration")
     tb.execute_cell("gui_init")
