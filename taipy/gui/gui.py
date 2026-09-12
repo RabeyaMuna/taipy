@@ -2638,7 +2638,20 @@ class Gui:
         ):
             return _Hooks()._handle_custom_page_render(self, page_name, pr)
         # Handle page rendering
-        context = page.render(self)
+        try:
+            context = page.render(self)
+        except Exception as _e:
+            # Call the configured exception handler and return a controlled 500 response
+            try:
+                self._call_on_exception(_e)
+            except Exception:
+                # Ensure we don't raise while handling the exception
+                pass
+            return self._server.create_http_response(
+                self._server.direct_render_json({"error": f"Error rendering page '{nav_page}'."}),
+                500,
+                {"Content-Type": "application/json; charset=utf-8"},
+            )
         if (
             nav_page == Gui.__root_page_name
             and page._rendered_jsx is not None

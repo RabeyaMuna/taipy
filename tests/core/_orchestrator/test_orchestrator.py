@@ -229,7 +229,7 @@ def test_blocked_task():
             assert_true_after_time(job_1.is_running)  # so it is still running
             assert dispatcher._nb_available_workers == 3  # One process used for job 1
             assert not _DataManager._get(task_1.bar.id).is_ready_for_reading  # And bar still not ready
-            assert job_2.is_blocked  # the job_2 remains blocked
+            assert job_2.is_blocked()  # the job_2 remains blocked
             assert_submission_status(submission_1, SubmissionStatus.RUNNING)
             assert_submission_status(submission_2, SubmissionStatus.BLOCKED)
         assert_true_after_time(job_1.is_completed)  # job1 unlocked and can complete
@@ -276,7 +276,7 @@ def test_blocked_submittable():
             job_1, job_2 = tasks_jobs[task_1.id], tasks_jobs[task_2.id]
             assert_true_after_time(job_1.is_running)  # job 1 is submitted and locked so it is still running
             assert not _DataManager._get(task_1.bar.id).is_ready_for_reading  # And bar still not ready
-            assert job_2.is_blocked  # the job_2 remains blocked
+            assert job_2.is_blocked()  # the job_2 remains blocked
             assert_submission_status(submission, SubmissionStatus.RUNNING)
             assert dispatcher._nb_available_workers == 1
         assert_true_after_time(job_1.is_completed)  # job1 unlocked and can complete

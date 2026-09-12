@@ -126,7 +126,7 @@ class _Manager(Generic[EntityType]):
             return cls._repository._load(entity_id)
         except ModelNotFound:
             cls._logger.error(f"{cls._ENTITY_NAME} not found: {entity_id}")
-            return default
+            raise
 
     @classmethod
     def _exists(cls, entity_id: str) -> ReasonCollection:
