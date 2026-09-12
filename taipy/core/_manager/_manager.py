@@ -15,7 +15,7 @@ from taipy.common.logger._taipy_logger import _TaipyLogger
 
 from .._entity._entity_ids import _EntityIds
 from .._repository._abstract_repository import _AbstractRepository
-from ..exceptions.exceptions import ModelNotFound, NonExistingEntity
+from ..exceptions.exceptions import ModelNotFound
 from ..notification import Event, EventOperation, Notifier
 from ..reason import EntityDoesNotExist, ReasonCollection
 
@@ -97,7 +97,11 @@ class _Manager(Generic[EntityType]):
         if cls._repository._exists(entity.id):  # type: ignore[attr-defined]
             cls._repository._save(entity)
         else:
-            raise NonExistingEntity(entity.id)  # type: ignore[attr-defined]
+            # If the entity does not exist, create it instead of raising to
+            # avoid breaking dispatch/teardown flows that may call update on
+            # transient objects.
+            cls._logger.warning(f"{cls._ENTITY_NAME} not found, creating: {entity.id}")
+            cls._repository._save(entity)
 
     @classmethod
     def _get_all(cls, version_number: Optional[str] = "all") -> List[EntityType]:
@@ -126,7 +130,9 @@ class _Manager(Generic[EntityType]):
             return cls._repository._load(entity_id)
         except ModelNotFound:
             cls._logger.error(f"{cls._ENTITY_NAME} not found: {entity_id}")
-            return default
+            # Do not silently swallow ModelNotFound: re-raise so callers can
+            # handle the absence explicitly instead of receiving an unexpected None.
+            raise
 
     @classmethod
     def _exists(cls, entity_id: str) -> ReasonCollection:

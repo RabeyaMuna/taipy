@@ -23,7 +23,11 @@ from taipy.common.config._serializer._toml_serializer import _TomlSerializer
 from taipy.common.config.checker._checker import _Checker
 from taipy.common.config.checker.issue_collector import IssueCollector
 from taipy.core.config import CoreSection, DataNodeConfig, JobConfig, ScenarioConfig, TaskConfig
-from taipy.rest.config import RestConfig
+
+try:
+    from taipy.rest.config import RestConfig
+except Exception:
+    RestConfig = None
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

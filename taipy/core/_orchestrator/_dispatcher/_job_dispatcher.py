@@ -105,12 +105,14 @@ class _JobDispatcher(threading.Thread):
 
     def _execute_jobs_synchronously(self):
         while not self.orchestrator.jobs_to_run.empty():
+            job = None
             with self.lock:
                 try:
                     job = self.orchestrator.jobs_to_run.get()
                 except Exception:  # In case the last job of the queue has been removed.
-                    self._logger.warning(f"{job.id} is no longer in the list of jobs to run.")
-            self._execute_job(job)
+                    self._logger.warning("A job is no longer in the list of jobs to run.")
+            if job is not None:
+                self._execute_job(job)
 
     @staticmethod
     def _needs_to_run(task: Task) -> bool:
@@ -157,7 +159,12 @@ class _JobDispatcher(threading.Thread):
                 st = "".join(traceback.format_exception(type(e), value=e, tb=e.__traceback__))
                 job._stacktrace.append(st)
                 _TaipyLogger._get_logger().error(st)
-            _JobManagerFactory._build_manager()._update(job)
+            try:
+                _JobManagerFactory._build_manager()._update(job)
+            except taipy.core.exceptions.exceptions.NonExistingEntity:
+                _TaipyLogger._get_logger().warning(f"Job {job.id} no longer exists when updating status.")
+            except Exception:
+                _TaipyLogger._get_logger().exception(f"Failed to update job {job.id} in manager.")
         else:
             for output in job.task.output.values():
                 output.track_edit(job_id=job.id)

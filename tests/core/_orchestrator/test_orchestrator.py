@@ -26,7 +26,6 @@ from taipy.core.common.scope import Scope
 from taipy.core.config.job_config import JobConfig
 from taipy.core.data._data_manager import _DataManager
 from taipy.core.scenario.scenario import Scenario
-from taipy.core.submission._submission_manager import _SubmissionManager
 from taipy.core.submission.submission_status import SubmissionStatus
 from taipy.core.task.task import Task
 from tests.core.utils import assert_submission_status, assert_true_after_time
@@ -189,9 +188,10 @@ def test_submit_task_multithreading_multiple_task_in_sync_way_to_check_job_statu
     assert job_2.is_completed()
     assert dispatcher._nb_available_workers == 2
     assert task_0.output[f"{task_0.config_id}_output0"].read() == 42
-    assert _SubmissionManager._get(job_0.submit_id).submission_status == SubmissionStatus.COMPLETED
-    assert _SubmissionManager._get(job_1.submit_id).submission_status == SubmissionStatus.COMPLETED
-    assert _SubmissionManager._get(job_2.submit_id).submission_status == SubmissionStatus.COMPLETED
+    # Use submission objects directly instead of querying the manager which can remove entities during teardown
+    assert submission_0.submission_status == SubmissionStatus.COMPLETED
+    assert submission_1.submission_status == SubmissionStatus.COMPLETED
+    assert submission_2.submission_status == SubmissionStatus.COMPLETED
 
 
 @pytest.mark.orchestrator_dispatcher
@@ -220,7 +220,8 @@ def test_blocked_task():
     job_2 = submission_2._jobs[0]  # job 2 is submitted
     assert job_2.is_blocked()  # since bar is not is_valid the job 2 is blocked
     assert dispatcher._nb_available_workers == 4  # No process used
-    assert _SubmissionManager._get(job_2.submit_id).submission_status == SubmissionStatus.BLOCKED
+    # Use the submission object instead of querying the manager directly which can remove entities
+    assert_submission_status(submission_2, SubmissionStatus.BLOCKED)
     assert len(_Orchestrator.blocked_jobs) == 1  # One job (job 2) is blocked
     with lock_2:
         with lock_1:
@@ -229,13 +230,14 @@ def test_blocked_task():
             assert_true_after_time(job_1.is_running)  # so it is still running
             assert dispatcher._nb_available_workers == 3  # One process used for job 1
             assert not _DataManager._get(task_1.bar.id).is_ready_for_reading  # And bar still not ready
-            assert job_2.is_blocked  # the job_2 remains blocked
+            assert job_2.is_blocked()  # the job_2 remains blocked
             assert_submission_status(submission_1, SubmissionStatus.RUNNING)
             assert_submission_status(submission_2, SubmissionStatus.BLOCKED)
         assert_true_after_time(job_1.is_completed)  # job1 unlocked and can complete
         assert _DataManager._get(task_1.bar.id).is_ready_for_reading  # bar becomes ready
         assert _DataManager._get(task_1.bar.id).read() == 2  # the data is computed and written
-        assert_true_after_time(job_2.is_running)  # And job 2 can start running
+        # Use a stable polling predicate with an explicit timeout to avoid flakiness
+        assert_true_after_time(lambda: job_2.is_running(), timeout=5)  # And job 2 can start running
         assert dispatcher._nb_available_workers == 3  # One process used for job 2
         assert len(_Orchestrator.blocked_jobs) == 0
         assert_submission_status(submission_1, SubmissionStatus.COMPLETED)

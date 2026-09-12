@@ -26,9 +26,20 @@ def assert_true_after_time(assertion, time=120, msg=None, **msg_params):
             print("Raise : ", e)  # noqa: T201
             loops += 1
             continue
+    # Attempt to produce a helpful message if a callback is provided
+    final_message = None
     if msg:
-        print(msg(**msg_params))  # noqa: T201
-    assert assertion()
+        try:
+            final_message = msg(**msg_params)
+        except Exception:
+            final_message = None
+        if final_message:
+            print(final_message)  # noqa: T201
+    elapsed = (datetime.now() - start).seconds
+    if final_message:
+        raise AssertionError(final_message)
+    else:
+        raise AssertionError(f"Condition not met within timeout (waited {elapsed} seconds, loops={loops})")
 
 
 def assert_submission_status(submission: Submission, expected_status, timeout=120):
@@ -37,7 +48,8 @@ def assert_submission_status(submission: Submission, expected_status, timeout=12
         time=timeout,
         msg=submission_status_message,
         submission=submission,
-        timeout=timeout)
+        timeout=timeout,
+    )
 
 
 def submission_status_message(submission: Submission, expected_status, timeout=120):

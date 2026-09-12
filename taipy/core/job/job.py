@@ -32,10 +32,32 @@ if TYPE_CHECKING:
 
 def _run_callbacks(fn):
     def __run_callbacks(job):
-        fn(job)
-        _TaipyLogger._get_logger().debug(f"{job.id} status has changed to {job.status}.")
-        for fct in job._subscribers:
-            fct(job)
+        try:
+            fn(job)
+        except Exception as e:
+            _TaipyLogger._get_logger().error(
+                f"Error while executing callback {getattr(fn, '__name__', repr(fn))} for job {getattr(job, 'id', 'unknown')}: {e}",
+                exc_info=True,
+            )
+
+        # Avoid triggering property reload by accessing the internal _status if available
+        status = getattr(job, "_status", None)
+        if status is None:
+            try:
+                status = job.status
+            except Exception:
+                status = "unknown"
+
+        _TaipyLogger._get_logger().debug(f"{getattr(job, 'id', 'unknown')} status has changed to {status}.")
+
+        for fct in getattr(job, "_subscribers", []):
+            try:
+                fct(job)
+            except Exception as e:
+                _TaipyLogger._get_logger().error(
+                    f"Subscriber {getattr(fct, '__name__', repr(fct))} raised an exception for job {getattr(job, 'id', 'unknown')}: {e}",
+                    exc_info=True,
+                )
 
     return __run_callbacks
 

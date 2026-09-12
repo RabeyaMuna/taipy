@@ -72,6 +72,7 @@ application.
 
 from taipy.common.config import _inject_section
 
+from . import servers
 from ._default_config import default_config
 from ._gui_section import _GuiSection
 from ._init import *
