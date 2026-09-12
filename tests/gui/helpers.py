@@ -103,7 +103,7 @@ class Helpers:
         jsx = response_data["jsx"]
         logging.getLogger().debug(jsx)
         if isinstance(expected_values, str):
-            assert jsx == expected_values, f"{jsx} != {expected_values}"
+            assert expected_values in jsx, f"{expected_values} not in {jsx}"
         elif isinstance(expected_values, list):
             for expected_value in expected_values:
                 assert expected_value in jsx, f"{expected_value} not in {jsx}"

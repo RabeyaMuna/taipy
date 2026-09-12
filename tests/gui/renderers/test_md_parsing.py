@@ -9,7 +9,22 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-from taipy.gui import Gui
+# Deferred, lazy import of taipy.gui.Gui to avoid import-time dependency on pkg_resources
+class _GuiProxy:
+    def __getattr__(self, name):
+        from taipy.gui import Gui as _RealGui
+
+        globals()["Gui"] = _RealGui
+        return getattr(_RealGui, name)
+
+    def __call__(self, *args, **kwargs):
+        from taipy.gui import Gui as _RealGui
+
+        globals()["Gui"] = _RealGui
+        return _RealGui(*args, **kwargs)
+
+
+Gui = _GuiProxy()
 
 
 def test_invalid_control_name(gui: Gui, helpers):

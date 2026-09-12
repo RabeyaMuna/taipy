@@ -9,14 +9,18 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+from typing import TYPE_CHECKING
+
 import taipy.gui.builder as tgb
-from taipy.gui import Gui
+
+if TYPE_CHECKING:
+    from taipy.gui import Gui
 
 
 def test_menu_builder(gui: Gui, test_client, helpers):
     gui._bind_var_val("lov", ["Item 1", "Item 2", "Item 3", "Item 4"])
     with tgb.Page(frame=None) as page:
-        tgb.menu(lov="{lov}", on_action="on_menu_action")  # type: ignore[attr-defined]
+        tgb.menu(lov="{lov}", onAction="on_menu_action")  # type: ignore[attr-defined]
     expected_list = [
         "<MenuCtl",
         'libClassName="taipy-menu"',

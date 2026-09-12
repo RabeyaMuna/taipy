@@ -9,7 +9,21 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-from taipy.gui import Gui
+
+class _LazyGui:
+    def __call__(self, *args, **kwargs):
+        from taipy.gui import Gui as _RealGui
+
+        globals()["Gui"] = _RealGui
+        return _RealGui(*args, **kwargs)
+
+    def __getattr__(self, name):
+        from taipy.gui import Gui as _RealGui
+
+        return getattr(_RealGui, name)
+
+
+Gui = _LazyGui()
 
 
 def test_selector_md_1(gui: Gui, test_client, helpers):

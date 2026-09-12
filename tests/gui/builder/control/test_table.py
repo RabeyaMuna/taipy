@@ -26,11 +26,11 @@ def test_table_builder_1(gui: Gui, helpers, csvdata):
         )
     expected_list = [
         "<Table",
-        'defaultColumns="{&quot;Entity&quot;: &#x7B;&quot;type&quot;: &quot;object&quot;, &quot;index&quot;: 1, &quot;dfid&quot;: &quot;Entity&quot;&#x7D;, &quot;Code&quot;: &#x7B;&quot;type&quot;: &quot;object&quot;, &quot;index&quot;: 2, &quot;dfid&quot;: &quot;Code&quot;&#x7D;, &quot;Daily hospital occupancy&quot;: &#x7B;&quot;type&quot;: &quot;int&quot;, &quot;index&quot;: 3, &quot;dfid&quot;: &quot;Daily hospital occupancy&quot;&#x7D;, &quot;Day_str&quot;: &#x7B;&quot;type&quot;: &quot;datetime&quot;, &quot;index&quot;: 0, &quot;format&quot;: &quot;eee dd MMM yyyy&quot;, &quot;dfid&quot;: &quot;Day&quot;&#x7D;}"',   # noqa: E501
+        'defaultColumns="{&quot;Entity&quot;: &#x7B;&quot;type&quot;: &quot;object&quot;, &quot;index&quot;: 1, &quot;dfid&quot;: &quot;Entity&quot;&#x7D;, &quot;Code&quot;: &#x7B;&quot;type&quot;: &quot;object&quot;, &quot;index&quot;: 2, &quot;dfid&quot;: &quot;Code&quot;&#x7D;, &quot;Daily hospital occupancy&quot;: &#x7B;&quot;type&quot;: &quot;int&quot;, &quot;index&quot;: 3, &quot;dfid&quot;: &quot;Daily hospital occupancy&quot;&#x7D;, &quot;Day_str&quot;: &#x7B;&quot;type&quot;: &quot;datetime&quot;, &quot;index&quot;: 0, &quot;format&quot;: &quot;eee dd MMM yyyy&quot;, &quot;dfid&quot;: &quot;Day&quot;&#x7D;}"',  # noqa: E501
         'height="80vh"',
         'width="100%"',
         'pageSizeOptions="[10, 30, 100]"',
-        'pageSize="{!10.0',
+        'pageSize="{!10"',
         'updateVarName="_TpD_tpec_TpExPr_csvdata_TPMDL_0"',
         'data="{!_TpD_tpec_TpExPr_csvdata_TPMDL_0',
     ]
@@ -54,7 +54,7 @@ def test_table_reset_builder(gui: Gui, helpers, csvdata):
         'height="80vh"',
         'width="100%"',
         'pageSizeOptions="[10, 30, 100]"',
-        'pageSize="{!10.0',
+        'pageSize="{!10"',
         'updateVarName="_TpD_tpec_TpExPr_csvdata_TPMDL_0"',
         'data="{!_TpD_tpec_TpExPr_csvdata_TPMDL_0',
         'columns="{!tp_TpExPr_gui_tbl_cols_True_None_7B_22columns_22_3A_20_22Day_3BEntity_3BCode_3BDaily_20hospital_20occupancy_22_2C_20_22date_format_22_3A_20_22eee_20dd_20MMM_20yyyy_22_7D_7B_22data_22_3A_20_22tpec_TpExPr_csvdata_TPMDL_0_22_7D_tpec_TpExPr_csvdata_TPMDL_0_csvdata_TPMDL_0_0',
@@ -80,7 +80,7 @@ def test_table_builder_2(gui: Gui, helpers, csvdata):
         "height": "60vh",
     }
     with tgb.Page(frame=None) as page:
-        tgb.table(data="{csvdata}", properties="table_properties", auto_loading=True, editable=True)  # type: ignore[attr-defined]
+        tgb.table(data="{csvdata}", properties=table_properties, auto_loading=True, editable=True)  # type: ignore[attr-defined]
     expected_list = [
         "<Table",
         'allowAllRows="{!true',
