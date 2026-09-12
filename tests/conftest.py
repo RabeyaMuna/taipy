@@ -14,16 +14,35 @@ import typing as t
 
 import pytest
 
-from taipy.common._cli._base_cli._taipy_parser import _TaipyParser
-from taipy.common.config import Config, _inject_section
-from taipy.common.config._config import _Config
-from taipy.common.config._config_comparator._config_comparator import _ConfigComparator
-from taipy.common.config._serializer._base_serializer import _BaseSerializer
-from taipy.common.config._serializer._toml_serializer import _TomlSerializer
-from taipy.common.config.checker._checker import _Checker
-from taipy.common.config.checker.issue_collector import IssueCollector
-from taipy.core.config import CoreSection, DataNodeConfig, JobConfig, ScenarioConfig, TaskConfig
-from taipy.rest.config import RestConfig
+try:
+    from taipy.common._cli._base_cli._taipy_parser import _TaipyParser
+    from taipy.common.config import Config, _inject_section
+    from taipy.common.config._config import _Config
+    from taipy.common.config._config_comparator._config_comparator import _ConfigComparator
+    from taipy.common.config._serializer._base_serializer import _BaseSerializer
+    from taipy.common.config._serializer._toml_serializer import _TomlSerializer
+    from taipy.common.config.checker._checker import _Checker
+    from taipy.common.config.checker.issue_collector import IssueCollector
+    from taipy.core.config import CoreSection, DataNodeConfig, JobConfig, ScenarioConfig, TaskConfig
+    from taipy.rest.config import RestConfig
+except (
+    ImportError
+):  # pragma: no cover - allow tests that don't require taipy to run when taipy or dependencies are missing
+    _TaipyParser = None
+    Config = None
+    _inject_section = None
+    _Config = None
+    _ConfigComparator = None
+    _BaseSerializer = None
+    _TomlSerializer = None
+    _Checker = None
+    IssueCollector = None
+    CoreSection = None
+    DataNodeConfig = None
+    JobConfig = None
+    ScenarioConfig = None
+    TaskConfig = None
+    RestConfig = None
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -161,6 +180,7 @@ def inject_core_sections() -> t.Callable:
         )
 
     return _inject_core_sections
+
 
 @pytest.fixture
 def inject_rest_sections() -> t.Callable:

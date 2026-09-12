@@ -12,7 +12,21 @@
 from apispec import APISpec
 from apispec.exceptions import APISpecError
 from apispec.ext.marshmallow import MarshmallowPlugin
-from apispec_webframeworks.flask import FlaskPlugin
+
+try:
+    from apispec_webframeworks.flask import FlaskPlugin
+except Exception:
+    # Defer hard failure at import time for environments where pkg_resources (setuptools)
+    # or apispec_webframeworks is not installed. Provide a clear runtime error when
+    # the plugin is actually instantiated/used.
+    class FlaskPlugin:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError(
+                "Optional dependency 'apispec_webframeworks.flask' is not available. "
+                "Install 'setuptools' and 'apispec-webframeworks' to enable FlaskPlugin."
+            )
+
+
 from flask import Blueprint, jsonify, render_template
 
 

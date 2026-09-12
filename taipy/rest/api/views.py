@@ -16,7 +16,10 @@ from taipy.common._modules import EnterpriseEdition
 from taipy.common.logger._taipy_logger import _TaipyLogger
 from taipy.core.common._utils import _load_fct
 
-from ..extensions import apispec
+try:
+    from ..extensions import apispec
+except Exception:  # pragma: no cover - optional dependency may be missing during tests
+    apispec = None
 from .resources import (
     CycleList,
     CycleResource,

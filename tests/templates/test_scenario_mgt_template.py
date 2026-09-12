@@ -13,8 +13,6 @@ import os
 
 from cookiecutter.main import cookiecutter
 
-from .utils import _run_template
-
 
 def test_scenario_management_with_toml_config(tmpdir):
     cookiecutter(
@@ -41,7 +39,20 @@ def test_scenario_management_with_toml_config(tmpdir):
         assert 'Config.load("config/config.toml")' in config_file.read()
 
     taipy_path = os.getcwd()
-    stdout = _run_template(taipy_path, os.path.join(tmpdir, "foo_app"), "main.py")
+    # Run the generated app as a package to preserve relative imports
+    import subprocess
+    import sys
+
+    pkg_dir = os.path.join(tmpdir, "foo_app")
+    pkg_name = os.path.basename(pkg_dir)
+    proc = subprocess.Popen(
+        [sys.executable, "-m", f"{pkg_name}.main"],
+        cwd=str(tmpdir),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    stdout, _ = proc.communicate()
 
     # Assert the message when the application is run successfully is in the stdout
     assert "[Taipy][INFO] Configuration 'config/config.toml' successfully loaded." in stdout
@@ -73,7 +84,20 @@ def test_scenario_management_without_toml_config(tmpdir):
         assert all(x in config_content for x in ["Config.configure_csv_data_node", "Config.configure_task"])
 
     taipy_path = os.getcwd()
-    stdout = _run_template(taipy_path, os.path.join(tmpdir, "foo_app"), "main.py")
+    # Run the generated app as a package to preserve relative imports
+    import subprocess
+    import sys
+
+    pkg_dir = os.path.join(tmpdir, "foo_app")
+    pkg_name = os.path.basename(pkg_dir)
+    proc = subprocess.Popen(
+        [sys.executable, "-m", f"{pkg_name}.main"],
+        cwd=str(tmpdir),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    stdout, _ = proc.communicate()
 
     # Assert the message when the application is run successfully is in the stdout
     assert "[Taipy][INFO]  * Server starting on" in stdout
