@@ -22,8 +22,12 @@ if util.find_spec("playwright"):
     from playwright._impl._page import Page
 
 from taipy.gui import Gui, Html
-from taipy.gui.servers.fastapi import _FastAPIServer
 from taipy.gui.servers.flask import _FlaskServer
+
+try:
+    from taipy.gui.servers.fastapi import _FastAPIServer
+except ImportError:
+    _FastAPIServer = None
 
 
 @pytest.mark.teste2e
@@ -110,6 +114,8 @@ def test_html_render_path_mapping(page: "Page", gui: Gui, helpers, e2e_base_url,
             async_mode="gevent",
         )
     else:
+        if _FastAPIServer is None:
+            pytest.skip("FastAPI server is not available")
         gui._server = _FastAPIServer(
             gui,
             path_mapping={
