@@ -1,0 +1,10 @@
+#!/bin/sh
+'''exec' /home/yisenxu/rabeya/mini-swe-agent-ci-based/results/think_repair_deepseek/b2d3b0e33d294b6eaf862048444d1f2ad04aaddc/testbed/.venv-taipy-443/bin/python3 "$0" "$@"
+' '''
+# -*- coding: utf-8 -*-
+import re
+import sys
+from virtualenv.__main__ import run_with_catch
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(run_with_catch())
