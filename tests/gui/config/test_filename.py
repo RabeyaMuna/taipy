@@ -11,7 +11,6 @@
 
 import pathlib
 
-import pytest
 
 from taipy.gui import Gui
 
