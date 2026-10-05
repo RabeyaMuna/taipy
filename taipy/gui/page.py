@@ -76,7 +76,7 @@ class Page:
         # Special variables only use for page reloading in notebook context
         self._notebook_gui: t.Optional["Gui"] = None
         self._notebook_page: t.Optional["_Page"] = None
-        self.set_style(kwargs.get("style", None))
+        self.set_style(t.cast(t.Optional[t.Dict[str, t.Dict[str, t.Any]]], kwargs.get("style", None)))
         self._script_paths(kwargs.get("script_paths", None))
 
     def create_page(self) -> t.Union[Page, str, None]:
@@ -146,7 +146,7 @@ class Page:
             return self._renderer.render(gui)
         return "<h1>No renderer found for page</h1>"
 
-    def set_style(self, style: t.Dict[str, t.Dict[str, t.Any]]) -> Page:
+    def set_style(self, style: t.Optional[t.Dict[str, t.Dict[str, t.Any]]]) -> Page:
         """Set the style for this page.
 
         The *style* parameter must contain a series of CSS rules that apply to the generated
