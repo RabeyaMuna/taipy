@@ -75,7 +75,7 @@ def get_changed_files(base_branch):
             check=True,
         )
         changed_files = [
-            file.replace("taipy/", "")
+            file.removeprefix("taipy/")
             for file in result.stdout.strip().splitlines()
             if not file.startswith(("tests/", "tools/"))
         ]
