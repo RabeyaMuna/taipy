@@ -44,12 +44,16 @@ def check_changed_files_coverage(coverage_file, changed_files, threshold=80):
         if not isinstance(classes, list):
             classes = [classes]
         for cls in classes:
-            files[cls["@filename"]] = float(cls["@line-rate"]) * 100
+            filename = cls["@filename"]
+            files[filename] = float(cls["@line-rate"]) * 100
+            files[filename.removeprefix("taipy/")] = files[filename]
     qty = 0
     sum_coverage = 0
     for file in changed_files:
-        if file in files:
-            coverage = files[file]
+        coverage = files.get(file)
+        if coverage is None:
+            coverage = files.get(f"taipy/{file}")
+        if coverage is not None:
             print(f"Coverage for {file}: {coverage:.2f}%")  # noqa: T201
             sum_coverage += coverage
             qty += 1
