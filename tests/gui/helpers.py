@@ -54,7 +54,7 @@ class WebSocketTestClient:
         self.sio.sleep(timeout)
         # wrap the messages in a dict to match the expected format
         wrapped_messages = []
-        wrapped_messages.extend({"name": "message", "args": message} for message in self.messages)
+        wrapped_messages.extend([{"name": "message", "args": message} for message in self.messages])
         self.messages = []
         return wrapped_messages
 
@@ -93,7 +93,7 @@ class Helpers:
 
     @staticmethod
     def _test_control(gui: Gui, expected_values: t.Union[str, t.List]):
-        gui.run(run_server=False, single_client=True, stylekit=False)
+        gui.run(run_server=True, single_client=True, stylekit=False)
         client = gui._server.test_client()
         response = client.get(f"/{Gui._JSX_URL}/test")
         assert response.status_code == 200, f"response.status_code {response.status_code} != 200"
@@ -193,7 +193,7 @@ class Helpers:
     @staticmethod
     def run_e2e_multi_client(gui: Gui):
         with warnings.catch_warnings(record=True):
-            gui.run(run_server=False, run_browser=False, single_client=False, stylekit=False)
+            gui.run(run_server=True, run_browser=False, single_client=False, stylekit=False)
             gui._server.run(
                 host=gui._get_config("host", "127.0.0.1"),
                 port=gui._get_config("port", 5000),
