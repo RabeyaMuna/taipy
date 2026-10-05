@@ -14,7 +14,6 @@ import typing as t
 
 import pytest
 
-from taipy.common._cli._base_cli._taipy_parser import _TaipyParser
 from taipy.common.config import Config, _inject_section
 from taipy.common.config._config import _Config
 from taipy.common.config._config_comparator._config_comparator import _ConfigComparator
@@ -23,7 +22,6 @@ from taipy.common.config._serializer._toml_serializer import _TomlSerializer
 from taipy.common.config.checker._checker import _Checker
 from taipy.common.config.checker.issue_collector import IssueCollector
 from taipy.core.config import CoreSection, DataNodeConfig, JobConfig, ScenarioConfig, TaskConfig
-from taipy.rest.config import RestConfig
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -51,6 +49,8 @@ def gui_server(request):
 
 def remove_subparser(name: str) -> None:
     """Remove a subparser from argparse."""
+    from taipy.common._cli._base_cli._taipy_parser import _TaipyParser
+
     _TaipyParser._sub_taipyparsers.pop(name, None)
 
     if _TaipyParser._subparser_action:
@@ -66,6 +66,8 @@ def clean_argparser() -> t.Callable:
     """Fixture to clean the argument parser."""
 
     def _clean_argparser() -> None:
+        from taipy.common._cli._base_cli._taipy_parser import _TaipyParser
+
         _TaipyParser._parser = argparse.ArgumentParser(conflict_handler="resolve")
         _TaipyParser._subparser_action = None
         _TaipyParser._arg_groups = {}

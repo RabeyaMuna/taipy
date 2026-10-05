@@ -12,11 +12,10 @@
 from apispec import APISpec
 from apispec.exceptions import APISpecError
 from apispec.ext.marshmallow import MarshmallowPlugin
-from apispec_webframeworks.flask import FlaskPlugin
 from flask import Blueprint, jsonify, render_template
 
 
-class FlaskRestfulPlugin(FlaskPlugin):
+class FlaskRestfulPlugin:
     """Small plugin override to handle flask-restful resources"""
 
     @staticmethod
@@ -38,6 +37,7 @@ class FlaskRestfulPlugin(FlaskPlugin):
         return app.url_map._rules_by_endpoint[endpoint][0]
 
 
+
 class APISpecExt:
     """Very simple and small extension to use apispec with this API as a flask extension"""
 
@@ -48,6 +48,8 @@ class APISpecExt:
             self.init_app(app, **kwargs)
 
     def init_app(self, app, **kwargs):
+        from apispec_webframeworks.flask import FlaskPlugin
+
         app.config.setdefault("APISPEC_TITLE", "Taipy Rest")
         app.config.setdefault("APISPEC_VERSION", "1.0.0")
         app.config.setdefault("OPENAPI_VERSION", "3.0.2")
