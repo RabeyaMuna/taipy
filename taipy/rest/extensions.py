@@ -15,6 +15,9 @@ All extensions here are used as singletons and
 initialized in application factory
 """
 
-from .commons.apispec import APISpecExt
+try:
+    from .commons.apispec import APISpecExt
+except ModuleNotFoundError:
+    APISpecExt = None
 
-apispec = APISpecExt()
+apispec = APISpecExt() if APISpecExt is not None else None

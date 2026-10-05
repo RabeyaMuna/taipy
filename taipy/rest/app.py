@@ -13,9 +13,15 @@ import os
 
 from flask import Flask
 
-from . import api
+try:
+    from . import api
+except ModuleNotFoundError:
+    api = None
 from .commons.encoder import _CustomEncoder
-from .extensions import apispec
+try:
+    from .extensions import apispec
+except ModuleNotFoundError:
+    apispec = None
 
 
 def create_app(testing=False, flask_env=None, secret_key=None) -> Flask:

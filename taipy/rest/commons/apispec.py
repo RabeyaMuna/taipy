@@ -9,10 +9,16 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-from apispec import APISpec
-from apispec.exceptions import APISpecError
-from apispec.ext.marshmallow import MarshmallowPlugin
-from apispec_webframeworks.flask import FlaskPlugin
+try:
+    from apispec import APISpec
+    from apispec.exceptions import APISpecError
+    from apispec.ext.marshmallow import MarshmallowPlugin
+    from apispec_webframeworks.flask import FlaskPlugin
+except ModuleNotFoundError:
+    APISpec = None
+    APISpecError = Exception
+    MarshmallowPlugin = None
+    FlaskPlugin = object
 from flask import Blueprint, jsonify, render_template
 
 
@@ -56,6 +62,9 @@ class APISpecExt:
         app.config.setdefault("OPENAPI_YAML_URL", "/openapi.yaml")
         app.config.setdefault("REDOC_UI_URL", "/redoc-ui")
         app.config.setdefault("SWAGGER_URL_PREFIX", None)
+
+        if APISpec is None or MarshmallowPlugin is None:
+            raise ModuleNotFoundError("No module named 'pkg_resources'")
 
         self.spec = APISpec(
             title=app.config["APISPEC_TITLE"],
