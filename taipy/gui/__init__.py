@@ -96,6 +96,7 @@ from .gui_actions import (
 from .icon import Icon
 from .page import Page
 from .partial import Partial
+from .servers.fastapi import *
 from .state import State
 from .utils import is_debugging
 

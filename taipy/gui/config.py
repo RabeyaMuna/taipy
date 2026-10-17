@@ -281,11 +281,13 @@ class _Config(object):
                         )
 
         # Taipy-config
-        from taipy.common.config import Config as TaipyConfig
-
         try:
+            from taipy.common.config import Config as TaipyConfig
             section = TaipyConfig.unique_sections["gui"]
             self.config.update(section._to_dict())
+        except ImportError:
+            # taipy-common may not be installed; ignore silently
+            pass
         except KeyError:
             _warn("taipy-common section for taipy-gui is not initialized.")
 
