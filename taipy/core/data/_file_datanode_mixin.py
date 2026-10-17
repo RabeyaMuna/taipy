@@ -47,8 +47,10 @@ class _FileDataNodeMixin:
     __logger = _TaipyLogger._get_logger()
 
     def __init__(self, properties: Dict) -> None:
-        self._path: str = properties.get(self._PATH_KEY, properties.get(self._DEFAULT_PATH_KEY))
-        self._is_generated: bool = properties.get(self._IS_GENERATED_KEY, self._path is None)
+        _path_raw = properties.get(self._PATH_KEY, properties.get(self._DEFAULT_PATH_KEY))
+        self._path: str = _path_raw if _path_raw is not None else ""
+        _is_generated_raw = properties.get(self._IS_GENERATED_KEY, self._path is None)
+        self._is_generated: bool = _is_generated_raw if _is_generated_raw is not None else False
         self._last_edit_date: Optional[datetime] = None
 
         if self._path and ".data" in self._path:
@@ -105,7 +107,7 @@ class _FileDataNodeMixin:
         Returns:
             The downloadable path of the file data of the data node if it exists, otherwise an empty string.
         """
-        if os.path.exists(self.path) and isfile(self._path):
+        if self._path and os.path.exists(self.path) and isfile(self._path):
             return self.path
 
         return ""
