@@ -96,7 +96,14 @@ class Helpers:
         gui.run(run_server=False, single_client=True, stylekit=False)
         client = gui._server.test_client()
         response = client.get(f"/{Gui._JSX_URL}/test")
-        assert response.status_code == 200, f"response.status_code {response.status_code} != 200"
+        if response.status_code != 200:
+            # Log the error response for debugging
+            error_text = response.get_data(as_text=True)
+            logging.getLogger().error(f"Server returned {response.status_code}: {error_text}")
+            # Re-raise the assertion with more context
+            assert (
+                response.status_code == 200
+            ), f"response.status_code {response.status_code} != 200. Response: {error_text}"
         response_data = Helpers.get_response_data(response, gui)
         assert isinstance(response_data, t.Dict), "response_data is not Dict"
         assert "jsx" in response_data, "jsx not in response_data"

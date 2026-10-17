@@ -141,7 +141,7 @@ class _Factory:
                 ("width", PropertyType.string_or_number),
                 ("height", PropertyType.string_or_number),
                 ("layout", PropertyType.dynamic_dict),
-                ("animation", PropertyType.to_json),
+                ("animation", PropertyType.json),
                 ("plot_config", PropertyType.dict),
                 ("on_range_change", PropertyType.function),
                 ("active", PropertyType.dynamic_boolean, True),
@@ -151,7 +151,7 @@ class _Factory:
                 ("template", PropertyType.dict),
                 ("template[dark]", PropertyType.dict, gui._get_config("chart_dark_template", None)),
                 ("template[light]", PropertyType.dict),
-                ("figure", PropertyType.to_json),
+                ("figure", PropertyType.json),
                 ("on_click", PropertyType.function),
             ]
         )
@@ -482,7 +482,7 @@ class _Factory:
                 ("page", PropertyType.dynamic_string),
                 ("render", PropertyType.dynamic_boolean, True),
                 ("height", PropertyType.dynamic_string),
-                ("content", PropertyType.toHtmlContent),
+                ("content", PropertyType.html_content),
                 ("width", PropertyType.string_or_number),
             ]
             + _Factory.__DRAG_N_DROP_ATTRIBUTES
