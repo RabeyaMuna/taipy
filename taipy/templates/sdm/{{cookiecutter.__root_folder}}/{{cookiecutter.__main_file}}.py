@@ -9,12 +9,15 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+# Relative imports replaced with absolute imports to avoid ImportError when running from a temporary test directory.
+# The generated application structure places config and pages modules in the same directory as this main file.
+# Using absolute imports based on the package name defined in cookiecutter.__root_folder.
+from config.config import configure
+from pages import job_page, scenario_page
+from pages.root import content, root, selected_data_node, selected_scenario
+
 import taipy as tp
 from taipy import Gui, Orchestrator
-
-from .config.config import configure
-from .pages import job_page, scenario_page
-from .pages.root import content, root, selected_data_node, selected_scenario
 
 
 def on_init(state): ...

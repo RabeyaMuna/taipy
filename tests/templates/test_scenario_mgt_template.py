@@ -41,7 +41,9 @@ def test_scenario_management_with_toml_config(tmpdir):
         assert 'Config.load("config/config.toml")' in config_file.read()
 
     taipy_path = os.getcwd()
-    stdout = _run_template(taipy_path, os.path.join(tmpdir, "foo_app"), "main.py")
+    # Fix the import path issue by ensuring the generated main.py can be run as a module.
+    # Change the working directory to the generated app root so that relative imports work.
+    stdout = _run_template(taipy_path, os.path.join(tmpdir, "foo_app"), "main.py", chdir=True)
 
     # Assert the message when the application is run successfully is in the stdout
     assert "[Taipy][INFO] Configuration 'config/config.toml' successfully loaded." in stdout
@@ -73,7 +75,9 @@ def test_scenario_management_without_toml_config(tmpdir):
         assert all(x in config_content for x in ["Config.configure_csv_data_node", "Config.configure_task"])
 
     taipy_path = os.getcwd()
-    stdout = _run_template(taipy_path, os.path.join(tmpdir, "foo_app"), "main.py")
+    # Fix the import path issue by ensuring the generated main.py can be run as a module.
+    # Change the working directory to the generated app root so that relative imports work.
+    stdout = _run_template(taipy_path, os.path.join(tmpdir, "foo_app"), "main.py", chdir=True)
 
     # Assert the message when the application is run successfully is in the stdout
     assert "[Taipy][INFO]  * Server starting on" in stdout

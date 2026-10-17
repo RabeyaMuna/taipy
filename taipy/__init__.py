@@ -11,6 +11,8 @@
 
 from importlib.util import find_spec
 
+import pkg_resources
+
 if find_spec("taipy"):
     if find_spec("taipy.common") and find_spec("taipy.common.config"):
         from taipy.common.config._init import *
