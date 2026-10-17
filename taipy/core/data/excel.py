@@ -224,8 +224,10 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
         finally:
             excel_file.close()
 
-        if len(user_provided_sheet_names) == 1:
-            return work_books[user_provided_sheet_names[0]]
+        # Convert user_provided_sheet_names to list for safe indexing
+        user_provided_sheet_names_list = list(user_provided_sheet_names)
+        if len(user_provided_sheet_names_list) == 1:
+            return work_books[user_provided_sheet_names_list[0]]
 
         return work_books
 
