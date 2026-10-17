@@ -128,7 +128,7 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
         if isinstance(data, Dict) and all(isinstance(x, (pd.DataFrame, np.ndarray)) for x in data.values()):
             self._write_excel_with_multiple_sheets(self._path, data, columns=columns)
         else:
-            df = pd.DataFrame(data)
+            df: pd.DataFrame = pd.DataFrame(data)
             if columns:
                 df = self._set_column_if_dataframe(df, columns)
             self._write_excel_with_single_sheet(df.to_excel, self.path, index=False)

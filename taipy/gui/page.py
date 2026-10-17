@@ -50,7 +50,7 @@ class Page:
             from ._renderers import Markdown
 
             page = Markdown(page)
-        self._renderer: t.Optional[Page] = page
+        self._renderer: t.Optional[t.Any] = page
 
         if "frame" in kwargs:
             self._frame = kwargs.get("frame")
@@ -76,7 +76,9 @@ class Page:
         # Special variables only use for page reloading in notebook context
         self._notebook_gui: t.Optional["Gui"] = None
         self._notebook_page: t.Optional["_Page"] = None
-        self.set_style(kwargs.get("style", None))
+        style = kwargs.get("style")
+        if style is not None:
+            self.set_style(style)
         self._script_paths(kwargs.get("script_paths", None))
 
     def create_page(self) -> t.Union[Page, str, None]:
@@ -146,7 +148,7 @@ class Page:
             return self._renderer.render(gui)
         return "<h1>No renderer found for page</h1>"
 
-    def set_style(self, style: t.Dict[str, t.Dict[str, t.Any]]) -> Page:
+    def set_style(self, style: t.Optional[t.Dict[str, t.Dict[str, t.Any]]]) -> Page:
         """Set the style for this page.
 
         The *style* parameter must contain a series of CSS rules that apply to the generated
