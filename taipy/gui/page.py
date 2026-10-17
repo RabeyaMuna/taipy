@@ -79,7 +79,11 @@ class Page:
         # Special variables only use for page reloading in notebook context
         self._notebook_gui: t.Optional["Gui"] = None
         self._notebook_page: t.Optional["_Page"] = None
-        self.set_style(kwargs.get("style", None))
+        style = kwargs.get("style")
+        if style is not None and isinstance(style, dict):
+            self.set_style(style)
+        else:
+            self.set_style({})
         self._script_paths(kwargs.get("script_paths", None))
 
     def create_page(self) -> t.Union[Page, str, None]:
@@ -182,7 +186,7 @@ class Page:
         Returns:
             This `Page` instance.
         """
-        self.__style = style if isinstance(style, dict) else None
+        self.__style: t.Dict[str, t.Dict[str, t.Any]] = style
         return self
 
     def _get_style(self):
@@ -217,7 +221,7 @@ class Page:
                     continue
                 else:
                     _warn(f"Script path '{script_path}' does not exist, is not a file, or is not a JavaScript file.")
-        self.__script_paths = script_paths if script_paths else None
+        self.__script_paths: t.Optional[t.List[t.Union[str, Path]]] = script_paths if script_paths else None
         return self
 
     def _get_script_paths(self):
