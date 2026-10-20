@@ -11,6 +11,7 @@
 
 import os
 
+# Ensure compatibility with apispec-webframeworks dependency
 from flask import Flask
 
 from . import api

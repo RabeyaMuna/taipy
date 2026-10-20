@@ -20,6 +20,7 @@ class _ListAttributes(UserList):
     def __add_iterable(self, iterable):
         for i in iterable:
             super(_ListAttributes, self).append(i)
+        self.__set_self()
 
     def __set_self(self):
         from ... import core as tp

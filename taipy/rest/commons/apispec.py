@@ -21,6 +21,8 @@ class FlaskRestfulPlugin(FlaskPlugin):
 
     @staticmethod
     def _rule_for_view(view, app=None):
+        if app is None:
+            raise APISpecError("app parameter is required")
         view_funcs = app.view_functions
         endpoint = None
 
@@ -30,12 +32,16 @@ class FlaskRestfulPlugin(FlaskPlugin):
 
             if view_func == view:
                 endpoint = ept
+                break
 
         if not endpoint:
             raise APISpecError("Could not find endpoint for view {0}".format(view))
 
         # WARNING: Assume 1 rule per view function for now
-        return app.url_map._rules_by_endpoint[endpoint][0]
+        rules = app.url_map._rules_by_endpoint.get(endpoint)
+        if not rules:
+            raise APISpecError("No rules found for endpoint {0}".format(endpoint))
+        return rules[0]
 
 
 class APISpecExt:
@@ -80,12 +86,16 @@ class APISpecExt:
         app.register_blueprint(blueprint)
 
     def swagger_json(self):
+        if self.spec is None:
+            return jsonify({"error": "APISpec not initialized"}), 500
         return jsonify(self.spec.to_dict())
 
     def swagger_ui(self):
         return render_template("swagger.j2")
 
     def openapi_yaml(self):
+        if self.spec is None:
+            return "error: APISpec not initialized", 500
         # Manually inject ReDoc's Authentication legend, then remove it
         self.spec.tag(
             {
@@ -95,7 +105,9 @@ class APISpecExt:
             }
         )
         redoc_spec = self.spec.to_yaml()
-        self.spec._tags.pop(0)
+        # Ensure there is at least one tag before popping
+        if self.spec._tags:
+            self.spec._tags.pop(0)
         return redoc_spec
 
     def redoc_ui(self):
