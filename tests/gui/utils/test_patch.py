@@ -10,34 +10,34 @@
 # specific language governing permissions and limitations under the License.
 
 
-import pytest
-
 from taipy.gui.utils.patch import _patch_value
 
 
 def test_patch_change_dict():
-    obj = { "a": { "b": { "c": 1 } } }
-    new_obj = _patch_value(obj, { "a": { "b": { "c": 2 } } })
+    obj = {"a": {"b": {"c": 1}}}
+    new_obj = _patch_value(obj, {"a": {"b": {"c": 2}}})
     assert new_obj.get("a").get("b").get("c") == 2
 
 
 def test_patch_remove_dict():
-    obj = { "a": { "b": { "c": 1 } } }
-    new_obj = _patch_value(obj, None,  { "a": { "b": { "c": None } } })
+    obj = {"a": {"b": {"c": 1}}}
+    new_obj = _patch_value(obj, None, {"a": {"b": {"c": None}}})
     assert new_obj.get("a").get("b").get("c", "") == ""
 
+
 def test_patch_change_list():
-    obj = { "a": { "b": { "c": [0, 1, 2] } } }
-    new_obj = _patch_value(obj, { "a": { "b": { "c": {2: 4} } } })
+    obj = {"a": {"b": {"c": [0, 1, 2]}}}
+    new_obj = _patch_value(obj, {"a": {"b": {"c": {2: 4}}}})
     assert new_obj.get("a").get("b").get("c") == [0, 1, 4]
 
 
 def test_patch_change_list_by_list():
-    obj = { "a": { "b": { "c": [0, 1, 2] } } }
-    new_obj = _patch_value(obj, { "a": { "b": { "c": {1: [-1, -2, -3]} } } })
+    obj = {"a": {"b": {"c": [0, 1, 2]}}}
+    new_obj = _patch_value(obj, {"a": {"b": {"c": {1: [-1, -2, -3]}}}})
     assert new_obj.get("a").get("b").get("c") == [0, -1, -2, -3]
 
+
 def test_patch_remove_list():
-    obj = { "a": { "b": { "c": [0, 1, 2] } } }
-    new_obj = _patch_value(obj, None,  { "a": { "b": { "c": {1: None} } } })
+    obj = {"a": {"b": {"c": [0, 1, 2]}}}
+    new_obj = _patch_value(obj, None, {"a": {"b": {"c": {1: None}}}})
     assert new_obj.get("a").get("b").get("c", "") == [0, 2]
