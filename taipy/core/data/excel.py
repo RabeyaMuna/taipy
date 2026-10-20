@@ -131,7 +131,9 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
             df = pd.DataFrame(data)
             if columns:
                 df = self._set_column_if_dataframe(df, columns)
-            self._write_excel_with_single_sheet(df.to_excel, self.path, index=False)
+            self._write_excel_with_single_sheet(
+                lambda path, **kwargs: df.to_excel(path, **kwargs), self.path, index=False
+            )
         self.track_edit(timestamp=datetime.now(), editor_id=editor_id)
 
     @staticmethod
@@ -224,8 +226,11 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
         finally:
             excel_file.close()
 
-        if len(user_provided_sheet_names) == 1:
+        if isinstance(user_provided_sheet_names, (list, tuple)) and len(user_provided_sheet_names) == 1:
             return work_books[user_provided_sheet_names[0]]
+        elif isinstance(user_provided_sheet_names, set) and len(user_provided_sheet_names) == 1:
+            sheet_name = next(iter(user_provided_sheet_names))
+            return work_books[sheet_name]
 
         return work_books
 
