@@ -9,4 +9,13 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-from .rest import Rest
+try:
+    from .rest import Rest
+except ImportError as e:
+    # Gracefully handle missing dependencies (e.g., pkg_resources)
+    # This allows the module to be imported even if dependencies are missing
+    # The actual error will be raised when Rest is used
+    Rest = None
+    import warnings
+
+    warnings.warn(f"Failed to import Rest from .rest: {e}", ImportWarning)

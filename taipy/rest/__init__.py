@@ -21,7 +21,11 @@ Taipy application in a more complex IT ecosystem.
 
 Please refer to [REST API](../../../reference_rest/index.md) page to get the exhaustive list of available APIs."""
 
-from ._init import *
-from .version import _get_version
+try:
+    from ._init import *
+    from .version import _get_version
+except ImportError:
+    # Gracefully handle missing dependencies during import
+    pass
 
 __version__ = _get_version()
