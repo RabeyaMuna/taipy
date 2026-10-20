@@ -71,4 +71,4 @@ class _Properties(UserDict):
     def _set_entity_owner(self, entity_owner):
         from ... import core as tp
 
-        tp.set(entity_owner)
+        tp.update(entity_owner)

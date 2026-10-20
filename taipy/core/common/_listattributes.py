@@ -25,7 +25,7 @@ class _ListAttributes(UserList):
         from ... import core as tp
 
         if hasattr(self, "_parent"):
-            tp.set(self._parent)
+            tp.update(self._parent)
 
     def __add__(self, value):
         if hasattr(value, "__iter__"):
