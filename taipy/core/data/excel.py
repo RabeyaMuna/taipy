@@ -179,6 +179,9 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
             user_provided_sheet_names = properties.get(self.__SHEET_NAME_PROPERTY) or []
             if not isinstance(user_provided_sheet_names, (list, set, tuple)):
                 user_provided_sheet_names = [user_provided_sheet_names]
+            # Ensure user_provided_sheet_names is a list for indexing
+            if isinstance(user_provided_sheet_names, (set, tuple)):
+                user_provided_sheet_names = list(user_provided_sheet_names)
 
             provided_sheet_names = user_provided_sheet_names or sheet_names
 
@@ -278,6 +281,8 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
         return data
 
     def _append_excel_with_multiple_sheets(self, data: Any, columns: List[str] = None):
+        if not isinstance(data, dict):
+            raise TypeError("Data must be a dictionary for multiple sheet appending.")
         with pd.ExcelWriter(self._path, mode="a", engine="openpyxl", if_sheet_exists="overlay") as writer:
             # Each key stands for a sheet name
             for sheet_name in data.keys():
@@ -304,7 +309,12 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
         elif isinstance(data, pd.DataFrame):
             self._append_excel_with_single_sheet(data.to_excel, index=False, header=False)
         else:
-            self._append_excel_with_single_sheet(pd.DataFrame(data).to_excel, index=False, header=False)
+            # Ensure data is convertible to DataFrame
+            try:
+                df = pd.DataFrame(data)
+                self._append_excel_with_single_sheet(df.to_excel, index=False, header=False)
+            except Exception as e:
+                raise TypeError(f"Data must be a dictionary, DataFrame, or convertible to DataFrame. Error: {e}")
 
     def _write_excel_with_single_sheet(self, write_excel_fct, path, *args, **kwargs):
         if sheet_name := self.properties.get(self.__SHEET_NAME_PROPERTY):
@@ -318,6 +328,8 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
             write_excel_fct(path, *args, **kwargs)
 
     def _write_excel_with_multiple_sheets(self, path: str, data: Any, columns: List[str] = None):
+        if not isinstance(data, dict):
+            raise TypeError("Data must be a dictionary for multiple sheet writing.")
         with pd.ExcelWriter(path) as writer:
             # Each key stands for a sheet name
             properties = self.properties
