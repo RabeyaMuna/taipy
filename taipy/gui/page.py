@@ -179,7 +179,7 @@ class Page:
         Returns:
             This `Page` instance.
         """
-        self.__style = style if isinstance(style, dict) else None
+        self.__style = style
         return self
 
     def _get_style(self):
@@ -195,13 +195,16 @@ class Page:
         Returns:
             This `Page` instance.
         """
+        processed_script_paths: t.Optional[t.List[t.Union[str, Path]]] = None
         if script_paths:
             if isinstance(script_paths, (str, Path)):
                 script_paths = [script_paths]
+            processed_script_paths = []
             for script_path in script_paths:
                 if isinstance(script_path, str):
                     parsed_url = urlparse(script_path)
                     if parsed_url.netloc:
+                        processed_script_paths.append(script_path)
                         continue
                     script_path = Path(script_path)
 
@@ -211,10 +214,10 @@ class Page:
                     and script_path.is_file()
                     and script_path.suffix == ".js"
                 ):
-                    continue
+                    processed_script_paths.append(script_path)
                 else:
                     _warn(f"Script path '{script_path}' does not exist, is not a file, or is not a JavaScript file.")
-        self.__script_paths = script_paths if script_paths else None
+        self.__script_paths = processed_script_paths
         return self
 
     def _get_script_paths(self):
