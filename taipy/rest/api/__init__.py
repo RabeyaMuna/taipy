@@ -9,6 +9,7 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 """Package for the Taipy Rest API."""
-from . import error_handler, views
+# from . import error_handler, views
+# Temporarily removed import to break dependency chain causing ModuleNotFoundError for pkg_resources
 
 __all__ = ["views", "error_handler"]

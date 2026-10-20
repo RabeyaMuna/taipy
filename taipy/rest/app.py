@@ -15,7 +15,8 @@ from flask import Flask
 
 from . import api
 from .commons.encoder import _CustomEncoder
-from .extensions import apispec
+
+# from .extensions import apispec  # Temporarily removed due to missing dependency
 
 
 def create_app(testing=False, flask_env=None, secret_key=None) -> Flask:

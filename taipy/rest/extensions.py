@@ -15,6 +15,13 @@ All extensions here are used as singletons and
 initialized in application factory
 """
 
-from .commons.apispec import APISpecExt
+try:
+    from .commons.apispec import APISpecExt
+except ModuleNotFoundError as e:
+    if "pkg_resources" in str(e):
+        raise ModuleNotFoundError(
+            "Missing dependency 'setuptools'. Please install it, e.g., via 'pip install setuptools'."
+        ) from e
+    raise
 
 apispec = APISpecExt()
