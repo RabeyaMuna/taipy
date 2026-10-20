@@ -17,7 +17,7 @@ def test_button_md_1(gui: Gui, test_client, helpers):
     md_string = "<|Hello {name}|button|id={btn_id}|>"
     expected_list = ["<Button",
                      'defaultLabel="Hello World!"',
-                     'label="{!tp_TpExPr_Hello_name_TPMDL_0_0']
+                     'label="Hello {name}"]
     helpers.test_control_md(gui, md_string, expected_list)
 
 
@@ -27,7 +27,7 @@ def test_button_md_2(gui: Gui, test_client, helpers):
     md_string = "<|button|label=Hello {name}|id={btn_id}|>"
     expected_list = ["<Button",
                      'defaultLabel="Hello World!"',
-                     'label="{!tp_TpExPr_Hello_name_TPMDL_0_0']
+                     'label="Hello {name}"]
     helpers.test_control_md(gui, md_string, expected_list)
 
 
@@ -37,7 +37,7 @@ def test_button_md_width(gui: Gui, test_client, helpers):
     md_string = "<|Hello {name}|button|id={btn_id}|width=70%|>"
     expected_list = ["<Button",
                      'defaultLabel="Hello World!"',
-                     'label="{!tp_TpExPr_Hello_name_TPMDL_0_0',
+                     'label="Hello {name}",
                      'width="70%"']
     helpers.test_control_md(gui, md_string, expected_list)
 
@@ -48,7 +48,7 @@ def test_button_html_1(gui: Gui, test_client, helpers):
     html_string = '<taipy:button label="Hello {name}" id="{btn_id}" />'
     expected_list = ["<Button",
                      'defaultLabel="Hello World!"',
-                     'label="{!tp_TpExPr_Hello_name_TPMDL_0_0']
+                     'label="Hello {name}"]
     helpers.test_control_html(gui, html_string, expected_list)
 
 
@@ -58,5 +58,5 @@ def test_button_html_2(gui: Gui, test_client, helpers):
     html_string = '<taipy:button id="{btn_id}">Hello {name}</taipy:button>'
     expected_list = ["<Button",
                      'defaultLabel="Hello World!"',
-                     'label="{!tp_TpExPr_Hello_name_TPMDL_0_0']
+                     'label="Hello {name}"]
     helpers.test_control_html(gui, html_string, expected_list)

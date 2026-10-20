@@ -20,7 +20,7 @@ def test_text_builder_1(gui: Gui, test_client, helpers):
     expected_list = ["<Field",
                      'dataType="int"',
                      'defaultValue="10"',
-                     'value="{!tpec_TpExPr_x_TPMDL_0']
+                     'value="{!tpec_TpExPr_x_TPMDL_0}"]
     helpers.test_control_builder(gui, page, expected_list)
 
 
@@ -31,5 +31,5 @@ def test_text_builder_2(gui: Gui, test_client, helpers):
     expected_list = ["<Field",
                      'dataType="int"',
                      'defaultValue="10"',
-                     'value="{!tpec_TpExPr_x_TPMDL_0']
+                     'value="{!tpec_TpExPr_x_TPMDL_0}"]
     helpers.test_control_builder(gui, page, expected_list)

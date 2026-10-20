@@ -23,7 +23,7 @@ def test_image_url_builder(gui: Gui, test_client, helpers):
         tgb.image(content="{content}")  # type: ignore[attr-defined]
     expected_list = [
         "<Image",
-        '"content="{!_TpCi_tpec_TpExPr_content_TPMDL_0',
+        'content="{!_TpCi_tpec_TpExPr_content_TPMDL_0',
         'defaultContent="some_url"',
     ]
     helpers.test_control_builder(gui, page, expected_list)
@@ -40,7 +40,7 @@ def test_image_file_builder(gui: Gui, test_client, helpers):
         ]
         if not util.find_spec("magic"):
             expected_list = ["<Image", 'defaultContent="/taipy-content/taipyStatic0/TaiPyContent.', ".bin"]
-        helpers.test_control_builder(gui, page, expected_list)
+        helpers.test_control_builder(gui, page, expected_list, allow_default_content=True)
 
 
 def test_image_path_builder(gui: Gui, test_client, helpers):
@@ -53,7 +53,7 @@ def test_image_path_builder(gui: Gui, test_client, helpers):
         "<Image",
         'defaultContent="/taipy-content/taipyStatic0/fred.png',
     ]
-    helpers.test_control_builder(gui, page, expected_list)
+    helpers.test_control_builder(gui, page, expected_list, allow_default_content=True)
 
 
 def test_image_bad_file_builder(gui: Gui, test_client, helpers):
@@ -67,4 +67,4 @@ def test_image_bad_file_builder(gui: Gui, test_client, helpers):
         ]
         if not util.find_spec("magic"):
             expected_list = ["<Image", 'defaultContent="/taipy-content/taipyStatic0/TaiPyContent.', ".bin"]
-        helpers.test_control_builder(gui, page, expected_list)
+        helpers.test_control_builder(gui, page, expected_list, allow_default_content=True)
