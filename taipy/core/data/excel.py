@@ -278,6 +278,8 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
         return data
 
     def _append_excel_with_multiple_sheets(self, data: Any, columns: List[str] = None):
+        if not isinstance(data, dict):
+            raise TypeError(f"Data must be a dictionary for multiple sheet append, got {type(data).__name__}")
         with pd.ExcelWriter(self._path, mode="a", engine="openpyxl", if_sheet_exists="overlay") as writer:
             # Each key stands for a sheet name
             for sheet_name in data.keys():
