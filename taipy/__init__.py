@@ -11,6 +11,19 @@
 
 from importlib.util import find_spec
 
+# Conditional import for taipy.rest to avoid pkg_resources dependency error
+if find_spec("taipy.rest") is not None:
+    try:
+        from taipy.rest._init import *
+    except ModuleNotFoundError as e:
+        # Log warning if pkg_resources or other dependencies are missing
+        import warnings
+
+        warnings.warn(f"Failed to import taipy.rest: {e}", ImportWarning)
+else:
+    # taipy.rest is not installed
+    pass
+
 if find_spec("taipy"):
     if find_spec("taipy.common") and find_spec("taipy.common.config"):
         from taipy.common.config._init import *

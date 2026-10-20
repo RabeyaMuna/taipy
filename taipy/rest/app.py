@@ -11,11 +11,24 @@
 
 import os
 
+# Ensure pkg_resources is available for apispec_webframeworks
 from flask import Flask
 
 from . import api
 from .commons.encoder import _CustomEncoder
 from .extensions import apispec
+
+# Try to import pkg_resources, which is part of setuptools
+# This is a transitive dependency of apispec_webframeworks
+# If not available, attempt to provide a fallback or raise a clear error.
+try:
+    import pkg_resources
+except ImportError:
+    # Provide a more informative error message
+    raise ImportError(
+        "The 'pkg_resources' module from setuptools is required by apispec_webframeworks. "
+        "Please install setuptools via 'pip install setuptools'."
+    )
 
 
 def create_app(testing=False, flask_env=None, secret_key=None) -> Flask:
