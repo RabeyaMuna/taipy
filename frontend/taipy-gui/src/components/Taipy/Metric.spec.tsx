@@ -238,6 +238,17 @@ describe("Metric Component", () => {
         });
     });
 
+    it("uses defaultDisplay when value is not provided", async () => {
+        const { container } = render(<Metric defaultDisplay={42} />);
+        await waitFor(() => {
+            const valueElement = container.querySelector("text.number");
+            if (!valueElement) {
+                throw new Error("Metric value element not found");
+            }
+            expect(valueElement.textContent).toContain("42");
+        });
+    });
+
     it("applies style correctly when deltaColor is set", async () => {
         const { container } = render(<Metric delta={10} deltaColor="#FF4136" />);
         await waitFor(() => {
