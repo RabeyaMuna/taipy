@@ -13,10 +13,13 @@ import inspect
 import time
 from urllib.request import urlopen
 
+import pytest
+
 from taipy.gui import Gui
 
 
 # this hangs in github
+@pytest.mark.standalone
 def test_run_thread(gui: Gui, helpers):
     gui._set_frame(inspect.currentframe())
     gui.add_page("page1", "# first page")
