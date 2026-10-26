@@ -47,7 +47,7 @@ class _FileDataNodeMixin:
     __logger = _TaipyLogger._get_logger()
 
     def __init__(self, properties: Dict) -> None:
-        self._path: str = properties.get(self._PATH_KEY, properties.get(self._DEFAULT_PATH_KEY))
+        self._path: str = properties.get(self._PATH_KEY, properties.get(self._DEFAULT_PATH_KEY))  # type: ignore[assignment]
         self._is_generated: bool = properties.get(self._IS_GENERATED_KEY, self._path is None)
         self._last_edit_date: Optional[datetime] = None
 
