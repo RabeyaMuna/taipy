@@ -43,7 +43,8 @@ class _Orchestrator(_AbstractOrchestrator):
 
     @classmethod
     def initialize(cls):
-        pass
+        cls.jobs_to_run = Queue()
+        cls.blocked_jobs = []
 
     @classmethod
     def submit(
@@ -98,7 +99,7 @@ class _Orchestrator(_AbstractOrchestrator):
             cls._orchestrate_job_to_run_or_block(jobs)
         if Config.job_config.is_development:
             cls._check_and_execute_jobs_if_development_mode()
-        elif wait:
+        if wait:
             cls._wait_until_job_finished(jobs, timeout)
         return submission
 
@@ -147,9 +148,8 @@ class _Orchestrator(_AbstractOrchestrator):
             cls._orchestrate_job_to_run_or_block(jobs)
         if Config.job_config.is_development:
             cls._check_and_execute_jobs_if_development_mode()
-        else:
-            if wait:
-                cls._wait_until_job_finished(job, timeout)
+        if wait:
+            cls._wait_until_job_finished(job, timeout)
         return submission
 
     @classmethod
@@ -254,7 +254,7 @@ class _Orchestrator(_AbstractOrchestrator):
     def __unblock_jobs(cls) -> None:
         with cls.lock:
             cls.__logger.debug("Acquiring lock to unblock jobs.")
-            for job in cls.blocked_jobs:
+            for job in list(cls.blocked_jobs):
                 if not cls._is_blocked(job):
                     cls.__logger.debug(f"Unblocking job: {job.id}.")
                     job.pending()
