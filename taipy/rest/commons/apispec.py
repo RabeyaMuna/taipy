@@ -9,11 +9,51 @@
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-from apispec import APISpec
+import re
+
+from apispec import APISpec, BasePlugin, yaml_utils
 from apispec.exceptions import APISpecError
 from apispec.ext.marshmallow import MarshmallowPlugin
-from apispec_webframeworks.flask import FlaskPlugin
-from flask import Blueprint, jsonify, render_template
+from flask import Blueprint, current_app, jsonify, render_template
+from flask.views import MethodView
+
+_RE_URL = re.compile(r"<(?:[^:<>]+:)?([^<>]+)>")
+
+
+class FlaskPlugin(BasePlugin):
+    """Small Flask apispec plugin that avoids importing apispec_webframeworks."""
+
+    @staticmethod
+    def flaskpath2openapi(path):
+        return _RE_URL.sub(r"{\1}", path)
+
+    @staticmethod
+    def _rule_for_view(view, app=None):
+        if app is None:
+            app = current_app
+
+        view_funcs = app.view_functions
+        endpoint = next((ept for ept, view_func in view_funcs.items() if view_func == view), None)
+
+        if not endpoint:
+            raise APISpecError("Could not find endpoint for view {0}".format(view))
+
+        # WARNING: Assume 1 rule per view function for now
+        return app.url_map._rules_by_endpoint[endpoint][0]
+
+    def path_helper(self, operations, *, view, app=None, **kwargs):
+        rule = self._rule_for_view(view, app=app)
+        operations.update(yaml_utils.load_operations_from_docstring(view.__doc__))
+
+        if hasattr(view, "view_class") and issubclass(view.view_class, MethodView):
+            for method in view.methods:
+                if method in rule.methods:
+                    method_name = method.lower()
+                    operations[method_name] = yaml_utils.load_yaml_from_docstring(
+                        getattr(view.view_class, method_name).__doc__
+                    )
+
+        return self.flaskpath2openapi(rule.rule)
 
 
 class FlaskRestfulPlugin(FlaskPlugin):

@@ -69,16 +69,18 @@ def test_need_to_run_skippable_task_no_validity_period_on_output():
 
 
 def test_need_to_run_skippable_task_with_validity_period_on_output():
-    hello_cfg = Config.configure_data_node("hello", default_data="Hello ")
-    hello_world_cfg = Config.configure_data_node("output", validity_period=timedelta(days=1))
-    task_cfg = Config.configure_task("name", nothing, [hello_cfg], [hello_world_cfg], skippable=True)
+    hello_cfg = Config.configure_in_memory_data_node("hello_validity_period", default_data="Hello ")
+    hello_world_cfg = Config.configure_in_memory_data_node(
+        "output_validity_period", validity_period=timedelta(days=1)
+    )
+    task_cfg = Config.configure_task("name_validity_period", nothing, [hello_cfg], [hello_world_cfg], skippable=True)
     task = _create_task_from_config(task_cfg)
     dispatcher = _JobDispatcher(_OrchestratorFactory._build_orchestrator())
 
     assert dispatcher._needs_to_run(task)  # output data is not edited
 
-    task.output["output"].write("Hello world !")  # output data is edited
-    output_edit_time = task.output["output"].last_edit_date
+    task.output["output_validity_period"].write("Hello world !")  # output data is edited
+    output_edit_time = task.output["output_validity_period"].last_edit_date
 
     with freezegun.freeze_time(output_edit_time + timedelta(minutes=30)):  # 30 min after edit time
         assert not dispatcher._needs_to_run(task)  # output data is written and validity period not expired

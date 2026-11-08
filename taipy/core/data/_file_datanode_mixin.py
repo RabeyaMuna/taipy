@@ -47,14 +47,17 @@ class _FileDataNodeMixin:
     __logger = _TaipyLogger._get_logger()
 
     def __init__(self, properties: Dict) -> None:
-        self._path: str = properties.get(self._PATH_KEY, properties.get(self._DEFAULT_PATH_KEY))
-        self._is_generated: bool = properties.get(self._IS_GENERATED_KEY, self._path is None)
+        configured_path: Optional[str] = properties.get(self._PATH_KEY, properties.get(self._DEFAULT_PATH_KEY))
+        self._is_generated: bool = properties.get(self._IS_GENERATED_KEY, configured_path is None)
         self._last_edit_date: Optional[datetime] = None
+        self._path: str
 
-        if self._path and ".data" in self._path:
-            self._path = self._migrate_path(self.storage_type(), self._path)  # type: ignore[attr-defined]
-        if not self._path:
+        if configured_path and ".data" in configured_path:
+            configured_path = self._migrate_path(self.storage_type(), configured_path)  # type: ignore[attr-defined]
+        if not configured_path:
             self._path = self._build_path(self.storage_type())  # type: ignore[attr-defined]
+        else:
+            self._path = configured_path
 
         properties[self._IS_GENERATED_KEY] = self._is_generated
         properties[self._PATH_KEY] = self._path
