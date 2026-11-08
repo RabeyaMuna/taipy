@@ -13,6 +13,7 @@ import threading
 import time
 import traceback
 from abc import abstractmethod
+from datetime import datetime
 from queue import Empty
 from typing import Optional
 
@@ -128,8 +129,21 @@ class _JobDispatcher(threading.Thread):
         data_manager = _DataManagerFactory._build_manager()
         if len(task.output) == 0:
             return True
-        are_outputs_in_cache = all(data_manager._get(dn.id).is_valid for dn in task.output.values())
+
+        def _is_output_valid(dn):
+            last_edit_date = dn._last_edit_date if dn._last_edit_date else dn.last_edit_date
+            if last_edit_date is None:
+                return False
+            if dn.validity_period is None:
+                return True
+            return (last_edit_date + dn.validity_period) > datetime.now()
+
+        output_data_nodes = list(task.output.values())
+        are_outputs_in_cache = all(data_manager._get(dn.id).is_valid for dn in output_data_nodes)
+        are_outputs_valid = all(_is_output_valid(dn) for dn in output_data_nodes)
         if not are_outputs_in_cache:
+            return True
+        if not are_outputs_valid:
             return True
         if len(task.input) == 0:
             return False
