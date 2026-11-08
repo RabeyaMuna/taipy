@@ -16,6 +16,7 @@ from typing import Dict, Type
 from ...common._modules import EnterpriseEdition
 from .._manager._manager import _Manager
 from ..common._utils import _load_fct
+from ..exceptions.exceptions import NonExistingEntity
 from ..notification import EventOperation, Notifier, _make_event
 
 
@@ -38,6 +39,18 @@ class _Reloader:
     def _reload(self, manager: str, obj):
         if self._no_reload_context:
             return obj
+
+        if manager == "job":
+            task = getattr(obj, "_task", None)
+            if task is not None and not self._get_manager("task")._repository._exists(task.id):
+                return obj
+        if manager == "sequence":
+            tasks = getattr(obj, "_tasks", [])
+            task_repository = self._get_manager("task")._repository
+            for task_or_id in tasks:
+                task_id = task_or_id.id if hasattr(task_or_id, "id") else task_or_id
+                if not task_repository._exists(task_id):
+                    return obj
 
         entity = self._get_manager(manager)._get(obj, obj)
         if obj._is_in_context and hasattr(entity, "_properties"):
@@ -122,7 +135,11 @@ def _self_setter(manager):
             if not self._is_in_context:
                 entity = _Reloader()._reload(manager, self)
                 fct(entity, *args, **kwargs)
-                _Reloader._get_manager(manager)._update(entity)
+                entity_manager = _Reloader._get_manager(manager)
+                try:
+                    entity_manager._update(entity)
+                except NonExistingEntity:
+                    entity_manager._repository._save(entity)
                 Notifier.publish(event)
             else:
                 self._in_context_attributes_changed_collector.append(event)

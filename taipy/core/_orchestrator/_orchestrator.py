@@ -19,13 +19,19 @@ from typing import Callable, Iterable, List, Optional, Set, Union
 from taipy.common.config import Config
 from taipy.common.logger._taipy_logger import _TaipyLogger
 
+from .._entity._reload import _Reloader
 from .._entity.submittable import Submittable
 from ..data._data_manager_factory import _DataManagerFactory
 from ..job._job_manager_factory import _JobManagerFactory
 from ..job.job import Job
 from ..job.job_id import JobId
+from ..scenario._scenario_manager_factory import _ScenarioManagerFactory
+from ..scenario.scenario import Scenario
+from ..sequence._sequence_manager_factory import _SequenceManagerFactory
+from ..sequence.sequence import Sequence
 from ..submission._submission_manager_factory import _SubmissionManagerFactory
 from ..submission.submission import Submission
+from ..task._task_manager_factory import _TaskManagerFactory
 from ..task.task import Task
 from ._abstract_orchestrator import _AbstractOrchestrator
 
@@ -43,7 +49,8 @@ class _Orchestrator(_AbstractOrchestrator):
 
     @classmethod
     def initialize(cls):
-        pass
+        cls.jobs_to_run = Queue()
+        cls.blocked_jobs = []
 
     @classmethod
     def submit(
@@ -73,6 +80,7 @@ class _Orchestrator(_AbstractOrchestrator):
         Returns:
             The created `Submission^` containing the information about the submission.
         """
+        cls.__persist_submittable_graph(submittable)
         submission = _SubmissionManagerFactory._build_manager()._create(
             submittable.id,  # type: ignore
             submittable._ID_PREFIX,  # type: ignore
@@ -80,7 +88,8 @@ class _Orchestrator(_AbstractOrchestrator):
             **properties,
         )
         jobs: List[Job] = []
-        tasks = submittable._get_sorted_tasks()
+        with _Reloader():
+            tasks = submittable._get_sorted_tasks()
         with cls.lock:
             cls.__logger.debug(f"Acquiring lock to submit {submission.entity_id}.")
             for ts in tasks:
@@ -129,6 +138,7 @@ class _Orchestrator(_AbstractOrchestrator):
         Returns:
             The created `Submission^` containing the information about the submission.
         """
+        cls.__persist_task(task)
         submission = _SubmissionManagerFactory._build_manager()._create(
             task.id, task._ID_PREFIX, task.config_id, **properties
         )
@@ -166,6 +176,30 @@ class _Orchestrator(_AbstractOrchestrator):
         return _JobManagerFactory._build_manager()._create(
             task, itertools.chain([cls._on_status_change], callbacks or []), submit_id, submit_entity_id, force=force
         )
+
+    @classmethod
+    def __persist_submittable_graph(cls, submittable: Submittable) -> None:
+        tasks = submittable._get_set_of_tasks()
+        for task in tasks:
+            cls.__persist_task(task)
+
+        if isinstance(submittable, Scenario):
+            scenario_manager = _ScenarioManagerFactory._build_manager()
+            if not scenario_manager._repository._exists(submittable.id):
+                scenario_manager._repository._save(submittable)
+        elif isinstance(submittable, Sequence):
+            sequence_manager = _SequenceManagerFactory._build_manager()
+            if not sequence_manager._repository._exists(submittable.id):
+                sequence_manager._repository._save(submittable)
+
+    @classmethod
+    def __persist_task(cls, task: Task) -> None:
+        manager = _TaskManagerFactory._build_manager()
+        if not manager._repository._exists(task.id):
+            try:
+                manager._repository._save(task)
+            except (AttributeError, TypeError):
+                cls.__logger.debug(f"Skipping persistence of transient task {task.id}.")
 
     @classmethod
     def _update_submission_status(cls, job: Job) -> None:
@@ -232,6 +266,8 @@ class _Orchestrator(_AbstractOrchestrator):
         Returns:
              True if one of its input data nodes is blocked.
         """
+        if isinstance(obj, Job) and obj._is_finished():
+            return False
         input_data_nodes = obj.task.input.values() if isinstance(obj, Job) else obj.input.values()
         data_manager = _DataManagerFactory._build_manager()
         return any(not data_manager._get(dn.id).is_ready_for_reading for dn in input_data_nodes)
