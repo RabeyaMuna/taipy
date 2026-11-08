@@ -384,9 +384,10 @@ def init_orchestrator():
 
         if _OrchestratorFactory._orchestrator is None:
             _OrchestratorFactory._build_orchestrator()
-        _OrchestratorFactory._build_dispatcher(force_restart=True)
+        # Reset pending orchestrator state before (re)starting the dispatcher thread.
         _OrchestratorFactory._orchestrator.jobs_to_run = Queue()
         _OrchestratorFactory._orchestrator.blocked_jobs = []
+        _OrchestratorFactory._build_dispatcher(force_restart=True)
 
     return _init_orchestrator
 

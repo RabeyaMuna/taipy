@@ -94,6 +94,7 @@ class _Orchestrator(_AbstractOrchestrator):
                     )
                     for task in ts
                 )
+            _SubmissionManagerFactory._build_manager()._repository._save(submission)
             submission.jobs = jobs  # type: ignore
             cls._orchestrate_job_to_run_or_block(jobs)
         if Config.job_config.is_development:
@@ -143,6 +144,7 @@ class _Orchestrator(_AbstractOrchestrator):
                 force,
             )
             jobs = [job]
+            _SubmissionManagerFactory._build_manager()._repository._save(submission)
             submission.jobs = jobs  # type: ignore
             cls._orchestrate_job_to_run_or_block(jobs)
         if Config.job_config.is_development:
@@ -161,11 +163,17 @@ class _Orchestrator(_AbstractOrchestrator):
         callbacks: Optional[Iterable[Callable]] = None,
         force: bool = False,
     ) -> Job:
+        data_manager = _DataManagerFactory._build_manager()
+        for dn in itertools.chain(task.input.values(), task.output.values()):
+            if not data_manager._repository._exists(dn.id):
+                data_manager._repository._save(dn)
         for dn in task.output.values():
             dn.lock_edit()
-        return _JobManagerFactory._build_manager()._create(
+        job = _JobManagerFactory._build_manager()._create(
             task, itertools.chain([cls._on_status_change], callbacks or []), submit_id, submit_entity_id, force=force
         )
+        _JobManagerFactory._build_manager()._repository._save(job)
+        return job
 
     @classmethod
     def _update_submission_status(cls, job: Job) -> None:
@@ -232,7 +240,9 @@ class _Orchestrator(_AbstractOrchestrator):
         Returns:
              True if one of its input data nodes is blocked.
         """
-        input_data_nodes = obj.task.input.values() if isinstance(obj, Job) else obj.input.values()
+        if isinstance(obj, Job) and obj.is_finished():
+            return False
+        input_data_nodes = obj._task.input.values() if isinstance(obj, Job) else obj.input.values()
         data_manager = _DataManagerFactory._build_manager()
         return any(not data_manager._get(dn.id).is_ready_for_reading for dn in input_data_nodes)
 
@@ -254,7 +264,7 @@ class _Orchestrator(_AbstractOrchestrator):
     def __unblock_jobs(cls) -> None:
         with cls.lock:
             cls.__logger.debug("Acquiring lock to unblock jobs.")
-            for job in cls.blocked_jobs:
+            for job in list(cls.blocked_jobs):
                 if not cls._is_blocked(job):
                     cls.__logger.debug(f"Unblocking job: {job.id}.")
                     job.pending()
@@ -282,7 +292,9 @@ class _Orchestrator(_AbstractOrchestrator):
             with cls.lock:
                 cls.__logger.debug(f"Acquiring lock to cancel job {job.id}.")
                 to_cancel_or_abandon_jobs = {job}
-                to_cancel_or_abandon_jobs.update(cls.__find_subsequent_jobs(job.submit_id, set(job.task.output.keys())))
+                to_cancel_or_abandon_jobs.update(
+                    cls.__find_subsequent_jobs(job.submit_id, set(job._task.output.keys()))
+                )
                 cls.__remove_blocked_jobs(to_cancel_or_abandon_jobs)
                 cls.__remove_jobs_to_run(to_cancel_or_abandon_jobs)
                 cls._cancel_jobs(job.id, to_cancel_or_abandon_jobs)
@@ -290,12 +302,12 @@ class _Orchestrator(_AbstractOrchestrator):
 
     @classmethod
     def __find_subsequent_jobs(cls, submit_id, output_dn_config_ids: Set) -> Set[Job]:
-        next_output_dn_config_ids = set()
+        next_output_dn_config_ids: Set[str] = set()
         subsequent_jobs = set()
         for job in cls.blocked_jobs:
-            job_input_dn_config_ids = job.task.input.keys()
+            job_input_dn_config_ids = job._task.input.keys()
             if job.submit_id == submit_id and len(output_dn_config_ids.intersection(job_input_dn_config_ids)) > 0:
-                next_output_dn_config_ids.update(job.task.output.keys())
+                next_output_dn_config_ids.update(job._task.output.keys())
                 subsequent_jobs.update([job])
         if next_output_dn_config_ids:
             subsequent_jobs.update(
@@ -323,7 +335,7 @@ class _Orchestrator(_AbstractOrchestrator):
             cls.__logger.debug("Acquiring lock to fail subsequent jobs.")
             to_fail_or_abandon_jobs = set()
             to_fail_or_abandon_jobs.update(
-                cls.__find_subsequent_jobs(failed_job.submit_id, set(failed_job.task.output.keys()))
+                cls.__find_subsequent_jobs(failed_job.submit_id, set(failed_job._task.output.keys()))
             )
             for job in to_fail_or_abandon_jobs:
                 job.abandoned()

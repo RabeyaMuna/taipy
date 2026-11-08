@@ -1016,6 +1016,8 @@ def get_parents(
     current_parent_dict: Dict[str, Set] = {}
     for parent in entity.parent_ids:
         parent_entity = get(parent)
+        if parent_entity is None:
+            continue
         if parent_entity._MANAGER_NAME in current_parent_dict.keys():
             current_parent_dict[parent_entity._MANAGER_NAME].add(parent_entity)
         else:

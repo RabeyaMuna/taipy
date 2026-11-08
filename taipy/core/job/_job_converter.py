@@ -14,10 +14,15 @@ from typing import List
 
 from .._repository._abstract_converter import _AbstractConverter
 from ..common._utils import _fcts_to_dict, _load_fct
-from ..exceptions import InvalidSubscriber
+from ..exceptions import InvalidSubscriber, ModelNotFound
 from ..job._job_model import _JobModel
 from ..job.job import Job
 from ..task._task_manager_factory import _TaskManagerFactory
+from ..task.task import Task, TaskId
+
+
+def _missing_task_function():
+    return None
 
 
 class _JobConverter(_AbstractConverter):
@@ -41,10 +46,15 @@ class _JobConverter(_AbstractConverter):
     def _model_to_entity(cls, model: _JobModel) -> Job:
         task_manager = _TaskManagerFactory._build_manager()
         task_repository = task_manager._repository
+        try:
+            task = task_repository._load(model.task_id)
+        except ModelNotFound:
+            task_config_id = model.task_id.removeprefix("TASK_").rsplit("_", 1)[0]
+            task = Task(task_config_id, {}, _missing_task_function, id=TaskId(model.task_id), version=model.version)
 
         job = Job(
             id=model.id,
-            task=task_repository._load(model.task_id),
+            task=task,
             submit_id=model.submit_id,
             submit_entity_id=model.submit_entity_id,
             version=model.version,
