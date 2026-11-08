@@ -16,7 +16,11 @@ from urllib.error import HTTPError, URLError
 from urllib.request import urlopen
 
 import pytest
-from testbook import testbook
+
+try:
+    from testbook import testbook
+except ImportError:  # pragma: no cover - optional dependency in some environments
+    pytest.skip("testbook is required for notebook GUI tests", allow_module_level=True)
 
 from taipy.gui import Gui
 
