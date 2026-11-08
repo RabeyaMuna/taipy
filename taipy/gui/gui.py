@@ -1120,7 +1120,7 @@ class Gui:
                 modified_vars.remove(k)
         for _var in modified_vars:
             newvalue = values.get(_var)
-            custom_page_filtered_types = _Hooks()._get_resource_handler_data_layer_supported_types()
+            custom_page_filtered_types = Gui.__get_resource_handler_data_layer_supported_types()
             if isinstance(newvalue, (_TaipyData)) or isinstance(newvalue, custom_page_filtered_types):  # type: ignore
                 newvalue = {"__taipy_refresh": True}
             else:
@@ -1211,10 +1211,21 @@ class Gui:
             _warn(f"Error transforming data: {str(e)}")
             return None
 
+    @staticmethod
+    def __get_resource_handler_data_layer_supported_types() -> t.Tuple[type, ...]:
+        custom_page_filtered_types = _Hooks()._get_resource_handler_data_layer_supported_types()
+        if isinstance(custom_page_filtered_types, type):
+            return (custom_page_filtered_types,)
+        if isinstance(custom_page_filtered_types, (list, tuple)):
+            return tuple(
+                filtered_type for filtered_type in custom_page_filtered_types if isinstance(filtered_type, type)
+            )
+        return ()
+
     def __request_data_update(self, var_name: str, payload: t.Any) -> None:
         # Use custom attrgetter function to allow value binding for _MapDict
         newvalue = _getscopeattr_drill(self, var_name)  # type: ignore[arg-type]
-        custom_page_filtered_types = _Hooks()._get_resource_handler_data_layer_supported_types()
+        custom_page_filtered_types = Gui.__get_resource_handler_data_layer_supported_types()
         if not isinstance(newvalue, _TaipyData) and isinstance(newvalue, custom_page_filtered_types):  # type: ignore
             newvalue = _TaipyData(newvalue, "")
         if isinstance(newvalue, _TaipyData):

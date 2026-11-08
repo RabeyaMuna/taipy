@@ -307,7 +307,7 @@ def test_create_scenario_does_not_modify_config():
 
 
 def test_create_and_delete_scenario():
-    creation_date_1 = datetime.now()
+    creation_date_1 = datetime(2026, 1, 15, 12, 0, 0)
     creation_date_2 = creation_date_1 + timedelta(minutes=10)
 
     name_1 = "name_1"
