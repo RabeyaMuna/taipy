@@ -22,8 +22,10 @@ if util.find_spec("playwright"):
     from playwright._impl._page import Page
 
 from taipy.gui import Gui, Html
-from taipy.gui.servers.fastapi import _FastAPIServer
 from taipy.gui.servers.flask import _FlaskServer
+
+if util.find_spec("taipy.gui.servers.fastapi"):
+    from taipy.gui.servers.fastapi import _FastAPIServer
 
 
 @pytest.mark.teste2e

@@ -11,6 +11,7 @@
 
 import argparse
 import typing as t
+from importlib import util
 
 import pytest
 
@@ -44,7 +45,12 @@ def e2e_port(request: pytest.FixtureRequest) -> str:
     return request.config.getoption("--e2e-port")
 
 
-@pytest.fixture(params=["flask", "fastapi"])
+_GUI_SERVER_PARAMS = ["flask"]
+if util.find_spec("taipy.gui.servers.fastapi"):
+    _GUI_SERVER_PARAMS.append("fastapi")
+
+
+@pytest.fixture(params=_GUI_SERVER_PARAMS)
 def gui_server(request):
     return request.param
 
