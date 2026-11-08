@@ -1,3 +1,4 @@
+setuptools>=76
 apispec[yaml]>=6.3,<=6.8.0
 apispec-webframeworks>=0.5.2,<=1.2.0
 flask>=3.1.0,<=3.1.0

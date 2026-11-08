@@ -177,10 +177,12 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
             sheet_names = excel_file.sheetnames
 
             user_provided_sheet_names = properties.get(self.__SHEET_NAME_PROPERTY) or []
-            if not isinstance(user_provided_sheet_names, (list, set, tuple)):
-                user_provided_sheet_names = [user_provided_sheet_names]
+            if isinstance(user_provided_sheet_names, (list, set, tuple)):
+                normalized_sheet_names = list(user_provided_sheet_names)
+            else:
+                normalized_sheet_names = [user_provided_sheet_names]
 
-            provided_sheet_names = user_provided_sheet_names or sheet_names
+            provided_sheet_names = normalized_sheet_names or sheet_names
 
             for sheet_name in provided_sheet_names:
                 if sheet_name not in sheet_names:
@@ -224,8 +226,9 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
         finally:
             excel_file.close()
 
-        if len(user_provided_sheet_names) == 1:
-            return work_books[user_provided_sheet_names[0]]
+        if len(normalized_sheet_names) == 1:
+            first_sheet_name = normalized_sheet_names[0]
+            return work_books[first_sheet_name]
 
         return work_books
 
@@ -307,13 +310,17 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
             self._append_excel_with_single_sheet(pd.DataFrame(data).to_excel, index=False, header=False)
 
     def _write_excel_with_single_sheet(self, write_excel_fct, path, *args, **kwargs):
-        if sheet_name := self.properties.get(self.__SHEET_NAME_PROPERTY):
-            if not isinstance(sheet_name, str):
-                if len(sheet_name) > 1:
+        sheet_name = self.properties.get(self.__SHEET_NAME_PROPERTY)
+        if sheet_name:
+            if isinstance(sheet_name, str):
+                write_excel_fct(path, *args, **kwargs, sheet_name=sheet_name)
+            else:
+                normalized_sheet_names = (
+                    list(sheet_name) if isinstance(sheet_name, (list, tuple, set)) else [sheet_name]
+                )
+                if len(normalized_sheet_names) > 1:
                     raise SheetNameLengthMismatch
-                else:
-                    sheet_name = sheet_name[0]
-            write_excel_fct(path, *args, **kwargs, sheet_name=sheet_name)
+                write_excel_fct(path, *args, **kwargs, sheet_name=normalized_sheet_names[0])
         else:
             write_excel_fct(path, *args, **kwargs)
 
