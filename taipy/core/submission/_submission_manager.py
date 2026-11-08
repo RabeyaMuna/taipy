@@ -90,6 +90,7 @@ class _SubmissionManager(_Manager[Submission], _VersionMixin):
                 submission._running_jobs.discard(job.id)
                 submission._blocked_jobs.discard(job.id)
                 submission._pending_jobs.discard(job.id)
+            cls.__synchronize_submission_status_attributes(submission, job)
             cls._update(submission)
 
             # The submission_status is set later to make sure notification for updating
@@ -111,6 +112,31 @@ class _SubmissionManager(_Manager[Submission], _VersionMixin):
             cls.__logger.debug(
                 f"{job.id} status is {job_status}. Submission status set to `{submission._submission_status}`."
             )
+
+    @classmethod
+    def __synchronize_submission_status_attributes(cls, submission: Submission, current_job: Job) -> None:
+        from ..job._job_manager_factory import _JobManagerFactory
+
+        job_manager = _JobManagerFactory._build_manager()
+        jobs = []
+        for submission_job in submission._jobs:
+            job_id = submission_job if isinstance(submission_job, str) else submission_job.id
+            if job_id == current_job.id:
+                jobs.append(current_job)
+            elif job := job_manager._get(job_id):
+                jobs.append(job)
+            else:
+                return
+
+        if not jobs:
+            return
+
+        submission._is_canceled = any(job.status == Status.CANCELED for job in jobs)
+        submission._is_abandoned = any(job.status == Status.ABANDONED for job in jobs)
+        submission._is_completed = all(job.status in (Status.COMPLETED, Status.SKIPPED) for job in jobs)
+        submission._running_jobs = {job.id for job in jobs if job.status == Status.RUNNING}
+        submission._pending_jobs = {job.id for job in jobs if job.status in (Status.PENDING, Status.SUBMITTED)}
+        submission._blocked_jobs = {job.id for job in jobs if job.status == Status.BLOCKED}
 
     @classmethod
     def __set_submission_status(cls, submission: Submission, new_submission_status: SubmissionStatus, job: Job) -> None:

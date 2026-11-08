@@ -100,6 +100,7 @@ class _Orchestrator(_AbstractOrchestrator):
             cls._check_and_execute_jobs_if_development_mode()
         elif wait:
             cls._wait_until_job_finished(jobs, timeout)
+            cls._wait_until_submission_finished(submission, timeout)
         return submission
 
     @classmethod
@@ -150,6 +151,7 @@ class _Orchestrator(_AbstractOrchestrator):
         else:
             if wait:
                 cls._wait_until_job_finished(job, timeout)
+                cls._wait_until_submission_finished(submission, timeout)
         return submission
 
     @classmethod
@@ -221,6 +223,17 @@ class _Orchestrator(_AbstractOrchestrator):
                     sleep(0.5)  # Limit CPU usage
             except Exception:
                 pass
+
+    @classmethod
+    def _wait_until_submission_finished(cls, submission: Submission, timeout: Union[float, int, None] = None) -> None:
+        start = datetime.now()
+        while timeout is None or (datetime.now() - start).total_seconds() < timeout:
+            try:
+                if _SubmissionManagerFactory._build_manager()._get(submission.id).is_finished():
+                    return
+            except Exception:
+                pass
+            sleep(0.5)
 
     @classmethod
     def _is_blocked(cls, obj: Union[Task, Job]) -> bool:

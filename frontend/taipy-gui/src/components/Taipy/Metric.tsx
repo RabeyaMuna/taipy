@@ -26,6 +26,8 @@ import { getComponentClassName } from "./TaipyStyle";
 const Plot = lazy(() => import("react-plotly.js"));
 
 interface MetricProps extends TaipyBaseProps, TaipyHoverProps {
+    display?: number;
+    defaultDisplay?: number;
     value?: number;
     defaultValue?: number;
     delta?: number;
@@ -74,7 +76,8 @@ const normalizeSize = (val: string | number | undefined): string | undefined => 
 
 const Metric = (props: MetricProps) => {
     const { showValue = true } = props;
-    const value = useDynamicProperty(props.value, props.defaultValue, 0);
+    const display = useDynamicProperty(props.display, props.defaultDisplay, undefined, "number");
+    const value = useDynamicProperty(props.value, props.defaultValue, display ?? 0);
     const threshold = useDynamicProperty(props.threshold, props.defaultThreshold, undefined);
     const delta = useDynamicProperty(props.delta, props.defaultDelta, undefined);
     const className = useClassNames(props.libClassName, props.dynamicClassName, props.className);
