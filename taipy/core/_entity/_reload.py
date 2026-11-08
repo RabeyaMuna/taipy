@@ -16,6 +16,7 @@ from typing import Dict, Type
 from ...common._check_dependencies import EnterpriseEditionUtils
 from .._manager._manager import _Manager
 from ..common._utils import _load_fct
+from ..exceptions.exceptions import NonExistingEntity
 from ..notification import EventOperation, Notifier, _make_event
 
 
@@ -122,7 +123,11 @@ def _self_setter(manager):
             if not self._is_in_context:
                 entity = _Reloader()._reload(manager, self)
                 fct(entity, *args, **kwargs)
-                _Reloader._get_manager(manager)._update(entity)
+                entity_manager = _Reloader._get_manager(manager)
+                try:
+                    entity_manager._update(entity)
+                except NonExistingEntity:
+                    entity_manager._repository._save(entity)
                 Notifier.publish(event)
             else:
                 self._in_context_attributes_changed_collector.append(event)
