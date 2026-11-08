@@ -11,7 +11,7 @@
 
 import os
 from datetime import datetime, timedelta
-from time import sleep
+from time import localtime, sleep
 from unittest import mock
 
 import pytest
@@ -118,6 +118,34 @@ class TestDataNode:
 
         with pytest.raises(InvalidConfigurationId):
             DataNode("foo bar")
+
+    def test_datetime_from_timestamp_preserves_microseconds(self):
+        timestamp = 1_725_846_123.123456
+        local_time = datetime(*localtime(timestamp)[:6])
+
+        assert DataNode._DataNode__datetime_from_timestamp(timestamp) == local_time.replace(microsecond=123456)
+
+    def test_datetime_from_timestamp_carries_rounded_microseconds(self):
+        timestamp = 1_725_846_123.9999996
+        local_time = datetime(*localtime(timestamp)[:6])
+
+        assert DataNode._DataNode__datetime_from_timestamp(timestamp) == local_time + timedelta(seconds=1)
+
+    def test_get_last_modified_datetime_returns_latest_file_from_directory(self, tmp_path):
+        older_file = tmp_path / "older.txt"
+        newer_file = tmp_path / "newer.txt"
+        subdirectory = tmp_path / "ignored"
+        older_file.write_text("older")
+        newer_file.write_text("newer")
+        subdirectory.mkdir()
+        older_timestamp = 1_725_846_123.123456
+        newer_timestamp = 1_725_846_124.654321
+        os.utime(older_file, (older_timestamp, older_timestamp))
+        os.utime(newer_file, (newer_timestamp, newer_timestamp))
+
+        expected_datetime = DataNode._DataNode__datetime_from_timestamp(newer_timestamp)
+
+        assert DataNode._get_last_modified_datetime(str(tmp_path)) == expected_datetime
 
     def test_read_write(self):
         dn = FakeDataNode("foo_bar")

@@ -11,6 +11,7 @@
 
 import functools
 import os
+import time
 import uuid
 from abc import abstractmethod
 from datetime import datetime, timedelta
@@ -592,19 +593,27 @@ class DataNode(_Entity, _Labeled):
     @classmethod
     def _get_last_modified_datetime(cls, path: Optional[str] = None) -> Optional[datetime]:
         if path and os.path.isfile(path):
-            return datetime.fromtimestamp(os.path.getmtime(path))
+            return cls.__datetime_from_timestamp(os.path.getmtime(path))
 
         last_modified_datetime = None
         if path and os.path.isdir(path):
             for filename in os.listdir(path):
                 filepath = os.path.join(path, filename)
                 if os.path.isfile(filepath):
-                    file_mtime = datetime.fromtimestamp(os.path.getmtime(filepath))
+                    file_mtime = cls.__datetime_from_timestamp(os.path.getmtime(filepath))
 
                     if last_modified_datetime is None or file_mtime > last_modified_datetime:
                         last_modified_datetime = file_mtime
 
         return last_modified_datetime
+
+    @staticmethod
+    def __datetime_from_timestamp(timestamp: float) -> datetime:
+        local_time = time.localtime(timestamp)
+        microsecond = round((timestamp - int(timestamp)) * 1_000_000)
+        if microsecond == 1_000_000:
+            return datetime(*local_time[:6]) + timedelta(seconds=1)
+        return datetime(*local_time[:6], microsecond=microsecond)
 
     @staticmethod
     def _class_map():
