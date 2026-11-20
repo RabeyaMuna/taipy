@@ -108,7 +108,7 @@ class _GuiCoreContext(_CoreEventConsumerBase):
 
     def process_event(self, event: Event):
         self.__lazy_start()
-        with self.gui._get_authorization(system=True): # type: ignore
+        with self.gui._get_authorization(system=True):  # type: ignore
             if event.entity_type is EventEntityType.SCENARIO:
                 self.scenario_refresh(
                     event.entity_id
@@ -184,7 +184,7 @@ class _GuiCoreContext(_CoreEventConsumerBase):
                 else:
                     last_client_status.submission_status = new_status
 
-            if client_id:= submission.properties.get("client_id"):
+            if client_id := submission.properties.get("client_id"):
                 with self.gui._get_authorization(client_id):
                     if payload is not None:
                         running_tasks = {}
@@ -663,9 +663,8 @@ class _GuiCoreContext(_CoreEventConsumerBase):
             filtered_list = [
                 e
                 if isinstance(e, DataNode)
-                else self.filter_entities(d, t.cast(str, col), col_type, False, action, val, col_fn)
+                else self.filter_entities(t.cast(list, e), t.cast(str, col), col_type, False, action, val, col_fn)
                 for e in filtered_list
-                for d in (t.cast(list, t.cast(list, e)[2]) if isinstance(e, list) else [e])
             ]
         # remove empty cycles
         return [e for e in filtered_list if isinstance(e, DataNode) or (isinstance(e, (tuple, list)) and len(e[2]))]
