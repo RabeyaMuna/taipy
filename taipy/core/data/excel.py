@@ -179,6 +179,8 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
             user_provided_sheet_names = properties.get(self.__SHEET_NAME_PROPERTY) or []
             if not isinstance(user_provided_sheet_names, (list, set, tuple)):
                 user_provided_sheet_names = [user_provided_sheet_names]
+            if isinstance(user_provided_sheet_names, (set, tuple)):
+                user_provided_sheet_names = list(user_provided_sheet_names)
 
             provided_sheet_names = user_provided_sheet_names or sheet_names
 
@@ -189,7 +191,7 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
             if isinstance(exposed_type, List):
                 if len(provided_sheet_names) != len(exposed_type):
                     raise ExposedTypeLengthMismatch(
-                        f"Expected {len(provided_sheet_names)} exposed types, got " f"{len(exposed_type)}"
+                        f"Expected {len(provided_sheet_names)} exposed types, got {len(exposed_type)}"
                     )
 
             for i, sheet_name in enumerate(provided_sheet_names):
