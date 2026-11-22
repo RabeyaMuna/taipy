@@ -13,6 +13,7 @@ import datetime
 import inspect
 import random
 import typing as t
+import pkg_resources
 
 from taipy.gui import Gui
 
