@@ -14,6 +14,7 @@ from apispec.exceptions import APISpecError
 from apispec.ext.marshmallow import MarshmallowPlugin
 from apispec_webframeworks.flask import FlaskPlugin
 from flask import Blueprint, jsonify, render_template
+import pkg_resources
 
 
 class FlaskRestfulPlugin(FlaskPlugin):
