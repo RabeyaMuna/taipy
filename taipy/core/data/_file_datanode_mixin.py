@@ -47,7 +47,8 @@ class _FileDataNodeMixin:
     __logger = _TaipyLogger._get_logger()
 
     def __init__(self, properties: Dict) -> None:
-        self._path: str = properties.get(self._PATH_KEY, properties.get(self._DEFAULT_PATH_KEY))
+        path_value = properties.get(self._PATH_KEY, properties.get(self._DEFAULT_PATH_KEY))
+        self._path: str = str(path_value) if path_value is not None else ""
         self._is_generated: bool = properties.get(self._IS_GENERATED_KEY, self._path is None)
         self._last_edit_date: Optional[datetime] = None
 
@@ -155,7 +156,7 @@ class _FileDataNodeMixin:
         try:
             upload_data = self._read_from_path(str(up_path))
         except Exception as err:
-            self.__logger.error(f"Error uploading `{up_path.name}` to data " f"node `{self.id}`:")  # type: ignore[attr-defined]
+            self.__logger.error(f"Error uploading `{up_path.name}` to data node `{self.id}`:")  # type: ignore[attr-defined]
             self.__logger.error(f"Error: {err}")
             reasons._add_reason(self.id, UploadFileCanNotBeRead(up_path.name, self.id))  # type: ignore[attr-defined]
             return reasons

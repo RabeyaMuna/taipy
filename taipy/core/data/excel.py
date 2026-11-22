@@ -189,7 +189,7 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
             if isinstance(exposed_type, List):
                 if len(provided_sheet_names) != len(exposed_type):
                     raise ExposedTypeLengthMismatch(
-                        f"Expected {len(provided_sheet_names)} exposed types, got " f"{len(exposed_type)}"
+                        f"Expected {len(provided_sheet_names)} exposed types, got {len(exposed_type)}"
                     )
 
             for i, sheet_name in enumerate(provided_sheet_names):
@@ -200,7 +200,7 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
                     if isinstance(exposed_type, dict):
                         sheet_exposed_type = exposed_type.get(sheet_name, self._EXPOSED_TYPE_PANDAS)
                     elif isinstance(exposed_type, List):
-                        sheet_exposed_type = exposed_type[i]
+                        sheet_exposed_type = exposed_type[i] if i < len(exposed_type) else self._EXPOSED_TYPE_PANDAS
                     elif exposed_type == np.ndarray:
                         sheet_exposed_type = self._EXPOSED_TYPE_NUMPY
                     elif exposed_type == pd.DataFrame:
