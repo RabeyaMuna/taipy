@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional, Set, Union, cast
 
 import numpy as np
 import pandas as pd
+import pkg_resources
 from openpyxl import load_workbook
 
 from .._entity._reload import _Reloader
