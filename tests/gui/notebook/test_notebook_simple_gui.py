@@ -39,6 +39,7 @@ def wait_for_content(url, expected_text, timeout=10):
 @pytest.mark.teste2e
 @testbook("tests/gui/notebook/simple_gui.ipynb")
 def test_notebook_simple_gui(tb, helpers):
+    from taipy.gui import Gui
     tb.execute_cell("import")
     tb.execute_cell("page_declaration")
     tb.execute_cell("gui_init")
@@ -83,6 +84,7 @@ def test_notebook_simple_gui(tb, helpers):
 @pytest.mark.teste2e
 @testbook("tests/gui/notebook/simple_gui_fastapi.ipynb")
 def test_notebook_simple_gui_fastapi(tb, helpers):
+    from taipy.gui import Gui
     tb.execute_cell("import")
     tb.execute_cell("page_declaration")
     tb.execute_cell("gui_init")
@@ -115,7 +117,7 @@ def test_notebook_simple_gui_fastapi(tb, helpers):
         with contextlib.suppress(Exception):
             urlopen(f"http://127.0.0.1:5000/{Gui._JSX_URL}/page1")
             break
-    assert wait_for_content(f"http://127.0.0.1:5000/{Gui._JSX_URL}/page1", ">Hello</h1>"), "Expected content not found"
+    assert wait_for_content(f"http://127.0.0.1:5000/{Gui._JSX_URL}/page1", ">Hello</h1>), "Expected content not found"
     tb.execute_cell("gui_re_stop")
     with pytest.raises(Exception) as exc_info:
         urlopen(f"http://127.0.0.1:5000/{Gui._JSX_URL}/page1")
