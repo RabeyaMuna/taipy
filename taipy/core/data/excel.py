@@ -191,7 +191,7 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
             if isinstance(exposed_type, List):
                 if len(provided_sheet_names) != len(exposed_type):
                     raise ExposedTypeLengthMismatch(
-                        f"Expected {len(provided_sheet_names)} exposed types, got " f"{len(exposed_type)}"
+                        f"Expected {len(provided_sheet_names)} exposed types, got {len(exposed_type)}"
                     )
 
             for i, sheet_name in enumerate(provided_sheet_names):
@@ -214,7 +214,10 @@ class ExcelDataNode(DataNode, _FileDataNodeMixin, _TabularDataNodeMixin):
                 if properties[self._HAS_HEADER_PROPERTY] and res:
                     header = res.pop(0)
                     for i, row in enumerate(res):
-                        res[i] = sheet_exposed_type(**dict([[h, r] for h, r in zip(header, row)]))
+                        if hasattr(sheet_exposed_type, "__annotations__"):
+                            res[i] = sheet_exposed_type(**dict([[h, r] for h, r in zip(header, row)]))
+                        else:
+                            res[i] = sheet_exposed_type(*row)
                 else:
                     for i, row in enumerate(res):
                         res[i] = sheet_exposed_type(*row)
